@@ -48,8 +48,18 @@ onMounted(async () => {
     })
     if (vErr) throw vErr
 
-    // 3. Segarkan state auth + koneksi, lalu masuk ke Home.
+    // 3. Segarkan state auth + koneksi.
     await reloadAuth()
+
+    // 4. Backfill riwayat aktivitas (sekali, otomatis) — tidak fatal bila gagal,
+    //    peserta tetap bisa lanjut & sinkron manual belakangan.
+    message.value = 'Menyinkronkan riwayat aktivitas…'
+    try {
+      await supabase.functions.invoke('strava-sync', { body: { athlete_id: data.athlete_id } })
+    } catch (syncErr) {
+      console.error('Auto-sync gagal:', syncErr)
+    }
+
     await refreshStravaStatus()
     router.replace('/home')
   } catch (e) {
