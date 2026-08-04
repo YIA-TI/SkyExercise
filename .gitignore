@@ -37,3 +37,12 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# Claude
+.Claude
+
+# Env (rahasia — jangan commit)
+.env
+.env.local
+.env.*.local
+!.env.example

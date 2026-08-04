@@ -2,94 +2,48 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { authState } from '../store/auth.js'
 
-import LoginSection      from '../components/LoginSection.vue'
-import AdminDashboard    from '../views/AdminDashboard.vue'
-import AdminDataAnggota  from '../views/AdminDataAnggota.vue'
-import AdminPeringkat    from '../views/AdminPeringkat.vue'
-import AnggotaDashboard  from '../views/AnggotaDashboard.vue'
-import AnggotaLatihan    from '../views/AnggotaLatihan.vue'
-import AnggotaPeringkat  from '../views/AnggotaPeringkat.vue'
-import AnggotaRincian    from '../views/AnggotaRincian.vue'
-import AnggotaRincianLatihan from '../views/AnggotaRincianLatihan.vue'
+// ── FE baru (gaya Sandow / mobile-first) ──
+import WelcomeScreen         from '../components/WelcomeScreen.vue'
+import SignInScreen          from '../components/SignInScreen.vue'
+import HomeScreen            from '../components/HomeScreen.vue'
+import StatsDetailScreen     from '../components/StatsDetailScreen.vue'
+import LatihanScreen         from '../components/LatihanScreen.vue'
+import RincianLatihanScreen  from '../components/RincianLatihanScreen.vue'
+import PeringkatScreen       from '../components/PeringkatScreen.vue'
+import ProfilScreen          from '../components/ProfilScreen.vue'
+import GantiPasswordScreen   from '../components/GantiPasswordScreen.vue'
+import StravaAuthorizeScreen from '../components/StravaAuthorizeScreen.vue'
+import StravaCallbackScreen  from '../components/StravaCallbackScreen.vue'
+import AdminMonitoringScreen from '../components/AdminMonitoringScreen.vue'
+import AdminAnggotaScreen    from '../components/AdminAnggotaScreen.vue'
+import AdminAnggotaDetailScreen from '../components/AdminAnggotaDetailScreen.vue'
+import AdminPeringkatScreen  from '../components/AdminPeringkatScreen.vue'
+import AdminQuestScreen      from '../components/AdminQuestScreen.vue'
 
 const routes = [
   // ── Publik ──────────────────────────────────────────────
-  {
-    path: '/',
-    name: 'Login',
-    component: LoginSection,
-    meta: { requiresAuth: false },
-  },
+  { path: '/',                name: 'Welcome',        component: WelcomeScreen,        meta: { requiresAuth: false } },
+  { path: '/signin',          name: 'SignIn',         component: SignInScreen,         meta: { requiresAuth: false } },
+  { path: '/strava/callback', name: 'StravaCallback', component: StravaCallbackScreen, meta: { requiresAuth: false } },
 
-  // ── Admin ────────────────────────────────────────────────
-  {
-    path: '/admin',
-    name: 'AdminDashboard',
-    component: AdminDashboard,
-    meta: { requiresAuth: true, role: 'admin' },
-  },
-  {
-    path: '/admin/anggota',
-    name: 'AdminDataAnggota',
-    component: AdminDataAnggota,
-    meta: { requiresAuth: true, role: 'admin' },
-  },
-  {
-    path: '/admin/peringkat/running',
-    name: 'AdminPeringkatRunning',
-    component: AdminPeringkat,
-    props: { mode: 'running' },
-    meta: { requiresAuth: true, role: 'admin' },
-  },
-  {
-    path: '/admin/peringkat/weight',
-    name: 'AdminPeringkatWeight',
-    component: AdminPeringkat,
-    props: { mode: 'weight' },
-    meta: { requiresAuth: true, role: 'admin' },
-  },
+  // ── Anggota ─────────────────────────────────────────────
+  { path: '/home',             name: 'Home',            component: HomeScreen,           meta: { requiresAuth: true, role: 'anggota' } },
+  { path: '/stats/:type',      name: 'StatsDetail',     component: StatsDetailScreen,     meta: { requiresAuth: true, role: 'anggota' } },
+  { path: '/latihan',          name: 'Latihan',         component: LatihanScreen,        meta: { requiresAuth: true, role: 'anggota' } },
+  { path: '/latihan/rincian/:id', name: 'RincianLatihan', component: RincianLatihanScreen, meta: { requiresAuth: true, role: 'anggota' } },
+  { path: '/peringkat',        name: 'Peringkat',       component: PeringkatScreen,      meta: { requiresAuth: true, role: 'anggota' } },
+  { path: '/profil',           name: 'Profil',          component: ProfilScreen,         meta: { requiresAuth: true, role: 'anggota' } },
+  { path: '/profil/ganti-password', name: 'GantiPassword', component: GantiPasswordScreen, meta: { requiresAuth: true, role: 'anggota' } },
+  { path: '/strava/authorize', name: 'StravaAuthorize', component: StravaAuthorizeScreen, meta: { requiresAuth: true, role: 'anggota' } },
 
-  // ── Anggota ──────────────────────────────────────────────
-  {
-    path: '/anggota',
-    name: 'AnggotaDashboard',
-    component: AnggotaDashboard,
-    meta: { requiresAuth: true, role: 'anggota' },
-  },
-  {
-    path: '/anggota/latihan',
-    name: 'AnggotaLatihan',
-    component: AnggotaLatihan,
-    meta: { requiresAuth: true, role: 'anggota' },
-  },
-  {
-    path: '/anggota/latihan/rincian',
-    name: 'AnggotaRincianLatihan',
-    component: AnggotaRincianLatihan,
-    meta: { requiresAuth: true, role: 'anggota' },
-  },
-  {
-    path: '/anggota/peringkat/running',
-    name: 'AnggotaPeringkatRunning',
-    component: AnggotaPeringkat,
-    props: { mode: 'running' },
-    meta: { requiresAuth: true, role: 'anggota' },
-  },
-  {
-    path: '/anggota/peringkat/weight',
-    name: 'AnggotaPeringkatWeight',
-    component: AnggotaPeringkat,
-    props: { mode: 'weight' },
-    meta: { requiresAuth: true, role: 'anggota' },
-  },
-  {
-    path: '/anggota/rincian',
-    name: 'AnggotaRincian',
-    component: AnggotaRincian,
-    meta: { requiresAuth: true, role: 'anggota' },
-  },
+  // ── Admin (Monitoring) ──────────────────────────────────
+  { path: '/admin',           name: 'AdminMonitoring', component: AdminMonitoringScreen, meta: { requiresAuth: true, role: 'admin' } },
+  { path: '/admin/anggota',   name: 'AdminAnggota',    component: AdminAnggotaScreen,    meta: { requiresAuth: true, role: 'admin' } },
+  { path: '/admin/anggota/:id', name: 'AdminAnggotaDetail', component: AdminAnggotaDetailScreen, meta: { requiresAuth: true, role: 'admin' } },
+  { path: '/admin/peringkat', name: 'AdminPeringkat',  component: AdminPeringkatScreen,  meta: { requiresAuth: true, role: 'admin' } },
+  { path: '/admin/quests',    name: 'AdminQuest',      component: AdminQuestScreen,      meta: { requiresAuth: true, role: 'admin' } },
 
-  // ── Fallback ─────────────────────────────────────────────
+  // ── Fallback ────────────────────────────────────────────
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
 
@@ -103,14 +57,14 @@ router.beforeEach((to) => {
   if (!to.meta.requiresAuth) return true
 
   if (!authState.isLoggedIn) {
-    return { name: 'Login' }
+    return { name: 'SignIn' }
   }
 
   if (to.meta.role && authState.userRole !== to.meta.role) {
-    // Redirect ke dashboard yang sesuai role
-    if (authState.userRole === 'admin') return { name: 'AdminDashboard' }
-    if (authState.userRole === 'anggota') return { name: 'AnggotaDashboard' }
-    return { name: 'Login' }
+    // Redirect ke beranda yang sesuai role
+    if (authState.userRole === 'admin') return { name: 'AdminMonitoring' }
+    if (authState.userRole === 'anggota') return { name: 'Home' }
+    return { name: 'SignIn' }
   }
 
   return true
