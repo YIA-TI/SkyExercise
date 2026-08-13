@@ -45,6 +45,15 @@ export function daysAgoISO(n) {
   return new Date(Date.now() - n * 86400000).toISOString()
 }
 
+// ISO timestamp → "3 Agu, 06:15" (tanggal + jam lokal, dipakai di daftar aktivitas).
+export function formatDateTime(iso) {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  const tanggal = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+  const jam = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  return `${tanggal}, ${jam}`
+}
+
 export function normalizeProfile(row) {
   return {
     athleteId: row.athlete_id,

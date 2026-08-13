@@ -171,7 +171,7 @@
             <p class="act-name">{{ a.name }}</p>
             <p class="act-meta">{{ a.meta }}</p>
           </div>
-          <span class="act-cal mono">{{ a.kkal }} kkal</span>
+          <span class="act-time mono">{{ a.waktu }}</span>
         </div>
         <p v-if="filteredActivities.length === 0" class="act-empty">Tidak ada aktivitas untuk filter ini.</p>
       </div>
@@ -206,6 +206,7 @@ import {
 import { stravaState } from '../store/strava.js'
 import { useStravaConnection } from '../composables/useStravaConnection.js'
 import { useHomeStats, useActivities } from '../composables/useMemberData.js'
+import { formatDateTime } from '../lib/normalize.js'
 import MemberTabBar from './MemberTabBar.vue'
 
 const router = useRouter()
@@ -225,6 +226,8 @@ async function handleSync() {
   syncing.value = true
   try {
     await sync()
+    // Ambil ulang data (statistik + My Activity) begitu sinkron selesai.
+    await Promise.all([refreshStats(), refreshActivities()])
   } finally {
     syncing.value = false
   }
@@ -239,7 +242,7 @@ function goRincian(id) {
 }
 
 // ── Statistik (Strava) — nilai nyata, fallback ke skeleton mock saat loading/kosong ──
-const { stats } = useHomeStats()
+const { stats, refresh: refreshStats } = useHomeStats()
 const distance = computed(() => ({ ...mockDistance, ...(stats.value?.distance || {}) }))
 const heartRate = computed(() => ({ ...mockHeartRate, ...(stats.value?.heartRate || {}) }))
 const calories = computed(() => ({ ...mockCalories, ...(stats.value?.calories || {}) }))
@@ -364,7 +367,7 @@ const filters = ['Semua', 'Lari', 'Gym']
 const activeFilter = ref('Semua')
 
 // Aktivitas nyata dari Strava (7 hari terakhir, difilter server-side lewat composable).
-const { activities: rawActivities } = useActivities(activeFilter)
+const { activities: rawActivities, refresh: refreshActivities } = useActivities(activeFilter)
 
 const filteredActivities = computed(() =>
   (rawActivities.value || []).map((a) => ({
@@ -372,10 +375,10 @@ const filteredActivities = computed(() =>
     icon: a.type === 'run' ? runIcon : gymIcon,
     cls: a.type === 'run' ? 'is-orange' : 'is-blue',
     name: a.name,
+    waktu: formatDateTime(a.startDate),
     meta: a.type === 'run'
       ? `${a.distanceKm ?? '—'} km · ${a.durationLabel ?? '—'} mnt`
       : `${a.durationLabel ?? '—'} mnt · ${a.avgHeartrate ? Math.round(a.avgHeartrate) + ' bpm' : '—'}`,
-    kkal: a.calories ?? '—',
   })),
 )
 
@@ -712,7 +715,7 @@ const visibleActivities = computed(() =>
 .aeroguard-home .act-body { flex: 1; min-width: 0; overflow: hidden; }
 .aeroguard-home .act-name { margin: 0; font-size: 13.5px; font-weight: 700; color: #1c1917; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .aeroguard-home .act-meta { margin: 3px 0 0; font-size: 11.5px; color: #57534e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.aeroguard-home .act-cal { font-size: 12.5px; font-weight: 700; color: #fc4c02; white-space: nowrap; flex-shrink: 0; }
+.aeroguard-home .act-time { font-size: 12px; font-weight: 700; color: #78716c; white-space: nowrap; flex-shrink: 0; }
 .aeroguard-home .act-empty { grid-column: 1 / -1; text-align: center; color: #a8a29e; padding: 24px; font-size: 13px; }
 
 .aeroguard-home .act-toggle {
