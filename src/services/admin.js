@@ -1,7 +1,7 @@
 // src/services/admin.js
 // Layanan untuk admin (RLS: is_admin() → akses semua peserta).
 import { supabase } from '../lib/supabase.js'
-import { normalizeActivity } from '../lib/normalize.js'
+import { normalizeActivity, daysAgoISO } from '../lib/normalize.js'
 
 const RUN = ['Run', 'TrailRun', 'VirtualRun']
 
@@ -30,10 +30,12 @@ export async function fetchDivisionSummary() {
   }
 }
 
+// Dibatasi 7 hari terakhir — feed "aktivitas terbaru" adalah ringkasan mingguan.
 export async function fetchRecentActivitiesAll(limit = 10) {
   const { data, error } = await supabase
     .from('activities')
     .select('*, athletes(firstname, lastname)')
+    .gte('start_date', daysAgoISO(7))
     .order('start_date', { ascending: false })
     .limit(limit)
   if (error) throw error
@@ -60,8 +62,10 @@ export async function fetchParticipants() {
 export async function fetchParticipantDetail(athleteId) {
   const [{ data: prof }, { data: acts }] = await Promise.all([
     supabase.from('athletes').select('*').eq('athlete_id', athleteId).maybeSingle(),
+    // Dibatasi 7 hari terakhir — konsisten dengan tampilan mingguan di seluruh app.
     supabase.from('activities').select('*').eq('athlete_id', athleteId)
-      .order('start_date', { ascending: false }).limit(30),
+      .gte('start_date', daysAgoISO(7))
+      .order('start_date', { ascending: false }).limit(100),
   ])
   return {
     profile: prof

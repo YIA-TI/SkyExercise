@@ -39,6 +39,12 @@ export function fullName(row) {
   return `${row.firstname ?? ''} ${row.lastname ?? ''}`.trim()
 }
 
+// ISO timestamp N hari ke belakang dari sekarang — dipakai untuk membatasi
+// query aktivitas ke jendela waktu tertentu (mis. 7 hari terakhir).
+export function daysAgoISO(n) {
+  return new Date(Date.now() - n * 86400000).toISOString()
+}
+
 export function normalizeProfile(row) {
   return {
     athleteId: row.athlete_id,

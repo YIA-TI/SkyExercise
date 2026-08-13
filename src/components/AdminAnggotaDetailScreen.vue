@@ -77,7 +77,7 @@
         </div>
 
         <div class="ins-act-list">
-          <div v-for="(act, i) in filteredActivities" :key="i" class="ins-act-item">
+          <div v-for="(act, i) in visibleActivities" :key="i" class="ins-act-item">
             <span class="ins-act-ic" :class="act.type === 'Lari' ? 'is-orange' : 'is-blue'" v-html="act.type === 'Lari' ? icons.run : icons.gym"></span>
             <div class="ins-act-body">
               <p class="ins-act-name">{{ act.name }}</p>
@@ -87,6 +87,16 @@
           </div>
           <p v-if="filteredActivities.length === 0" class="ins-act-empty">Tidak ada aktivitas untuk filter ini.</p>
         </div>
+
+        <button
+          v-if="filteredActivities.length > INITIAL_VISIBLE"
+          class="ins-act-toggle"
+          type="button"
+          @click="showAllActivities = !showAllActivities"
+        >
+          {{ showAllActivities ? 'Sembunyikan' : `Tampilkan Semua (${filteredActivities.length})` }}
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: showAllActivities ? 'rotate(180deg)' : 'none' }"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
       </section>
     </template>
 
@@ -98,7 +108,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAdminParticipantDetail } from '../composables/useAdminData.js'
 import AdminTabBar from './AdminTabBar.vue'
@@ -195,6 +205,14 @@ const filteredActivities = computed(() => {
     ? member.value.activities
     : member.value.activities.filter(a => a.type === activeFilter.value)
 })
+
+// Daftar bisa dilipat — tampilkan beberapa dulu agar tak memenuhi layar.
+const INITIAL_VISIBLE = 4
+const showAllActivities = ref(false)
+watch(activeFilter, () => { showAllActivities.value = false })
+const visibleActivities = computed(() =>
+  showAllActivities.value ? filteredActivities.value : filteredActivities.value.slice(0, INITIAL_VISIBLE),
+)
 </script>
 
 <style scoped>
@@ -368,6 +386,26 @@ const filteredActivities = computed(() => {
   padding: 24px;
   font-size: 13px;
 }
+
+.ins-act-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #57534e;
+  background: #ffffff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  box-shadow: 0 10px 24px -20px rgba(17, 18, 20, 0.5);
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+.ins-act-toggle:hover { color: #fc4c02; transform: translateY(-1px); }
+.ins-act-toggle svg { transition: transform 0.2s ease; flex-shrink: 0; }
 
 .ins-notfound {
   text-align: center;

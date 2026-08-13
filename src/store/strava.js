@@ -26,9 +26,24 @@ export function stravaAuthorizeUrl() {
   return `https://www.strava.com/oauth/authorize?${params.toString()}`
 }
 
+// Kuota sementara Strava (tier self-upgrade tanpa review = maks 10 atlet).
+// Setelah app lolos review Strava, naikkan via VITE_STRAVA_MAX_ATHLETES tanpa ubah kode.
+const MAX_ATHLETES = Number(import.meta.env.VITE_STRAVA_MAX_ATHLETES) || 10
+
+// Cek kuota koneksi tersisa (RPC security-definer — aman dipanggil sebelum login).
+export async function checkStravaCapacity() {
+  const { data, count, error } = await supabase.rpc('connected_athlete_count')
+  const used = error ? 0 : (data ?? count ?? 0)
+  return { available: used < MAX_ATHLETES, used, max: MAX_ATHLETES }
+}
+
 // Redirect ke halaman otorisasi Strava (dipakai login peserta & tombol "Hubungkan").
-export function connectStrava() {
+// Cek kuota dulu — kalau penuh, TIDAK redirect (hindari error mentah 403 dari Strava).
+export async function connectStrava() {
+  const cap = await checkStravaCapacity()
+  if (!cap.available) return { ok: false, reason: 'full', ...cap }
   window.location.href = stravaAuthorizeUrl()
+  return { ok: true }
 }
 
 // Segarkan status koneksi dari data yang readable (aktivitas terakhir peserta).

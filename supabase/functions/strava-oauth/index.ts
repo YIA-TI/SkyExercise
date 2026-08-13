@@ -69,6 +69,7 @@ Deno.serve(async (req) => {
       token_hash: link.properties?.hashed_token,
     })
   } catch (e) {
+    console.error('[strava-oauth] error:', e)
     return json({ error: e instanceof Error ? e.message : String(e) }, 500)
   }
 })

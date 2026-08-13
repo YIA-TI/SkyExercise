@@ -139,9 +139,13 @@ async function handleSignIn() {
   }
 }
 
-// Peserta masuk lewat Strava (redirect OAuth).
-function handleStrava() {
-  connectStrava()
+// Peserta masuk lewat Strava (redirect OAuth) — cek kuota dulu.
+async function handleStrava() {
+  errorMsg.value = ''
+  const res = await connectStrava()
+  if (!res.ok) {
+    errorMsg.value = `Kuota koneksi Strava sedang penuh (${res.used}/${res.max}). Coba lagi nanti — kuota akan ditambah setelah app disetujui Strava.`
+  }
 }
 
 // Link "Masuk sebagai Admin" — sama dengan submit form (butuh kredensial admin).

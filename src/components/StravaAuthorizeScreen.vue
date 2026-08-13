@@ -39,9 +39,13 @@
         </li>
       </ul>
 
+      <p v-if="capFull" class="so-full">
+        Kuota koneksi Strava sedang penuh ({{ capInfo.used }}/{{ capInfo.max }}). Coba lagi nanti — kuota akan ditambah setelah app disetujui Strava.
+      </p>
+
       <div class="so-actions">
         <button class="so-cancel" type="button" :disabled="authorizing" @click="handleCancel">Batalkan</button>
-        <button class="so-authorize" type="button" :disabled="authorizing" @click="handleAuthorize">
+        <button class="so-authorize" type="button" :disabled="authorizing || capFull" @click="handleAuthorize">
           {{ authorizing ? 'Menghubungkan…' : 'Otorisasi' }}
         </button>
       </div>
@@ -53,13 +57,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { authState } from '../store/auth.js'
-import { connectStrava } from '../store/strava.js'
+import { connectStrava, checkStravaCapacity } from '../store/strava.js'
 
 const router = useRouter()
 const authorizing = ref(false)
+const capFull = ref(false)
+const capInfo = ref({ used: 0, max: 10 })
 
 const permissions = [
   'Lihat profil publik kamu (nama, foto, kota)',
@@ -67,15 +73,27 @@ const permissions = [
   'Lihat statistik dan pencapaian',
 ]
 
+// Cek kuota begitu halaman dibuka, agar user langsung tahu sebelum klik.
+onMounted(async () => {
+  const cap = await checkStravaCapacity()
+  capFull.value = !cap.available
+  capInfo.value = { used: cap.used, max: cap.max }
+})
+
 function handleCancel() {
   router.back()
 }
 
-function handleAuthorize() {
-  if (authorizing.value) return
+async function handleAuthorize() {
+  if (authorizing.value || capFull.value) return
   authorizing.value = true
   // Redirect asli ke halaman otorisasi Strava (kembali ke /strava/callback).
-  connectStrava()
+  const res = await connectStrava()
+  if (!res.ok) {
+    authorizing.value = false
+    capFull.value = true
+    capInfo.value = { used: res.used, max: res.max }
+  }
 }
 </script>
 
@@ -173,6 +191,18 @@ function handleAuthorize() {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.so-full {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fee2e2;
+  color: #dc2626;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 17px;
+  text-align: left;
 }
 
 .so-perms li {

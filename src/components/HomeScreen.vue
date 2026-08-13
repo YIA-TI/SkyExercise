@@ -158,7 +158,7 @@
 
       <div class="act-list">
         <div
-          v-for="a in filteredActivities"
+          v-for="a in visibleActivities"
           :key="a.id"
           class="act-item"
           role="button"
@@ -175,6 +175,16 @@
         </div>
         <p v-if="filteredActivities.length === 0" class="act-empty">Tidak ada aktivitas untuk filter ini.</p>
       </div>
+
+      <button
+        v-if="filteredActivities.length > INITIAL_VISIBLE"
+        class="act-toggle"
+        type="button"
+        @click="showAllActivities = !showAllActivities"
+      >
+        {{ showAllActivities ? 'Sembunyikan' : `Tampilkan Semua (${filteredActivities.length})` }}
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: showAllActivities ? 'rotate(180deg)' : 'none' }"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
     </section>
 
   </div>
@@ -353,7 +363,7 @@ const gymIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" 
 const filters = ['Semua', 'Lari', 'Gym']
 const activeFilter = ref('Semua')
 
-// Aktivitas nyata dari Strava (difilter server-side lewat composable).
+// Aktivitas nyata dari Strava (7 hari terakhir, difilter server-side lewat composable).
 const { activities: rawActivities } = useActivities(activeFilter)
 
 const filteredActivities = computed(() =>
@@ -368,6 +378,14 @@ const filteredActivities = computed(() =>
     kkal: a.calories ?? '—',
   })),
 )
+
+// Daftar bisa dilipat — tampilkan beberapa dulu agar tak memenuhi layar.
+const INITIAL_VISIBLE = 4
+const showAllActivities = ref(false)
+watch(activeFilter, () => { showAllActivities.value = false }) // reset saat ganti filter
+const visibleActivities = computed(() =>
+  showAllActivities.value ? filteredActivities.value : filteredActivities.value.slice(0, INITIAL_VISIBLE),
+)
 </script>
 
 <style>
@@ -377,6 +395,8 @@ const filteredActivities = computed(() =>
 .aeroguard-home {
   --card-w: min(320px, calc(100vw - 80px));
   --card-h: 272px;
+  --card-pad: 22px;    /* padding dalam kartu */
+  --bars-h: 44px;      /* tinggi mini-bars */
   --card-gap: 230px;   /* jarak antar kartu horizontal */
   --card-depth: 180px; /* kedalaman Z per slot */
   --card-rot: 44deg;   /* rotasi Y per slot */
@@ -412,11 +432,25 @@ const filteredActivities = computed(() =>
     --card-rot: 36deg;
   }
 }
-/* Tablet / small desktop — sedikit lebih lebar */
+/* Tablet / small desktop — kartu tumbuh LINEAR dari ukuran mobile (600px) sampai
+   400x320 (1023px), pakai formula `a*vw + b` (bukan vw murni) supaya benar-benar
+   membesar sejak awal breakpoint — vw murni membuatnya "mentok" di nilai minimum
+   sampai lebar layar sangat besar, itu sebabnya sebelumnya terasa kurang besar. */
 @media (min-width: 600px) {
   .aeroguard-home {
-    --card-w: 340px;
-    --card-gap: 250px;
+    --card-w: clamp(320px, 18.9vw + 207px, 400px);
+    --card-gap: 260px;
+    --card-h: clamp(272px, 11.35vw + 204px, 320px);
+    --card-pad: 24px;
+    --bars-h: 48px;
+  }
+}
+/* Desktop lebar — kartu maksimal sedikit lebih besar lagi */
+@media (min-width: 1024px) {
+  .aeroguard-home {
+    --card-w: clamp(360px, 30vw, 420px);
+    --card-gap: 280px;
+    --card-h: clamp(290px, 26vw, 340px);
   }
 }
 
@@ -584,7 +618,7 @@ const filteredActivities = computed(() =>
   cursor: pointer;
   background: #ffffff;
   border-radius: 26px;
-  padding: 22px;
+  padding: var(--card-pad);
   overflow: hidden;
   box-shadow: 0 20px 40px -24px rgba(17, 18, 20, 0.5);
   transform-style: preserve-3d;
@@ -617,7 +651,7 @@ const filteredActivities = computed(() =>
 }
 
 /* mini bars */
-.aeroguard-home .mini-bars { display: flex; align-items: flex-end; gap: 4px; height: 44px; }
+.aeroguard-home .mini-bars { display: flex; align-items: flex-end; gap: 4px; height: var(--bars-h); }
 .aeroguard-home .mini-bar { flex: 1; border-radius: 3px; background: linear-gradient(180deg, #ff914d, #fc4c02); }
 
 /* dot indikator */
@@ -680,4 +714,24 @@ const filteredActivities = computed(() =>
 .aeroguard-home .act-meta { margin: 3px 0 0; font-size: 11.5px; color: #57534e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .aeroguard-home .act-cal { font-size: 12.5px; font-weight: 700; color: #fc4c02; white-space: nowrap; flex-shrink: 0; }
 .aeroguard-home .act-empty { grid-column: 1 / -1; text-align: center; color: #a8a29e; padding: 24px; font-size: 13px; }
+
+.aeroguard-home .act-toggle {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #57534e;
+  background: #ffffff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  box-shadow: 0 10px 24px -20px rgba(17, 18, 20, 0.5);
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+.aeroguard-home .act-toggle:hover { color: #fc4c02; transform: translateY(-1px); }
+.aeroguard-home .act-toggle svg { transition: transform 0.2s ease; flex-shrink: 0; }
 </style>

@@ -158,6 +158,23 @@ language sql security definer stable as $$
 $$;
 ```
 
+## Tambahan — RPC kapasitas koneksi (batas Strava self-review = 10 atlet)
+
+> **Jalankan blok ini terpisah** (bukan bagian dari DDL utama di atas — cukup tambahan).
+> Selama app belum lolos review Strava, hanya **10 atlet** yang boleh terhubung. RPC ini
+> menghitung jumlah koneksi aktif TANPA membuka data sensitif, agar FE bisa cek kuota
+> **sebelum** redirect ke Strava (bukan setelah kena error 403 dari Strava).
+
+```sql
+create or replace function connected_athlete_count()
+returns integer
+language sql security definer stable as $$
+  select count(*)::integer from strava_credentials;
+$$;
+
+grant execute on function connected_athlete_count() to anon, authenticated;
+```
+
 ## Seed 1 admin (setelah DDL)
 
 Login admin memakai Supabase Auth, jadi butuh 1 user + baris di `admins`:

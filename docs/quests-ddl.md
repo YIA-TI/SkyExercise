@@ -5,6 +5,8 @@ definisi quest dikelola admin). **Jalankan sekali** di Supabase → SQL Editor �
 
 Metric yang didukung: `run_distance` (km), `run_sessions` (jumlah), `gym_sessions` (jumlah).
 Scope: `harian` (reset tiap hari) atau `mingguan` (reset tiap pekan, mulai Senin).
+Batas hari/minggu dihitung dalam **WIB (Asia/Jakarta)**, bukan UTC — supaya "hari ini" di quest
+sesuai jam lokal tim, bukan mundur ~7 jam seperti kalau pakai `now()` UTC mentah.
 
 ```sql
 -- 1. QUESTS (definisi — dikelola admin)
@@ -56,7 +58,7 @@ create policy "read own claims" on quest_claims for select using (
   is_admin() or athlete_id in (select athlete_id from athletes where user_id = auth.uid())
 );
 
--- 5. RPC quest_status() — daftar quest aktif + progress + status klaim (periode berjalan)
+-- 5. RPC quest_status() — daftar quest aktif + progress + status klaim (periode berjalan, WIB)
 create or replace function quest_status()
 returns table (
   id bigint, scope text, title text, description text, metric text,
@@ -64,7 +66,10 @@ returns table (
   progress real, claimed boolean
 )
 language plpgsql security definer stable as $$
-declare v_athlete bigint;
+declare
+  v_athlete bigint;
+  -- jam dinding WIB (naive), dipakai untuk batas hari/minggu
+  v_now_wib timestamp := now() AT TIME ZONE 'Asia/Jakarta';
 begin
   select athlete_id into v_athlete from athletes where user_id = auth.uid();
 
@@ -75,29 +80,37 @@ begin
         select coalesce(sum(a.distance),0) / 1000.0 from activities a
         where a.athlete_id = v_athlete
           and a.sport_type in ('Run','TrailRun','VirtualRun')
-          and a.start_date >= (case q.scope when 'harian' then date_trunc('day', now()) else date_trunc('week', now()) end))
+          and a.start_date >= (case q.scope
+            when 'harian' then date_trunc('day', v_now_wib) AT TIME ZONE 'Asia/Jakarta'
+            else date_trunc('week', v_now_wib) AT TIME ZONE 'Asia/Jakarta' end))
       when 'run_sessions' then (
         select count(*) from activities a
         where a.athlete_id = v_athlete
           and a.sport_type in ('Run','TrailRun','VirtualRun')
-          and a.start_date >= (case q.scope when 'harian' then date_trunc('day', now()) else date_trunc('week', now()) end))
+          and a.start_date >= (case q.scope
+            when 'harian' then date_trunc('day', v_now_wib) AT TIME ZONE 'Asia/Jakarta'
+            else date_trunc('week', v_now_wib) AT TIME ZONE 'Asia/Jakarta' end))
       when 'gym_sessions' then (
         select count(*) from activities a
         where a.athlete_id = v_athlete
           and a.sport_type in ('WeightTraining','Workout','Crossfit')
-          and a.start_date >= (case q.scope when 'harian' then date_trunc('day', now()) else date_trunc('week', now()) end))
+          and a.start_date >= (case q.scope
+            when 'harian' then date_trunc('day', v_now_wib) AT TIME ZONE 'Asia/Jakarta'
+            else date_trunc('week', v_now_wib) AT TIME ZONE 'Asia/Jakarta' end))
       else 0 end)::real,
     exists (
       select 1 from quest_claims c
       where c.athlete_id = v_athlete and c.quest_id = q.id
-        and c.period_key = (case q.scope when 'harian' then to_char(current_date,'YYYY-MM-DD') else to_char(current_date,'IYYY-"W"IW') end)
+        and c.period_key = (case q.scope
+          when 'harian' then to_char(v_now_wib::date, 'YYYY-MM-DD')
+          else to_char(v_now_wib::date, 'IYYY-"W"IW') end)
     )
   from quests q
   where q.active
   order by q.sort_order, q.id;
 end $$;
 
--- 6. RPC claim_quest() — verifikasi progress server-side, catat klaim, tambah XP
+-- 6. RPC claim_quest() — verifikasi progress server-side (WIB), catat klaim, tambah XP
 create or replace function claim_quest(p_quest_id bigint)
 returns integer
 language plpgsql security definer as $$
@@ -108,6 +121,8 @@ declare
   v_start timestamptz;
   v_progress real;
   v_new_xp integer;
+  -- jam dinding WIB (naive), dipakai untuk batas hari/minggu
+  v_now_wib timestamp := now() AT TIME ZONE 'Asia/Jakarta';
 begin
   select athlete_id into v_athlete from athletes where user_id = auth.uid();
   if v_athlete is null then raise exception 'Bukan peserta'; end if;
@@ -116,11 +131,11 @@ begin
   if not found then raise exception 'Quest tidak ditemukan'; end if;
 
   if v_quest.scope = 'harian' then
-    v_period := to_char(current_date, 'YYYY-MM-DD');
-    v_start  := date_trunc('day', now());
+    v_period := to_char(v_now_wib::date, 'YYYY-MM-DD');
+    v_start  := date_trunc('day', v_now_wib) AT TIME ZONE 'Asia/Jakarta';
   else
-    v_period := to_char(current_date, 'IYYY-"W"IW');
-    v_start  := date_trunc('week', now());
+    v_period := to_char(v_now_wib::date, 'IYYY-"W"IW');
+    v_start  := date_trunc('week', v_now_wib) AT TIME ZONE 'Asia/Jakarta';
   end if;
 
   if exists (select 1 from quest_claims where athlete_id = v_athlete and quest_id = p_quest_id and period_key = v_period) then

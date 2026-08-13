@@ -3,7 +3,7 @@
 // Semua field diturunkan dari kolom nyata (lihat docs/database-schema.md) — tidak ada
 // yang dikarang: tanpa best_efforts/splits_metric (tak disimpan), tanpa BMI/langkah/makro.
 import { supabase } from '../lib/supabase.js'
-import { isRun, kmFromMeters, speedToPace } from '../lib/normalize.js'
+import { isRun, kmFromMeters, speedToPace, daysAgoISO } from '../lib/normalize.js'
 
 function formatTanggal(iso) {
   return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
@@ -19,21 +19,22 @@ function effortZone(total) {
 export async function fetchHomeStats(athleteId) {
   if (!athleteId) return null
 
+  // Dibatasi 7 hari terakhir — semua statistik Home adalah ringkasan mingguan.
   const { data, error } = await supabase
     .from('activities')
     .select('*')
     .eq('athlete_id', athleteId)
+    .gte('start_date', daysAgoISO(7))
     .order('start_date', { ascending: false })
-    .limit(60)
+    .limit(200)
   if (error) throw error
 
-  const acts = data ?? []
-  const weekSince = new Date(Date.now() - 7 * 86400000).toISOString()
+  const acts = data ?? [] // sudah dalam jendela 7 hari — jadi `acts` = `week`
   const todayStr = new Date().toISOString().slice(0, 10)
 
-  const week = acts.filter((a) => a.start_date >= weekSince)
+  const week = acts
   const runs = acts.filter((a) => isRun(a.sport_type))
-  const weekRuns = week.filter((a) => isRun(a.sport_type))
+  const weekRuns = runs
   const last = acts[0] ?? null
   const lastRun = runs[0] ?? null
   const today = acts.filter((a) => (a.start_date || '').slice(0, 10) === todayStr)

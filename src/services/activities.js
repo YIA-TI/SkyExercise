@@ -1,17 +1,19 @@
 // src/services/activities.js
 import { supabase } from '../lib/supabase.js'
-import { normalizeActivity } from '../lib/normalize.js'
+import { normalizeActivity, daysAgoISO } from '../lib/normalize.js'
 
 const RUN = ['Run', 'TrailRun', 'VirtualRun']
 const GYM = ['WeightTraining', 'Workout', 'Crossfit']
 
 // filter: 'Semua' | 'Lari' | 'Gym'
-export async function fetchActivities({ athleteId, filter = 'Semua', limit = 50 }) {
+// Dibatasi ke 7 hari terakhir — "My Activity" adalah tampilan mingguan, bukan histori penuh.
+export async function fetchActivities({ athleteId, filter = 'Semua', limit = 100 }) {
   if (!athleteId) return []
   let q = supabase
     .from('activities')
     .select('*')
     .eq('athlete_id', athleteId)
+    .gte('start_date', daysAgoISO(7))
     .order('start_date', { ascending: false })
     .limit(limit)
 
