@@ -101,7 +101,7 @@ export async function fetchQuestSummary(startDateStr, endDateStr) {
     supabase.from('quests').select('id, title, scope, created_at').eq('active', true).order('sort_order', { ascending: true }),
     supabase.from('quest_claims').select('athlete_id, quest_id, period_key')
       .in('period_key', [...weeks.map((w) => w.periodKey), ...days]),
-    supabase.from('activities').select('athlete_id, start_date, sport_type')
+    supabase.from('activities').select('athlete_id, start_date, sport_type, distance')
       .gte('start_date', dateStrStartISO(startDateStr)).lte('start_date', dateStrEndISO(endDateStr)),
   ])
   if (athErr) throw athErr
@@ -112,13 +112,19 @@ export async function fetchQuestSummary(startDateStr, endDateStr) {
   // claimedSet key: `${athleteId}:${questId}:${periodKey}` (periodKey minggu ATAU tanggal harian)
   const claimedSet = new Set((claims ?? []).map((c) => `${c.athlete_id}:${c.quest_id}:${c.period_key}`))
 
-  // activeDaySet key: `${athleteId}:${'YYYY-MM-DD'}` — ada aktivitas lari/gym pada hari itu,
-  // lepas dari ada/tidaknya quest yang cocok.
-  const activeDaySet = new Set(
-    (acts ?? [])
-      .filter((a) => RUN.includes(a.sport_type) || GYM.includes(a.sport_type))
-      .map((a) => `${a.athlete_id}:${toDateStr(new Date(a.start_date))}`),
-  )
+  // dayActivityMap key: `${athleteId}:${'YYYY-MM-DD'}` -> { km, hasGym } — dari
+  // aktivitas lari/gym pada hari itu, lepas dari ada/tidaknya quest yang cocok.
+  const dayActivityMap = new Map()
+  ;(acts ?? []).forEach((a) => {
+    const isRun = RUN.includes(a.sport_type)
+    const isGym = GYM.includes(a.sport_type)
+    if (!isRun && !isGym) return
+    const key = `${a.athlete_id}:${toDateStr(new Date(a.start_date))}`
+    const entry = dayActivityMap.get(key) ?? { km: 0, hasGym: false }
+    if (isRun) entry.km += (a.distance || 0) / 1000
+    if (isGym) entry.hasGym = true
+    dayActivityMap.set(key, entry)
+  })
 
   const questList = quests ?? []
 
@@ -152,13 +158,21 @@ export async function fetchQuestSummary(startDateStr, endDateStr) {
       }
     })
 
-    // Kolom bonus: hari ada aktivitas lari/gym, independen dari quest apa pun.
-    const bonusPerWeek = weekDayLists.map((wd) => wd.filter((d) => activeDaySet.has(`${a.athlete_id}:${d}`)).length)
+    // Kolom bonus: hari ada aktivitas lari/gym + jaraknya, independen dari quest apa pun.
+    const dayDetail = (d) => {
+      const entry = dayActivityMap.get(`${a.athlete_id}:${d}`)
+      if (!entry) return null
+      return { dateStr: d, label: shortDate(new Date(`${d}T00:00:00`)), km: +entry.km.toFixed(1), hasGym: entry.hasGym }
+    }
+    const activeDays = days.map(dayDetail).filter(Boolean)
+    const totalKm = activeDays.reduce((s, d) => s + d.km, 0)
+    const bonusPerWeek = weekDayLists.map((wd) => wd.map(dayDetail).filter(Boolean))
     const bonusPerWeekTotal = weekDayLists.map((wd) => wd.length)
     questCols.push({
       questId: 'bonus-active-days', title: 'Hari Aktif (Bonus)', scope: 'bonus', unit: 'hari',
-      achieved: bonusPerWeek.reduce((s, n) => s + n, 0),
+      achieved: activeDays.length,
       total: days.length,
+      totalKm: +totalKm.toFixed(1),
       perWeek: bonusPerWeek,
       perWeekTotal: bonusPerWeekTotal,
     })

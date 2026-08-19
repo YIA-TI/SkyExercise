@@ -102,7 +102,8 @@
               </div>
               <div v-for="qc in pr.questCols" :key="qc.questId" class="qs-cell qs-cell--col">
                 <span class="qs-badge" :class="[badgeClassQuest(qc), { 'is-bonus': qc.scope === 'bonus' }]">
-                  {{ qc.total ? `${qc.achieved}/${qc.total} ${qc.unit}` : 'Belum ada' }}
+                  <template v-if="qc.scope === 'bonus'">{{ qc.achieved }} hari · {{ qc.totalKm }} km</template>
+                  <template v-else>{{ qc.total ? `${qc.achieved}/${qc.total} ${qc.unit}` : 'Belum ada' }}</template>
                 </span>
               </div>
             </div>
@@ -116,6 +117,12 @@
                     <span v-else-if="qc.perWeek[wi] === false" class="qs-dash">–</span>
                     <span v-else class="qs-na">n/a</span>
                   </template>
+                  <div v-else-if="qc.scope === 'bonus'" class="qs-bonus-days">
+                    <span v-for="d in qc.perWeek[wi]" :key="d.dateStr" class="qs-bonus-day">
+                      {{ d.label }}<template v-if="d.km > 0"> · {{ d.km }} km</template><template v-else-if="d.hasGym"> · Gym</template>
+                    </span>
+                    <span v-if="qc.perWeek[wi].length === 0" class="qs-dash">–</span>
+                  </div>
                   <span v-else-if="qc.perWeekTotal[wi] > 0" class="qs-week-count">{{ qc.perWeek[wi] }}/{{ qc.perWeekTotal[wi] }}</span>
                   <span v-else class="qs-na">n/a</span>
                 </div>
@@ -258,6 +265,11 @@ async function downloadQuestPdf() {
             if (qc.scope === 'mingguan') {
               if (qc.perWeek[wi] === null) return 'n/a'
               return qc.perWeek[wi] ? 'Tercapai' : '-'
+            }
+            if (qc.scope === 'bonus') {
+              const list = qc.perWeek[wi]
+              if (!list.length) return '-'
+              return list.map((d) => `${d.label}${d.km > 0 ? ` ${d.km}km` : d.hasGym ? ' Gym' : ''}`).join(', ')
             }
             return qc.perWeekTotal[wi] > 0 ? `${qc.perWeek[wi]}/${qc.perWeekTotal[wi]}` : 'n/a'
           }),
@@ -435,4 +447,7 @@ async function downloadQuestPdf() {
 .qs-dash { color: #d6cfc8; font-weight: 700; }
 .qs-week-count { font-size: 11.5px; font-weight: 700; color: #57534e; }
 .qs-na { font-size: 10.5px; font-style: italic; color: #d6cfc8; }
+
+.qs-bonus-days { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.qs-bonus-day { font-size: 10.5px; font-weight: 700; color: #7c3aed; white-space: nowrap; }
 </style>
