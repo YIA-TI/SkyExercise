@@ -19,7 +19,6 @@ import AdminAnggotaScreen    from '../components/AdminAnggotaScreen.vue'
 import AdminAnggotaDetailScreen from '../components/AdminAnggotaDetailScreen.vue'
 import AdminPeringkatScreen  from '../components/AdminPeringkatScreen.vue'
 import AdminQuestScreen      from '../components/AdminQuestScreen.vue'
-import AdminQuestSummaryScreen from '../components/AdminQuestSummaryScreen.vue'
 
 const routes = [
   // ── Publik ──────────────────────────────────────────────
@@ -43,7 +42,6 @@ const routes = [
   { path: '/admin/anggota/:id', name: 'AdminAnggotaDetail', component: AdminAnggotaDetailScreen, meta: { requiresAuth: true, role: 'admin' } },
   { path: '/admin/peringkat', name: 'AdminPeringkat',  component: AdminPeringkatScreen,  meta: { requiresAuth: true, role: 'admin' } },
   { path: '/admin/quests',    name: 'AdminQuest',      component: AdminQuestScreen,      meta: { requiresAuth: true, role: 'admin' } },
-  { path: '/admin/quests/ringkasan', name: 'AdminQuestSummary', component: AdminQuestSummaryScreen, meta: { requiresAuth: true, role: 'admin' } },
 
   // ── Fallback ────────────────────────────────────────────
   { path: '/:pathMatch(.*)*', redirect: '/' },

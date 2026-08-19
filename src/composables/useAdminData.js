@@ -7,7 +7,7 @@ import {
   fetchParticipants,
   fetchParticipantDetail,
 } from '../services/admin.js'
-import { fetchWeeklyQuestSummary } from '../services/questSummary.js'
+import { fetchQuestSummary } from '../services/questSummary.js'
 
 function useAsync(runner, deps = []) {
   const data = ref(null)
@@ -65,7 +65,7 @@ export function useAdminParticipantDetail(athleteId, range = {}) {
 export function useQuestSummary(range) {
   const { start, end } = range
   const { data, loading, error, refresh } = useAsync(
-    () => fetchWeeklyQuestSummary(unref(start), unref(end)),
+    () => fetchQuestSummary(unref(start), unref(end)),
     [() => unref(start), () => unref(end)],
   )
   return { summary: data, loading, error, refresh }
