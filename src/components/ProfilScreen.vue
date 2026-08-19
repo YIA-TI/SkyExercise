@@ -73,6 +73,11 @@
     <section class="mui-block">
       <h2 class="mui-section-title">Akun</h2>
       <div class="mui-card pf-list">
+        <button class="pf-row" type="button" @click="goDataTubuh">
+          <span class="pf-row-ic" v-html="icons.scale"></span>
+          <span class="pf-row-label">Edit Data Tubuh</span>
+          <svg class="pf-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
         <button class="pf-row" type="button" @click="goGantiPassword">
           <span class="pf-row-ic" v-html="icons.lock"></span>
           <span class="pf-row-label">Ganti Password</span>
@@ -134,6 +139,8 @@ import { authState, logout } from '../store/auth.js'
 import { distance as mockDistance } from '../store/stats.js'
 import { stravaState, disconnectStrava } from '../store/strava.js'
 import { useProfile, useHomeStats, useLeaderboard } from '../composables/useMemberData.js'
+import { calcBmi, bmiCategory } from '../lib/normalize.js'
+import { openBodyMetricsModal } from '../store/bodyMetricsModal.js'
 import MemberTabBar from './MemberTabBar.vue'
 
 const router = useRouter()
@@ -170,6 +177,10 @@ function goGantiPassword() {
   router.push('/profil/ganti-password')
 }
 
+function goDataTubuh() {
+  openBodyMetricsModal()
+}
+
 function goConnectStrava() {
   router.push('/strava/authorize')
 }
@@ -187,12 +198,16 @@ function handleDelete() {
   }
 }
 
+const bmi = computed(() => calcBmi(profile.value?.weight, profile.value?.height))
+const bmiLabel = computed(() => bmi.value != null ? `${bmi.value} · ${bmiCategory(bmi.value)}` : '—')
+
 const infoDiri = computed(() => [
   { label: 'Nama Lengkap', value: profile.value?.name || authState.userName || '—' },
   { label: 'Jenis Kelamin', value: profile.value?.sex === 'M' ? 'Laki-laki' : profile.value?.sex === 'F' ? 'Perempuan' : '—' },
   { label: 'Kota', value: profile.value?.city || '—' },
   { label: 'Negara', value: profile.value?.country || '—' },
   { label: 'Berat Badan', value: profile.value?.weight ? `${profile.value.weight} kg` : '—' },
+  { label: 'Tinggi Badan', value: profile.value?.height ? `${profile.value.height} cm` : '—' },
 ])
 
 const quickStats = computed(() => [
@@ -208,9 +223,14 @@ const quickStats = computed(() => [
     label: 'Peringkat Effort', value: effortRank.value, cls: 'is-green',
     icon: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
   },
+  {
+    label: 'BMI', value: bmiLabel.value, cls: 'is-purple',
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/></svg>',
+  },
 ])
 
 const icons = {
+  scale: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/></svg>',
   lock: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
   shield: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
   trash: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>',
@@ -318,6 +338,7 @@ const icons = {
 .pf-quick-ic.is-orange { background: #ffedd5; color: #ea580c; }
 .pf-quick-ic.is-blue   { background: #ccfbf1; color: #0f766e; }
 .pf-quick-ic.is-green  { background: #d1fae5; color: #059669; }
+.pf-quick-ic.is-purple { background: #ede9fe; color: #7c3aed; }
 
 .pf-quick-value { margin: 0; font-size: 17px; font-weight: 700; color: #1c1917; letter-spacing: -0.3px; }
 .pf-quick-label { margin: 2px 0 0; font-size: 10.5px; color: #a8a29e; }

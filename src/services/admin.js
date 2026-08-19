@@ -1,7 +1,15 @@
 // src/services/admin.js
 // Layanan untuk admin (RLS: is_admin() → akses semua peserta).
 import { supabase } from '../lib/supabase.js'
-import { normalizeActivity, daysAgoISO } from '../lib/normalize.js'
+import { normalizeActivity, daysAgoDateStr, toDateStr, dateStrStartISO, dateStrEndISO } from '../lib/normalize.js'
+
+// Rentang tanggal default kalau admin belum memilih filter — 7 hari terakhir.
+function resolveRange({ start, end } = {}) {
+  return {
+    startISO: dateStrStartISO(start || daysAgoDateStr(7)),
+    endISO: dateStrEndISO(end || toDateStr(new Date())),
+  }
+}
 
 const RUN = ['Run', 'TrailRun', 'VirtualRun']
 
@@ -30,12 +38,14 @@ export async function fetchDivisionSummary() {
   }
 }
 
-// Dibatasi 7 hari terakhir — feed "aktivitas terbaru" adalah ringkasan mingguan.
-export async function fetchRecentActivitiesAll(limit = 10) {
+// Akses histori penuh — dibatasi lewat filter tanggal (default 7 hari terakhir).
+export async function fetchRecentActivitiesAll(limit = 10, range) {
+  const { startISO, endISO } = resolveRange(range)
   const { data, error } = await supabase
     .from('activities')
     .select('*, athletes(firstname, lastname)')
-    .gte('start_date', daysAgoISO(7))
+    .gte('start_date', startISO)
+    .lte('start_date', endISO)
     .order('start_date', { ascending: false })
     .limit(limit)
   if (error) throw error
@@ -59,17 +69,19 @@ export async function fetchParticipants() {
   }))
 }
 
-export async function fetchParticipantDetail(athleteId) {
+export async function fetchParticipantDetail(athleteId, range) {
+  const { startISO, endISO } = resolveRange(range)
   const [{ data: prof }, { data: acts }] = await Promise.all([
     supabase.from('athletes').select('*').eq('athlete_id', athleteId).maybeSingle(),
-    // Dibatasi 7 hari terakhir — konsisten dengan tampilan mingguan di seluruh app.
+    // Akses histori penuh dalam rentang filter (default 7 hari terakhir).
     supabase.from('activities').select('*').eq('athlete_id', athleteId)
-      .gte('start_date', daysAgoISO(7))
-      .order('start_date', { ascending: false }).limit(100),
+      .gte('start_date', startISO)
+      .lte('start_date', endISO)
+      .order('start_date', { ascending: false }).limit(1000),
   ])
   return {
     profile: prof
-      ? { athleteId: prof.athlete_id, name: nameOf(prof), city: prof.city, avatar: prof.profile_photo, weight: prof.weight }
+      ? { athleteId: prof.athlete_id, name: nameOf(prof), city: prof.city, avatar: prof.profile_photo, weight: prof.weight, height: prof.height }
       : null,
     activities: (acts ?? []).map(normalizeActivity),
   }

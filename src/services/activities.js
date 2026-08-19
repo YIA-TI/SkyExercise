@@ -1,19 +1,18 @@
 // src/services/activities.js
 import { supabase } from '../lib/supabase.js'
-import { normalizeActivity, daysAgoISO } from '../lib/normalize.js'
+import { normalizeActivity } from '../lib/normalize.js'
 
 const RUN = ['Run', 'TrailRun', 'VirtualRun']
 const GYM = ['WeightTraining', 'Workout', 'Crossfit']
 
 // filter: 'Semua' | 'Lari' | 'Gym'
-// Dibatasi ke 7 hari terakhir — "My Activity" adalah tampilan mingguan, bukan histori penuh.
-export async function fetchActivities({ athleteId, filter = 'Semua', limit = 100 }) {
+// Tanpa batas waktu — "My Activity" menampilkan seluruh histori (selaras batas backfill strava-sync: 1000).
+export async function fetchActivities({ athleteId, filter = 'Semua', limit = 1000 }) {
   if (!athleteId) return []
   let q = supabase
     .from('activities')
     .select('*')
     .eq('athlete_id', athleteId)
-    .gte('start_date', daysAgoISO(7))
     .order('start_date', { ascending: false })
     .limit(limit)
 

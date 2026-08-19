@@ -24,6 +24,12 @@
         </div>
       </div>
 
+      <!-- Filter tanggal — jadi dasar semua ringkasan & daftar di bawah -->
+      <section class="mui-block">
+        <h2 class="mui-section-title">Periode</h2>
+        <DateRangeFilter v-model:start="filterStart" v-model:end="filterEnd" />
+      </section>
+
       <!-- Ringkasan cepat -->
       <div class="ins-quick-row">
         <div v-for="q in quickStats" :key="q.label" class="ins-quick">
@@ -35,15 +41,16 @@
         </div>
       </div>
 
-      <!-- Grafik jarak mingguan -->
+      <!-- Grafik jarak per sesi lari (dalam periode dipilih) -->
       <section class="mui-block">
-        <h2 class="mui-section-title">Jarak 7 Hari Terakhir</h2>
+        <h2 class="mui-section-title">Jarak per Sesi Lari</h2>
         <div class="mui-card">
           <div class="ins-chart">
             <div v-for="(h, i) in member.bars" :key="i" class="ins-chart-col">
               <span class="ins-chart-bar" :style="{ height: h + '%' }"></span>
-              <span class="ins-chart-label">{{ dayLabels[i] }}</span>
+              <span class="ins-chart-label">{{ member.barLabels[i] }}</span>
             </div>
+            <p v-if="member.bars.length === 0" class="ins-act-empty">Tidak ada sesi lari pada periode ini.</p>
           </div>
         </div>
       </section>
@@ -111,24 +118,30 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAdminParticipantDetail } from '../composables/useAdminData.js'
+import { calcBmi, bmiCategory, daysAgoDateStr, toDateStr } from '../lib/normalize.js'
 import AdminTabBar from './AdminTabBar.vue'
+import DateRangeFilter from './DateRangeFilter.vue'
 
 const route = useRoute()
 const router = useRouter()
 
 const athleteId = computed(() => Number(route.params.id))
-const { detail } = useAdminParticipantDetail(athleteId)
+const filterStart = ref(daysAgoDateStr(7))
+const filterEnd = ref(toDateStr(new Date()))
+const { detail } = useAdminParticipantDetail(athleteId, { start: filterStart, end: filterEnd })
 
-// Bentuk `member` dari data nyata (profil + aktivitas), lengkap dengan agregat ringkas.
+const MAX_BARS = 14 // batasi jumlah bar biar grafik tak melebar tak terkendali di rentang panjang
+
+// Bentuk `member` dari data nyata (profil + aktivitas dalam periode filter), lengkap
+// dengan agregat ringkas — semuanya mengikuti rentang tanggal yang dipilih admin.
 const member = computed(() => {
   const d = detail.value
   if (!d?.profile) return null
   const acts = d.activities || []
   const runs = acts.filter((a) => a.type === 'run')
-  const weekSince = Date.now() - 7 * 86400000
-  const weekRuns = runs.filter((a) => new Date(a.startDate).getTime() >= weekSince)
-  const weekKm = weekRuns.reduce((s, a) => s + (a.distanceKm || 0), 0)
-  const maxKm = Math.max(1, ...weekRuns.map((a) => a.distanceKm || 0))
+  const distanceKm = runs.reduce((s, a) => s + (a.distanceKm || 0), 0)
+  const maxKm = Math.max(1, ...runs.map((a) => a.distanceKm || 0))
+  const barRuns = runs.slice(0, MAX_BARS).reverse()
   const last = acts[0]
   return {
     name: d.profile.name,
@@ -138,11 +151,13 @@ const member = computed(() => {
     memberId: `#${d.profile.athleteId}`,
     weight: d.profile.weight ? `${d.profile.weight} kg` : '—',
     joined: '—',
-    bars: weekRuns.slice(0, 7).reverse().map((a) => Math.round(((a.distanceKm || 0) / maxKm) * 100)),
+    bars: barRuns.map((a) => Math.round(((a.distanceKm || 0) / maxKm) * 100)),
+    barLabels: barRuns.map((a) => new Date(a.startDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })),
     stats: {
-      weekKm: weekKm.toFixed(1),
+      distanceKm: distanceKm.toFixed(1),
       avgHr: last?.avgHeartrate ? Math.round(last.avgHeartrate) : '—',
       effort: last?.sufferScore ?? '—',
+      bmi: calcBmi(d.profile.weight, d.profile.height),
     },
     activities: acts.map((a) => ({
       type: a.type === 'run' ? 'Lari' : 'Gym',
@@ -163,8 +178,6 @@ function kembali() {
   router.push('/admin/anggota')
 }
 
-const dayLabels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
-
 const icons = {
   run: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
   gym: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/></svg>',
@@ -177,9 +190,10 @@ const quickStats = computed(() => {
   if (!member.value) return []
   const s = member.value.stats
   return [
-    { label: 'Km Minggu Ini', value: s.weekKm, cls: 'is-orange', icon: icons.distance },
+    { label: 'Km pada Periode', value: s.distanceKm, cls: 'is-orange', icon: icons.distance },
     { label: 'Rata HR (bpm)', value: String(s.avgHr), cls: 'is-blue', icon: icons.heart },
     { label: 'Relative Effort', value: String(s.effort), cls: 'is-green', icon: icons.effort },
+    { label: 'BMI', value: s.bmi != null ? `${s.bmi} · ${bmiCategory(s.bmi)}` : '—', cls: 'is-purple', icon: icons.gym },
   ]
 })
 
@@ -286,6 +300,7 @@ const visibleActivities = computed(() =>
 .ins-quick-ic.is-orange { background: #ffedd5; color: #ea580c; }
 .ins-quick-ic.is-blue   { background: #ccfbf1; color: #0f766e; }
 .ins-quick-ic.is-green  { background: #d1fae5; color: #059669; }
+.ins-quick-ic.is-purple { background: #ede9fe; color: #7c3aed; }
 
 .ins-quick-value { margin: 0; font-size: 18px; font-weight: 700; color: #1c1917; letter-spacing: -0.3px; }
 .ins-quick-label { margin: 2px 0 0; font-size: 11px; color: #a8a29e; }

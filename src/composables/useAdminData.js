@@ -7,6 +7,7 @@ import {
   fetchParticipants,
   fetchParticipantDetail,
 } from '../services/admin.js'
+import { fetchWeeklyQuestSummary } from '../services/questSummary.js'
 
 function useAsync(runner, deps = []) {
   const data = ref(null)
@@ -28,9 +29,14 @@ function useAsync(runner, deps = []) {
   return { data, loading, error, refresh }
 }
 
-export function useAdminMonitoring() {
+// range: { start, end } — ref/getter opsional 'YYYY-MM-DD'. Kosong = default 7 hari terakhir.
+export function useAdminMonitoring(range = {}) {
+  const { start, end } = range
   const summary = useAsync(fetchDivisionSummary)
-  const recent = useAsync(() => fetchRecentActivitiesAll(10))
+  const recent = useAsync(
+    () => fetchRecentActivitiesAll(10, { start: unref(start), end: unref(end) }),
+    [() => unref(start), () => unref(end)],
+  )
   return {
     summary: summary.data,
     recent: recent.data,
@@ -45,10 +51,22 @@ export function useAdminParticipants() {
   return { participants: data, loading, error, refresh }
 }
 
-export function useAdminParticipantDetail(athleteId) {
+// range: { start, end } — ref/getter opsional 'YYYY-MM-DD'. Kosong = default 7 hari terakhir.
+export function useAdminParticipantDetail(athleteId, range = {}) {
+  const { start, end } = range
   const { data, loading, error, refresh } = useAsync(
-    () => fetchParticipantDetail(unref(athleteId)),
-    [() => unref(athleteId)],
+    () => fetchParticipantDetail(unref(athleteId), { start: unref(start), end: unref(end) }),
+    [() => unref(athleteId), () => unref(start), () => unref(end)],
   )
   return { detail: data, loading, error, refresh }
+}
+
+// range: { start, end } — ref/getter wajib 'YYYY-MM-DD' (dipakai hitung daftar minggu ISO).
+export function useQuestSummary(range) {
+  const { start, end } = range
+  const { data, loading, error, refresh } = useAsync(
+    () => fetchWeeklyQuestSummary(unref(start), unref(end)),
+    [() => unref(start), () => unref(end)],
+  )
+  return { summary: data, loading, error, refresh }
 }

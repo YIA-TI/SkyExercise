@@ -12,6 +12,12 @@
       <span class="mui-pill">{{ quests.length }} Quest</span>
     </header>
 
+    <button class="qf-summary-link" type="button" @click="goRingkasan">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Lihat Ringkasan Quest Mingguan
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+
     <!-- Form tambah quest -->
     <section class="mui-block">
       <h2 class="mui-section-title">Tambah Quest</h2>
@@ -46,6 +52,7 @@
               <option value="run_distance">Jarak lari (km)</option>
               <option value="run_sessions">Jumlah sesi lari</option>
               <option value="gym_sessions">Jumlah sesi gym</option>
+              <option value="gym_duration">Durasi gym (menit)</option>
             </select>
           </label>
         </div>
@@ -103,9 +110,15 @@
 
 <script setup>
 import { reactive, ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { authState } from '../store/auth.js'
 import { useAdminQuests } from '../composables/useAdminQuests.js'
 import AdminTabBar from './AdminTabBar.vue'
+
+const router = useRouter()
+function goRingkasan() {
+  router.push('/admin/quests/ringkasan')
+}
 
 const initials = computed(() =>
   (authState.userName || 'Admin').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
@@ -130,6 +143,7 @@ const METRIC_LABELS = {
   run_distance: 'Jarak lari',
   run_sessions: 'Sesi lari',
   gym_sessions: 'Sesi gym',
+  gym_duration: 'Durasi gym',
 }
 function metricLabel(m) { return METRIC_LABELS[m] || m }
 
@@ -187,6 +201,14 @@ async function hapus(q) {
 .qf-submit:disabled { opacity: 0.6; cursor: default; }
 .qf-error { margin: 0; color: #dc2626; font-size: 12.5px; font-weight: 600; }
 .qf-muted { color: #a8a29e; font-size: 13px; }
+
+.qf-summary-link {
+  display: inline-flex; align-items: center; gap: 8px; align-self: flex-start;
+  border: 1.5px solid #ece7e2; cursor: pointer; font-family: inherit;
+  font-size: 13px; font-weight: 700; color: #57534e; padding: 10px 16px; border-radius: 12px;
+  background: #ffffff; transition: border-color 0.15s ease, color 0.15s ease;
+}
+.qf-summary-link:hover { border-color: #fc4c02; color: #fc4c02; }
 
 .ql-list { display: flex; flex-direction: column; gap: 10px; }
 .ql-item {

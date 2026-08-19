@@ -48,6 +48,15 @@
       <button v-else class="strava-sync" type="button" @click="goConnectStrava">Hubungkan</button>
     </div>
 
+    <!-- Reminder mingguan: update berat badan -->
+    <div v-if="showWeightReminder" class="weight-reminder">
+      <span class="weight-reminder-text">Sudah 7 hari — update berat badan kamu untuk BMI yang akurat.</span>
+      <div class="weight-reminder-actions">
+        <button class="weight-reminder-btn" type="button" @click="goUpdateWeight">Update</button>
+        <button class="weight-reminder-dismiss" type="button" aria-label="Tutup" @click="dismissWeightReminder">✕</button>
+      </div>
+    </div>
+
     <!-- Statistik — coverflow 3D, putar & pilih -->
     <section class="stats-wrap">
       <div class="stats-head">
@@ -197,6 +206,7 @@
 import { ref, computed, watch, onBeforeUnmount, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { authState } from '../store/auth.js'
+import { openBodyMetricsModal } from '../store/bodyMetricsModal.js'
 import {
   distance as mockDistance,
   heartRate as mockHeartRate,
@@ -235,6 +245,18 @@ async function handleSync() {
 
 function goConnectStrava() {
   router.push('/strava/authorize')
+}
+
+// ── Reminder mingguan: update berat badan (dismiss hanya untuk sesi ini) ──
+const weightReminderDismissed = ref(false)
+const showWeightReminder = computed(() =>
+  authState.needsWeightReminder && !weightReminderDismissed.value,
+)
+function dismissWeightReminder() {
+  weightReminderDismissed.value = true
+}
+function goUpdateWeight() {
+  openBodyMetricsModal()
 }
 
 function goRincian(id) {
@@ -366,7 +388,7 @@ const gymIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" 
 const filters = ['Semua', 'Lari', 'Gym']
 const activeFilter = ref('Semua')
 
-// Aktivitas nyata dari Strava (7 hari terakhir, difilter server-side lewat composable).
+// Aktivitas nyata dari Strava (seluruh histori, difilter server-side lewat composable).
 const { activities: rawActivities, refresh: refreshActivities } = useActivities(activeFilter)
 
 const filteredActivities = computed(() =>
@@ -404,17 +426,55 @@ const visibleActivities = computed(() =>
   --card-depth: 180px; /* kedalaman Z per slot */
   --card-rot: 44deg;   /* rotasi Y per slot */
 
+  position: relative;
+  z-index: 0;
   min-height: 100vh;
   width: 100%;
   display: flex;
   justify-content: center;
-  background:
-    radial-gradient(820px 360px at 100% -6%, rgba(252, 76, 2, 0.10), transparent 60%),
-    radial-gradient(720px 400px at -12% 108%, rgba(13, 148, 136, 0.07), transparent 55%),
-    #ece7e2;
+  /* Latar bold ala peta rute Strava — grain + gradient besar & jenuh, plus drift
+     lambat supaya terasa hidup. Garis diagonal (::before) & motif rute (::after)
+     ada di lapisan terpisah supaya masing-masing bisa berdenyut (pulse) sendiri. */
+  background-image:
+    var(--grain),
+    radial-gradient(880px 440px at 100% -8%, rgba(252, 76, 2, 0.22), transparent 62%),
+    radial-gradient(800px 480px at -10% 108%, rgba(13, 148, 136, 0.16), transparent 58%);
+  background-color: #ece7e2;
+  background-repeat: repeat, no-repeat, no-repeat;
+  background-size: 180px 180px, auto, auto;
   background-attachment: fixed;
+  animation: bg-drift 18s ease-in-out infinite;
   font-family: "Manrope", "Barlow", system-ui, sans-serif;
   box-sizing: border-box;
+}
+
+/* Garis diagonal ganda (oranye/teal, saling silang) — lapisan terpisah supaya
+   bisa berdenyut (pulse) sendiri, kesan "detak" energi ala Strava. */
+.aeroguard-home::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(135deg, rgba(252, 76, 2, 0.09) 0, rgba(252, 76, 2, 0.09) 3px, transparent 3px, transparent 46px),
+    repeating-linear-gradient(45deg, rgba(13, 148, 136, 0.06) 0, rgba(13, 148, 136, 0.06) 2px, transparent 2px, transparent 70px);
+  animation: stripe-pulse 3s ease-in-out infinite;
+}
+
+/* Motif rute GPS di sudut — lapisan terpisah dengan ritme pulse sendiri (denyut
+   live-tracking), letaknya tak ikut drift latar utama. */
+.aeroguard-home::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--route-line);
+  background-repeat: no-repeat;
+  background-size: 640px 640px;
+  background-position: 110% 110%;
+  animation: route-pulse 2.5s ease-in-out infinite;
 }
 
 /* Layar kecil: kartu & gap lebih sempit */
@@ -585,6 +645,28 @@ const visibleActivities = computed(() =>
 .aeroguard-home .strava-sync-ic.is-spinning { animation: strava-spin 0.9s linear infinite; }
 @keyframes strava-spin { to { transform: rotate(360deg); } }
 
+/* ----- Reminder mingguan: berat badan ----- */
+.aeroguard-home .weight-reminder {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #fff2e8;
+  color: #c2410c;
+}
+.aeroguard-home .weight-reminder-text { flex: 1; min-width: 0; font-size: 12.5px; font-weight: 600; }
+.aeroguard-home .weight-reminder-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.aeroguard-home .weight-reminder-btn {
+  border: none; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 700;
+  color: #ffffff; padding: 8px 14px; border-radius: 10px;
+  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+}
+.aeroguard-home .weight-reminder-dismiss {
+  border: none; background: none; cursor: pointer; color: #c2410c; font-size: 13px;
+  padding: 4px; line-height: 1;
+}
+
 /* ----- Section wrap ----- */
 .aeroguard-home .stats-wrap { display: flex; flex-direction: column; gap: 12px; }
 .aeroguard-home .stats-head { display: flex; align-items: center; justify-content: space-between; }
@@ -604,6 +686,10 @@ const visibleActivities = computed(() =>
   touch-action: pan-y;
   user-select: none;
   overflow: hidden;  /* clip kartu yang keluar viewport */
+  /* Kartu samping memudar sebelum kena batas overflow, jadi terlihat "menghilang
+     halus" bukan "terpotong" tajam di tepi. */
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
 }
 .aeroguard-home .sphere-stage {
   position: absolute;

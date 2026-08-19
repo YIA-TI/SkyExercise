@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "shadcn-vue": "^2.8.0",
     "vue": "^3.5.38",
     "vue-router": "^4.6.4"

@@ -4,18 +4,55 @@
    ───────────────────────────────────────────────────────── */
 
 .mui {
+  position: relative;
+  z-index: 0;
   min-height: 100vh;
   width: 100%;
   display: flex;
   justify-content: center;
-  /* Aksen latar halus — tak polos */
-  background:
-    radial-gradient(760px 340px at 100% -6%, rgba(252, 76, 2, 0.10), transparent 60%),
-    radial-gradient(680px 380px at -12% 108%, rgba(13, 148, 136, 0.07), transparent 55%),
-    #ece7e2;
+  /* Latar bold ala peta rute Strava — grain + gradient besar & jenuh, plus drift
+     lambat supaya terasa hidup. Garis diagonal (::before) & motif rute (::after)
+     ada di lapisan terpisah supaya masing-masing bisa berdenyut (pulse) sendiri. */
+  background-image:
+    var(--grain),
+    radial-gradient(820px 420px at 100% -8%, rgba(252, 76, 2, 0.22), transparent 62%),
+    radial-gradient(760px 460px at -10% 108%, rgba(13, 148, 136, 0.16), transparent 58%);
+  background-color: #ece7e2;
+  background-repeat: repeat, no-repeat, no-repeat;
+  background-size: 180px 180px, auto, auto;
   background-attachment: fixed;
+  animation: bg-drift 18s ease-in-out infinite;
   font-family: "Manrope", "Barlow", system-ui, sans-serif;
   box-sizing: border-box;
+}
+
+/* Garis diagonal ganda (oranye/teal, saling silang) — lapisan terpisah supaya
+   bisa berdenyut (pulse) sendiri, kesan "detak" energi ala Strava. */
+.mui::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(135deg, rgba(252, 76, 2, 0.09) 0, rgba(252, 76, 2, 0.09) 3px, transparent 3px, transparent 46px),
+    repeating-linear-gradient(45deg, rgba(13, 148, 136, 0.06) 0, rgba(13, 148, 136, 0.06) 2px, transparent 2px, transparent 70px);
+  animation: stripe-pulse 3s ease-in-out infinite;
+}
+
+/* Motif rute GPS di sudut — lapisan terpisah dengan ritme pulse sendiri (denyut
+   live-tracking), letaknya tak ikut drift latar utama. */
+.mui::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--route-line);
+  background-repeat: no-repeat;
+  background-size: 640px 640px;
+  background-position: 110% 110%;
+  animation: route-pulse 2.5s ease-in-out infinite;
 }
 
 .mui-col {

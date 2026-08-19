@@ -7,6 +7,8 @@
 import { reactive, readonly } from 'vue'
 import { supabase } from '../lib/supabase.js'
 
+const WEIGHT_REMINDER_DAYS = 7
+
 const state = reactive({
   isLoggedIn: false,
   userRole: null, // 'admin' | 'anggota' | null
@@ -15,6 +17,8 @@ const state = reactive({
   athleteId: null,
   userId: null,
   loading: true,
+  needsBodyMetrics: false,  // peserta belum isi weight/height sama sekali
+  needsWeightReminder: false, // sudah isi, tapi weight_updated_at > 7 hari
 })
 
 // Tentukan peran + profil dari sesi Supabase.
@@ -35,13 +39,15 @@ async function resolveRole(session) {
     state.userEmail = adminRow.email || session.user.email || ''
     state.athleteId = null
     state.isLoggedIn = true
+    state.needsBodyMetrics = false
+    state.needsWeightReminder = false
     return
   }
 
   // Peserta: cari atlet yang tertaut ke user ini.
   const { data: ath } = await supabase
     .from('athletes')
-    .select('athlete_id, firstname, lastname')
+    .select('athlete_id, firstname, lastname, weight, height, weight_updated_at')
     .eq('user_id', uid)
     .maybeSingle()
 
@@ -50,6 +56,11 @@ async function resolveRole(session) {
   state.userName = ath ? `${ath.firstname ?? ''} ${ath.lastname ?? ''}`.trim() : (session.user.email || '')
   state.userEmail = session.user.email || ''
   state.isLoggedIn = true
+  state.needsBodyMetrics = !ath?.weight || !ath?.height
+  state.needsWeightReminder = !state.needsBodyMetrics && (
+    !ath.weight_updated_at ||
+    Date.now() - new Date(ath.weight_updated_at).getTime() > WEIGHT_REMINDER_DAYS * 86400000
+  )
 
   // Segarkan status koneksi Strava (dynamic import agar tak ada siklus di top-level).
   import('./strava.js').then((m) => m.refreshStravaStatus()).catch(() => {})
@@ -65,6 +76,8 @@ async function applySession(session) {
     state.userEmail = ''
     state.athleteId = null
     state.userId = null
+    state.needsBodyMetrics = false
+    state.needsWeightReminder = false
   }
 }
 

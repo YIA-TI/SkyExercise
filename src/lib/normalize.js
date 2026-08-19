@@ -45,6 +45,36 @@ export function daysAgoISO(n) {
   return new Date(Date.now() - n * 86400000).toISOString()
 }
 
+// ISO timestamp awal bulan berjalan (waktu lokal) — dipakai untuk membatasi
+// query aktivitas ke bulan berjalan.
+export function startOfMonthISO() {
+  const d = new Date()
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString()
+}
+
+// Date → "YYYY-MM-DD" (waktu lokal) — dipakai sebagai value <input type="date">.
+export function toDateStr(d) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+// "YYYY-MM-DD" N hari ke belakang dari hari ini — default filter tanggal admin.
+export function daysAgoDateStr(n) {
+  return toDateStr(new Date(Date.now() - n * 86400000))
+}
+
+// "YYYY-MM-DD" → ISO timestamp awal hari (00:00:00 lokal) — batas bawah query.
+export function dateStrStartISO(dateStr) {
+  return new Date(`${dateStr}T00:00:00`).toISOString()
+}
+
+// "YYYY-MM-DD" → ISO timestamp akhir hari (23:59:59.999 lokal) — batas atas query.
+export function dateStrEndISO(dateStr) {
+  return new Date(`${dateStr}T23:59:59.999`).toISOString()
+}
+
 // ISO timestamp → "3 Agu, 06:15" (tanggal + jam lokal, dipakai di daftar aktivitas).
 export function formatDateTime(iso) {
   if (!iso) return '—'
@@ -63,8 +93,25 @@ export function normalizeProfile(row) {
     city: row.city,
     country: row.country,
     weight: row.weight,
+    height: row.height,
+    weightUpdatedAt: row.weight_updated_at,
     avatar: row.profile_photo,
   }
+}
+
+// BMI dari berat (kg) & tinggi (cm) — rentang standar WHO dewasa.
+export function calcBmi(weightKg, heightCm) {
+  if (!weightKg || !heightCm) return null
+  const heightM = heightCm / 100
+  return +(weightKg / (heightM * heightM)).toFixed(1)
+}
+
+export function bmiCategory(bmi) {
+  if (bmi == null) return null
+  if (bmi < 18.5) return 'Kurus'
+  if (bmi < 25) return 'Normal'
+  if (bmi < 30) return 'Gemuk'
+  return 'Obesitas'
 }
 
 export function normalizeActivity(row) {

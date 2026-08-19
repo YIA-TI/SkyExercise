@@ -12,3 +12,12 @@ export async function fetchProfile(athleteId) {
   if (error) throw error
   return data ? normalizeProfile(data) : null
 }
+
+// Peserta memperbarui berat/tinggi sendiri lewat RPC security-definer.
+export async function updateBodyMetrics(weightKg, heightCm) {
+  const { error } = await supabase.rpc('update_my_body_metrics', {
+    p_weight: weightKg,
+    p_height: heightCm,
+  })
+  if (error) throw error
+}

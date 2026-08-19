@@ -29,6 +29,7 @@
     <!-- Aktivitas terbaru -->
     <section class="mui-block">
       <h2 class="mui-section-title">Aktivitas Latihan Terbaru</h2>
+      <DateRangeFilter v-model:start="filterStart" v-model:end="filterEnd" />
       <div class="ad-list">
         <article
           v-for="a in recentActivities"
@@ -59,11 +60,13 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { authState } from '../store/auth.js'
 import { useAdminMonitoring } from '../composables/useAdminData.js'
+import { daysAgoDateStr, toDateStr } from '../lib/normalize.js'
 import AdminTabBar from './AdminTabBar.vue'
+import DateRangeFilter from './DateRangeFilter.vue'
 
 const router = useRouter()
 
@@ -77,7 +80,10 @@ const initials = computed(() =>
   displayName.value.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
 )
 
-const { summary, recent } = useAdminMonitoring()
+const filterStart = ref(daysAgoDateStr(7))
+const filterEnd = ref(toDateStr(new Date()))
+
+const { summary, recent } = useAdminMonitoring({ start: filterStart, end: filterEnd })
 
 const ICONS = {
   members: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
