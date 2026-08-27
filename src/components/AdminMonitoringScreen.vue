@@ -78,7 +78,7 @@
         lari/gym meski tanpa quest yang cocok — nilai plus di luar sistem quest.
       </p>
 
-      <div v-if="questLoading" class="qs-table-wrap qs-table-wrap--skel">
+      <div v-if="questLoading" class="qs-list qs-list--skel">
         <div v-for="i in 5" :key="i" class="qs-skel-row">
           <div class="mui-skel mui-skel--text" style="width: 38%;"></div>
           <div class="mui-skel" style="width: 70px; height: 22px; border-radius: 999px;"></div>
@@ -89,46 +89,33 @@
       <template v-else-if="questSummaryData">
         <p v-if="questProgressRows.length === 0" class="qf-muted">Belum ada personil terdaftar.</p>
 
-        <div v-else class="qs-table-wrap" :style="{ '--quest-count': columnDefs.length }">
-          <div class="qs-row qs-row--head">
-            <div class="qs-cell qs-cell--name">Nama</div>
-            <div v-for="col in columnDefs" :key="col.questId" class="qs-cell qs-cell--col" :class="{ 'is-bonus': col.scope === 'bonus' }">
-              {{ col.title }}
-              <span v-if="col.scope !== 'bonus'" class="qs-col-scope">
-                {{ col.scope === 'mingguan' ? 'Mingguan' : 'Harian' }}<template v-if="col.periodLabel"> · {{ col.periodLabel }}</template>
-              </span>
-            </div>
-          </div>
-
+        <div v-else class="qs-list">
           <template v-for="pr in questProgressRows" :key="pr.athleteId">
             <div
-              class="qs-row qs-row--athlete"
+              class="qs-athlete-row"
               role="button"
               tabindex="0"
               @click="toggleQuestExpand(pr.athleteId)"
               @keyup.enter="toggleQuestExpand(pr.athleteId)"
             >
-              <div class="qs-cell qs-cell--name">
-                <svg
-                  class="qs-chevron"
-                  :class="{ 'is-open': expandedIds.has(pr.athleteId) }"
-                  xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                ><polyline points="9 18 15 12 9 6"/></svg>
-                {{ pr.name }}
-              </div>
-              <div v-for="qc in pr.questCols" :key="qc.questId" class="qs-cell qs-cell--col">
-                <span class="qs-badge" :class="[badgeClassQuest(qc), { 'is-bonus': qc.scope === 'bonus' }]">
-                  <span v-if="qc.scope !== 'bonus'" class="qs-badge-dot"></span>
-                  <template v-if="qc.scope === 'bonus'">{{ qc.achieved }} hari · {{ qc.totalKm }} km</template>
-                  <template v-else>{{ qc.total ? `${qc.achieved}/${qc.total} ${qc.unit}` : 'Belum ada' }}</template>
-                </span>
-              </div>
+              <svg
+                class="qs-chevron"
+                :class="{ 'is-open': expandedIds.has(pr.athleteId) }"
+                xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+              ><polyline points="9 18 15 12 9 6"/></svg>
+              <span class="qs-athlete-name">{{ pr.name }}</span>
+              <span class="mui-tag mui-tag--gray">{{ athleteSummary(pr).done }}/{{ athleteSummary(pr).total }} selesai</span>
             </div>
 
             <template v-if="expandedIds.has(pr.athleteId)">
               <div class="qs-quest-list">
                 <div v-for="qc in pr.questCols" :key="qc.questId" class="qs-quest-item">
-                  <span class="qs-quest-item-name">{{ qc.title }}</span>
+                  <div class="qs-quest-item-info">
+                    <span class="qs-quest-item-name">{{ qc.title }}</span>
+                    <span v-if="qc.scope !== 'bonus'" class="qs-quest-item-scope">
+                      {{ qc.scope === 'mingguan' ? 'Mingguan' : 'Harian' }}<template v-if="columnMetaById.get(qc.questId)?.periodLabel"> · {{ columnMetaById.get(qc.questId).periodLabel }}</template>
+                    </span>
+                  </div>
                   <span class="qs-badge" :class="[badgeClassQuest(qc), { 'is-bonus': qc.scope === 'bonus' }]">
                     <span v-if="qc.scope !== 'bonus'" class="qs-badge-dot"></span>
                     <template v-if="qc.scope === 'bonus'">{{ qc.achieved }} hari · {{ qc.totalKm }} km</template>
@@ -203,6 +190,17 @@ function badgeClassQuest(qc) {
   if (qc.achieved === 0) return 'is-none'
   if (qc.achieved === qc.total) return 'is-full'
   return 'is-partial'
+}
+
+// Lookup periodLabel per quest (dipakai di daftar quest per-atlet, key by questId
+// krn columnDefs cuma sekali dihitung, bukan per baris atlet).
+const columnMetaById = computed(() => new Map(columnDefs.value.map((c) => [c.questId, c])))
+
+// Ringkasan "X/Y selesai" di baris atlet (kolektif, bonus dikecualikan sama spt grafik).
+function athleteSummary(pr) {
+  const applicable = pr.questCols.filter((qc) => qc.scope !== 'bonus' && qc.total)
+  const done = applicable.filter((qc) => badgeClassQuest(qc) === 'is-full').length
+  return { done, total: applicable.length }
 }
 
 // Distribusi status quest (semua personil x quest aktif, kolom bonus dikecualikan karena
@@ -397,27 +395,15 @@ async function downloadQuestPdf() {
 .qf-muted { color: #a8a29e; font-size: 13px; }
 .qf-error { margin: 0; color: #dc2626; font-size: 12.5px; font-weight: 600; }
 
-/* Matriks personil x quest — grid dgn kolom dinamis sesuai jumlah quest aktif + bonus */
-.qs-table-wrap {
-  overflow-x: auto;
+/* Daftar personil x quest — tiap quest didaftar KE BAWAH per atlet (bukan kolom
+   ke samping), diperluas per atlet supaya tetap ringkas utk banyak personil. */
+.qs-list {
   background: #ffffff;
   border-radius: 18px;
   box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
 }
 
-.qs-row {
-  display: grid;
-  grid-template-columns: minmax(180px, 1fr) repeat(var(--quest-count), minmax(120px, 160px));
-  align-items: center;
-}
-
-.qs-row--head {
-  padding: 12px 16px;
-  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #a8a29e;
-  border-bottom: 1px solid #f5f1ec;
-}
-
-.qs-table-wrap--skel { padding: 4px 0; }
+.qs-list--skel { padding: 4px 0; }
 .qs-skel-row {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 16px;
@@ -425,14 +411,18 @@ async function downloadQuestPdf() {
 }
 .qs-skel-row:last-child { border-bottom: none; }
 
-.qs-row--athlete {
+.qs-athlete-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 12px 16px;
   cursor: pointer;
   font-size: 13.5px; font-weight: 700; color: #1c1917;
   border-bottom: 1px solid #f5f1ec;
   transition: background 0.15s ease;
 }
-.qs-row--athlete:hover { background: #f5f1ec; }
+.qs-athlete-row:hover { background: #f5f1ec; }
+.qs-athlete-name { flex: 1; min-width: 0; }
 
 .qs-quest-list {
   padding: 6px 16px 12px 38px;
@@ -440,7 +430,7 @@ async function downloadQuestPdf() {
   border-bottom: 1px solid #f5f1ec;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 .qs-quest-item {
   display: flex;
@@ -450,16 +440,9 @@ async function downloadQuestPdf() {
   font-size: 12.5px;
   color: #57534e;
 }
-.qs-quest-item-name { font-weight: 700; min-width: 0; }
-
-.qs-cell--name { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.qs-cell--col {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  text-align: center; font-size: 11.5px; font-weight: 700; color: #57534e; line-height: 1.3; white-space: normal;
-}
-.qs-cell--col.is-bonus { color: #7c3aed; }
-
-.qs-col-scope {
+.qs-quest-item-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.qs-quest-item-name { font-weight: 700; color: #1c1917; }
+.qs-quest-item-scope {
   font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #a8a29e;
 }
 
