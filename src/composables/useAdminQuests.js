@@ -19,7 +19,7 @@ export function useAdminQuests() {
     }
   }
 
-  async function create(q) { await createQuest(q); await refresh() }
+  async function create(q) { const id = await createQuest(q); await refresh(); return id }
   async function update(id, patch) { await updateQuest(id, patch); await refresh() }
   async function remove(id) { await deleteQuest(id); await refresh() }
 

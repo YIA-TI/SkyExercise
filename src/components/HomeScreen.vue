@@ -399,8 +399,8 @@ const filteredActivities = computed(() =>
     name: a.name,
     waktu: formatDateTime(a.startDate),
     meta: a.type === 'run'
-      ? `${a.distanceKm ?? '—'} km · ${a.durationLabel ?? '—'} mnt`
-      : `${a.durationLabel ?? '—'} mnt · ${a.avgHeartrate ? Math.round(a.avgHeartrate) + ' bpm' : '—'}`,
+      ? `${a.distanceKm ?? '—'} km · ${a.durationLabel ?? '—'}`
+      : `${a.durationLabel ?? '—'} · ${a.avgHeartrate ? Math.round(a.avgHeartrate) + ' bpm' : '—'}`,
   })),
 )
 

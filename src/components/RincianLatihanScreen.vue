@@ -89,7 +89,7 @@ const ringkasan = computed(() => {
     unit: 'bpm',
     color: '#ef4444',
   })
-  rows.push({ label: 'Durasi Sesi', value: a.durationLabel ?? '—', unit: 'mnt' })
+  rows.push({ label: 'Durasi Sesi', value: a.durationLabel ?? '—', unit: '' })
   if (a.type === 'run' && a.elevationGain != null) {
     rows.push({ label: 'Elevasi', value: Math.round(a.elevationGain), unit: 'm' })
   }

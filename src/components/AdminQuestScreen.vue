@@ -125,6 +125,7 @@ import { reactive, ref, computed, watch } from 'vue'
 import { authState } from '../store/auth.js'
 import { useAdminQuests } from '../composables/useAdminQuests.js'
 import { questPeriodLabel } from '../services/questSummary.js'
+import { backfillQuestClaims } from '../services/adminQuests.js'
 import { showToast } from '../store/toast.js'
 import AdminTabBar from './AdminTabBar.vue'
 
@@ -171,11 +172,25 @@ watch(() => form.metric, (metric) => {
   form.target = METRIC_META[metric]?.defaultTarget ?? form.target
 })
 
+// Quest bertanggal cuma tampil ke atlet pada hari/minggu targetnya sendiri (lihat
+// migrasi quest_specific_period) — kalau tanggalnya di masa lalu, atlet tak pernah
+// sempat klaim walau aktivitasnya sudah memenuhi target. Backfill menutup celah itu:
+// cek activities riil pada periode target, langsung tandai selesai (+kredit XP)
+// tanpa perlu klaim manual.
+async function runBackfill(questId) {
+  try {
+    const n = await backfillQuestClaims(questId)
+    if (n > 0) showToast(`${n} atlet otomatis dinyatakan selesai dari aktivitas lampau`)
+  } catch (e) {
+    showToast(e?.message || 'Gagal memeriksa aktivitas lampau', 'error')
+  }
+}
+
 async function submit() {
   formError.value = ''
   saving.value = true
   try {
-    await create({
+    const newId = await create({
       title: form.title,
       description: form.description || null,
       scope: form.scope,
@@ -188,10 +203,12 @@ async function submit() {
       // jadi kalau nilainya sama, urutannya otomatis ikut id (urutan pembuatan).
       sort_order: 0,
     })
+    const questDate = form.quest_date
     form.title = ''
     form.description = ''
     form.quest_date = ''
     showToast('Quest berhasil ditambahkan')
+    if (questDate) await runBackfill(newId)
   } catch (e) {
     formError.value = 'Gagal menyimpan: ' + (e?.message || e)
     showToast('Gagal menambahkan quest', 'error')
@@ -223,10 +240,12 @@ function cancelEditDate() {
 }
 async function saveDate(q) {
   savingDate.value = true
+  const newDate = editDate.value
   try {
-    await update(q.id, { quest_date: editDate.value || null })
+    await update(q.id, { quest_date: newDate || null })
     cancelEditDate()
     showToast('Tanggal quest berhasil diperbarui')
+    if (newDate) await runBackfill(q.id)
   } catch (e) {
     showToast(e?.message || 'Gagal memperbarui tanggal', 'error')
   } finally {

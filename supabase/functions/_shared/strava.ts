@@ -95,6 +95,57 @@ export const TRACKED_SPORTS = [
   'WeightTraining', 'Workout', 'Crossfit',
 ]
 
+const PER_PAGE = 100
+const MAX_PAGES = 10 // batas aman: hingga 1000 aktivitas per sinkron, cukup utk riwayat penuh
+
+// Sinkron riwayat aktivitas seorang atlet dari Strava (paginasi), filter lari/gym,
+// upsert ke `activities`. Dipakai oleh strava-sync (on-demand, satu atlet) dan
+// strava-sync-all (cron, semua atlet — biasanya dgn `after` supaya inkremental/hemat).
+export async function syncAthleteActivities(
+  db: SupabaseClient,
+  athleteId: number,
+  after?: number,
+): Promise<{ synced: number; seen: number; pages: number }> {
+  const token = await ensureValidToken(db, athleteId)
+
+  let totalSynced = 0
+  let totalSeen = 0
+  let page = 1
+
+  while (page <= MAX_PAGES) {
+    const params = new URLSearchParams({ per_page: String(PER_PAGE), page: String(page) })
+    if (after) params.set('after', String(after)) // epoch detik; opsional (sinkron inkremental)
+
+    const res = await fetch(
+      `https://www.strava.com/api/v3/athlete/activities?${params.toString()}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    )
+    if (!res.ok) {
+      const body = await res.text()
+      throw new Error(`Strava activities gagal: ${res.status} ${body}`)
+    }
+
+    const acts = (await res.json()) as Array<Record<string, unknown>>
+    if (!acts.length) break // habis, tak ada halaman berikutnya
+    totalSeen += acts.length
+
+    const rows = acts
+      .filter((a) => TRACKED_SPORTS.includes((a.sport_type ?? a.type) as string))
+      .map((a) => ({ ...toActivityRow(a), athlete_id: athleteId }))
+
+    if (rows.length) {
+      const { error: upErr } = await db.from('activities').upsert(rows, { onConflict: 'activity_id' })
+      if (upErr) throw new Error(`upsert gagal: ${upErr.message}`)
+      totalSynced += rows.length
+    }
+
+    if (acts.length < PER_PAGE) break // halaman terakhir
+    page += 1
+  }
+
+  return { synced: totalSynced, seen: totalSeen, pages: page }
+}
+
 // Bentuk baris `activities` dari objek aktivitas Strava (summary/detailed).
 export function toActivityRow(act: Record<string, unknown>) {
   return {

@@ -27,12 +27,21 @@ export function speedKmh(mps) {
   return +(mps * 3.6).toFixed(1)
 }
 
-// detik → "M:SS" (menit total bisa > 59, mis. 75:10).
+// Menit (bilangan) → label manusiawi, sudah termasuk satuannya — "45 mnt" di
+// bawah 60 menit, naik jadi "1 jam" / "1 jam 15 mnt" begitu genap 60+ menit.
+export function minutesLabel(totalMin) {
+  if (totalMin == null) return null
+  const m = Math.round(totalMin)
+  if (m < 60) return `${m} mnt`
+  const h = Math.floor(m / 60)
+  const rest = m % 60
+  return rest === 0 ? `${h} jam` : `${h} jam ${rest} mnt`
+}
+
+// detik → label durasi manusiawi (lihat minutesLabel).
 export function durationLabel(sec) {
   if (sec == null) return null
-  const m = Math.floor(sec / 60)
-  const s = Math.round(sec % 60)
-  return `${m}:${String(s).padStart(2, '0')}`
+  return minutesLabel(sec / 60)
 }
 
 export function fullName(row) {

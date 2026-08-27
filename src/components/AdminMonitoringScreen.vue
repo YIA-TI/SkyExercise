@@ -126,22 +126,14 @@
             </div>
 
             <template v-if="expandedIds.has(pr.athleteId)">
-              <div v-for="(w, wi) in questSummaryData.weeks" :key="w.periodKey" class="qs-row qs-row--quest">
-                <div class="qs-cell qs-cell--name qs-cell--week">{{ w.label }}</div>
-                <div v-for="qc in pr.questCols" :key="qc.questId" class="qs-cell qs-cell--col">
-                  <template v-if="qc.scope === 'mingguan'">
-                    <svg v-if="qc.perWeek[wi]" class="qs-check" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span v-else-if="qc.perWeek[wi] === false" class="qs-dash">–</span>
-                    <span v-else class="qs-na">n/a</span>
-                  </template>
-                  <div v-else-if="qc.scope === 'bonus'" class="qs-bonus-days">
-                    <span v-for="d in qc.perWeek[wi]" :key="d.dateStr" class="qs-bonus-day">
-                      {{ d.label }}<template v-if="d.km > 0"> · {{ d.km }} km</template><template v-else-if="d.hasGym"> · Gym</template>
-                    </span>
-                    <span v-if="qc.perWeek[wi].length === 0" class="qs-dash">–</span>
-                  </div>
-                  <span v-else-if="qc.perWeekTotal[wi] > 0" class="qs-week-count">{{ qc.perWeek[wi] }}/{{ qc.perWeekTotal[wi] }}</span>
-                  <span v-else class="qs-na">n/a</span>
+              <div class="qs-quest-list">
+                <div v-for="qc in pr.questCols" :key="qc.questId" class="qs-quest-item">
+                  <span class="qs-quest-item-name">{{ qc.title }}</span>
+                  <span class="qs-badge" :class="[badgeClassQuest(qc), { 'is-bonus': qc.scope === 'bonus' }]">
+                    <span v-if="qc.scope !== 'bonus'" class="qs-badge-dot"></span>
+                    <template v-if="qc.scope === 'bonus'">{{ qc.achieved }} hari · {{ qc.totalKm }} km</template>
+                    <template v-else>{{ qc.total ? `${qc.achieved}/${qc.total} ${qc.unit}` : 'Belum ada' }}</template>
+                  </span>
                 </div>
               </div>
             </template>
@@ -442,15 +434,25 @@ async function downloadQuestPdf() {
 }
 .qs-row--athlete:hover { background: #f5f1ec; }
 
-.qs-row--quest {
-  padding: 10px 16px;
+.qs-quest-list {
+  padding: 6px 16px 12px 38px;
   background: #faf8f6;
-  font-size: 12.5px; color: #57534e;
   border-bottom: 1px solid #f5f1ec;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
+.qs-quest-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12.5px;
+  color: #57534e;
+}
+.qs-quest-item-name { font-weight: 700; min-width: 0; }
 
 .qs-cell--name { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.qs-cell--week { padding-left: 22px; }
 .qs-cell--col {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   text-align: center; font-size: 11.5px; font-weight: 700; color: #57534e; line-height: 1.3; white-space: normal;
@@ -476,12 +478,4 @@ async function downloadQuestPdf() {
 
 /* Indikator visual penyelesaian quest — merah/orange/hijau, selalu berdampingan dgn teks */
 .qs-badge-dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; background: currentColor; }
-
-.qs-check { color: #059669; }
-.qs-dash { color: #d6cfc8; font-weight: 700; }
-.qs-week-count { font-size: 11.5px; font-weight: 700; color: #57534e; }
-.qs-na { font-size: 10.5px; font-style: italic; color: #d6cfc8; }
-
-.qs-bonus-days { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.qs-bonus-day { font-size: 10.5px; font-weight: 700; color: #7c3aed; white-space: nowrap; }
 </style>
