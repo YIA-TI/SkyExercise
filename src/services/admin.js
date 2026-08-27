@@ -11,48 +11,26 @@ function resolveRange({ start, end } = {}) {
   }
 }
 
-const RUN = ['Run', 'TrailRun', 'VirtualRun']
-
 function nameOf(a) {
   return `${a?.firstname ?? ''} ${a?.lastname ?? ''}`.trim()
 }
 
-export async function fetchDivisionSummary() {
-  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0)
-  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
+// Ringkasan dihitung untuk periode terpilih (default 7 hari terakhir) — bukan
+// patokan waktu tetap ("hari ini"/"bulan ini"), supaya angkanya selalu sesuai
+// filter yang dipilih admin.
+export async function fetchDivisionSummary(range = {}) {
+  const { startISO, endISO } = resolveRange(range)
 
-  const [{ count: totalMembers }, { count: sessionsToday }, { data: monthActs }] = await Promise.all([
+  const [{ count: totalMembers }, { count: totalSessions }] = await Promise.all([
     supabase.from('athletes').select('*', { count: 'exact', head: true }),
-    supabase.from('activities').select('*', { count: 'exact', head: true }).gte('start_date', todayStart.toISOString()),
-    supabase.from('activities').select('distance, sport_type').gte('start_date', monthStart.toISOString()),
+    supabase.from('activities').select('*', { count: 'exact', head: true })
+      .gte('start_date', startISO).lte('start_date', endISO),
   ])
-
-  const distanceMonthKm = (monthActs ?? [])
-    .filter((a) => RUN.includes(a.sport_type))
-    .reduce((s, a) => s + (a.distance || 0), 0) / 1000
 
   return {
     totalMembers: totalMembers ?? 0,
-    sessionsToday: sessionsToday ?? 0,
-    distanceMonthKm: Math.round(distanceMonthKm),
+    totalSessions: totalSessions ?? 0,
   }
-}
-
-// Akses histori penuh — dibatasi lewat filter tanggal (default 7 hari terakhir).
-export async function fetchRecentActivitiesAll(limit = 10, range) {
-  const { startISO, endISO } = resolveRange(range)
-  const { data, error } = await supabase
-    .from('activities')
-    .select('*, athletes(firstname, lastname)')
-    .gte('start_date', startISO)
-    .lte('start_date', endISO)
-    .order('start_date', { ascending: false })
-    .limit(limit)
-  if (error) throw error
-  return (data ?? []).map((row) => ({
-    ...normalizeActivity(row),
-    athleteName: nameOf(row.athletes),
-  }))
 }
 
 export async function fetchParticipants() {

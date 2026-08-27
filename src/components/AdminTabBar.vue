@@ -38,3 +38,10 @@ function handleLogout() {
   router.push('/')
 }
 </script>
+
+<style>
+/* Style .m-tabbar/.m-tab hidup di mobile-ui.css (dipakai bareng MemberTabBar) —
+   di-@import di sini supaya ikut ke chunk CSS komponen ini sendiri saat
+   di-lazy-load per rute (jangan andalkan chunk lain kebetulan memuatnya). */
+@import '../assets/mobile-ui.css';
+</style>

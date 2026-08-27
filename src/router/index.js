@@ -2,23 +2,24 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { authState } from '../store/auth.js'
 
-// ── FE baru (gaya Sandow / mobile-first) ──
-import WelcomeScreen         from '../components/WelcomeScreen.vue'
-import SignInScreen          from '../components/SignInScreen.vue'
-import HomeScreen            from '../components/HomeScreen.vue'
-import StatsDetailScreen     from '../components/StatsDetailScreen.vue'
-import LatihanScreen         from '../components/LatihanScreen.vue'
-import RincianLatihanScreen  from '../components/RincianLatihanScreen.vue'
-import PeringkatScreen       from '../components/PeringkatScreen.vue'
-import ProfilScreen          from '../components/ProfilScreen.vue'
-import GantiPasswordScreen   from '../components/GantiPasswordScreen.vue'
-import StravaAuthorizeScreen from '../components/StravaAuthorizeScreen.vue'
-import StravaCallbackScreen  from '../components/StravaCallbackScreen.vue'
-import AdminMonitoringScreen from '../components/AdminMonitoringScreen.vue'
-import AdminAnggotaScreen    from '../components/AdminAnggotaScreen.vue'
-import AdminAnggotaDetailScreen from '../components/AdminAnggotaDetailScreen.vue'
-import AdminPeringkatScreen  from '../components/AdminPeringkatScreen.vue'
-import AdminQuestScreen      from '../components/AdminQuestScreen.vue'
+// ── FE baru (gaya Sandow / mobile-first) ── lazy: tiap screen jadi chunk
+// terpisah, cuma diunduh saat rute-nya dibuka (bukan di bundle awal).
+const WelcomeScreen         = () => import('../components/WelcomeScreen.vue')
+const SignInScreen          = () => import('../components/SignInScreen.vue')
+const HomeScreen            = () => import('../components/HomeScreen.vue')
+const StatsDetailScreen     = () => import('../components/StatsDetailScreen.vue')
+const LatihanScreen         = () => import('../components/LatihanScreen.vue')
+const RincianLatihanScreen  = () => import('../components/RincianLatihanScreen.vue')
+const PeringkatScreen       = () => import('../components/PeringkatScreen.vue')
+const ProfilScreen          = () => import('../components/ProfilScreen.vue')
+const GantiPasswordScreen   = () => import('../components/GantiPasswordScreen.vue')
+const StravaAuthorizeScreen = () => import('../components/StravaAuthorizeScreen.vue')
+const StravaCallbackScreen  = () => import('../components/StravaCallbackScreen.vue')
+const AdminMonitoringScreen = () => import('../components/AdminMonitoringScreen.vue')
+const AdminAnggotaScreen    = () => import('../components/AdminAnggotaScreen.vue')
+const AdminAnggotaDetailScreen = () => import('../components/AdminAnggotaDetailScreen.vue')
+const AdminPeringkatScreen  = () => import('../components/AdminPeringkatScreen.vue')
+const AdminQuestScreen      = () => import('../components/AdminQuestScreen.vue')
 
 const routes = [
   // ── Publik ──────────────────────────────────────────────

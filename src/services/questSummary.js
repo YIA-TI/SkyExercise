@@ -22,7 +22,7 @@ function mondayOf(date) {
   return d
 }
 
-// Nomor & tahun minggu ISO-8601 (patokan Kamis) — samakan dengan `to_char(d,'IYYY"W"IW')`
+// Nomor & tahun minggu ISO-8601 (patokan Kamis) — samakan dengan `to_char(d,'IYYY-"W"IW')`
 // yang dipakai claim_quest() di database, supaya period_key cocok.
 function isoWeekOf(date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
@@ -39,6 +39,18 @@ function shortDate(d) {
   return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
 }
 
+// Label tampilan tanggal/minggu target sebuah quest bertanggal — dipakai di form
+// pembuatan quest & header kolom monitoring supaya konsisten.
+export function questPeriodLabel(scope, dateStr) {
+  if (!dateStr) return null
+  const d = new Date(`${dateStr}T00:00:00`)
+  if (scope !== 'mingguan') return shortDate(d)
+  const monday = mondayOf(d)
+  const sunday = new Date(monday)
+  sunday.setDate(sunday.getDate() + 6)
+  return `${shortDate(monday)} – ${shortDate(sunday)}`
+}
+
 // Daftar minggu ISO (Senin–Minggu) yang overlap [startDateStr, endDateStr] ('YYYY-MM-DD').
 export function weeksInRange(startDateStr, endDateStr) {
   const start = mondayOf(new Date(`${startDateStr}T00:00:00`))
@@ -50,7 +62,7 @@ export function weeksInRange(startDateStr, endDateStr) {
     weekEnd.setDate(weekEnd.getDate() + 6)
     const { isoYear, isoWeek } = isoWeekOf(cursor)
     weeks.push({
-      periodKey: `${isoYear}W${String(isoWeek).padStart(2, '0')}`,
+      periodKey: `${isoYear}-W${String(isoWeek).padStart(2, '0')}`,
       start: new Date(cursor),
       end: weekEnd,
       label: `${shortDate(cursor)} – ${shortDate(weekEnd)}`,
@@ -98,7 +110,7 @@ export async function fetchQuestSummary(startDateStr, endDateStr) {
     { data: acts, error: actErr },
   ] = await Promise.all([
     supabase.from('athletes').select('athlete_id, firstname, lastname').order('firstname', { ascending: true }),
-    supabase.from('quests').select('id, title, scope, created_at').eq('active', true).order('sort_order', { ascending: true }),
+    supabase.from('quests').select('id, title, scope, created_at, quest_date').eq('active', true).order('sort_order', { ascending: true }),
     supabase.from('quest_claims').select('athlete_id, quest_id, period_key')
       .in('period_key', [...weeks.map((w) => w.periodKey), ...days]),
     supabase.from('activities').select('athlete_id, start_date, sport_type, distance')
@@ -128,14 +140,31 @@ export async function fetchQuestSummary(startDateStr, endDateStr) {
 
   const questList = quests ?? []
 
+  // Quest bertanggal (quest_date terisi) cuma berlaku pada satu hari (harian) atau
+  // satu minggu (mingguan) spesifik — bukan berulang di tiap hari/minggu rentang
+  // filter seperti quest lama (quest_date kosong). Dihitung sekali per quest.
+  const targetKeyByQuest = new Map(questList.map((q) => {
+    if (!q.quest_date) return [q.id, null]
+    if (q.scope === 'mingguan') {
+      const { isoYear, isoWeek } = isoWeekOf(new Date(`${q.quest_date}T00:00:00`))
+      return [q.id, `${isoYear}-W${String(isoWeek).padStart(2, '0')}`]
+    }
+    return [q.id, q.quest_date]
+  }))
+
   const rows = (athletes ?? []).map((a) => {
     const questCols = questList.map((q) => {
       // Quest cuma "berlaku" sejak dibuat — minggu/hari sebelum created_at bukan
       // kegagalan, tapi memang belum ada quest-nya, jadi dikeluarkan dari total.
       const createdAt = new Date(q.created_at)
+      const targetKey = targetKeyByQuest.get(q.id)
 
       if (q.scope === 'mingguan') {
-        const perWeek = weeks.map((w) => (w.end >= createdAt ? claimedSet.has(`${a.athlete_id}:${q.id}:${w.periodKey}`) : null))
+        const perWeek = weeks.map((w) => {
+          if (w.end < createdAt) return null
+          if (targetKey && w.periodKey !== targetKey) return null
+          return claimedSet.has(`${a.athlete_id}:${q.id}:${w.periodKey}`)
+        })
         const applicable = perWeek.filter((v) => v !== null)
         return {
           questId: q.id, title: q.title, scope: 'mingguan', unit: 'minggu',
@@ -145,10 +174,11 @@ export async function fetchQuestSummary(startDateStr, endDateStr) {
         }
       }
       // harian
+      const isApplicableDay = (d) => new Date(`${d}T00:00:00`) >= createdAt && (!targetKey || d === targetKey)
       const perWeek = weekDayLists.map((wd) =>
-        wd.filter((d) => new Date(`${d}T00:00:00`) >= createdAt && claimedSet.has(`${a.athlete_id}:${q.id}:${d}`)).length,
+        wd.filter((d) => isApplicableDay(d) && claimedSet.has(`${a.athlete_id}:${q.id}:${d}`)).length,
       )
-      const perWeekTotal = weekDayLists.map((wd) => wd.filter((d) => new Date(`${d}T00:00:00`) >= createdAt).length)
+      const perWeekTotal = weekDayLists.map((wd) => wd.filter(isApplicableDay).length)
       return {
         questId: q.id, title: q.title, scope: 'harian', unit: 'hari',
         achieved: perWeek.reduce((s, n) => s + n, 0),

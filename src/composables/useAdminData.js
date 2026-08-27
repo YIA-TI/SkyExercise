@@ -3,7 +3,6 @@
 import { ref, unref, watch, onMounted } from 'vue'
 import {
   fetchDivisionSummary,
-  fetchRecentActivitiesAll,
   fetchParticipants,
   fetchParticipantDetail,
 } from '../services/admin.js'
@@ -32,17 +31,15 @@ function useAsync(runner, deps = []) {
 // range: { start, end } — ref/getter opsional 'YYYY-MM-DD'. Kosong = default 7 hari terakhir.
 export function useAdminMonitoring(range = {}) {
   const { start, end } = range
-  const summary = useAsync(fetchDivisionSummary)
-  const recent = useAsync(
-    () => fetchRecentActivitiesAll(10, { start: unref(start), end: unref(end) }),
+  const summary = useAsync(
+    () => fetchDivisionSummary({ start: unref(start), end: unref(end) }),
     [() => unref(start), () => unref(end)],
   )
   return {
     summary: summary.data,
-    recent: recent.data,
-    loading: summary.loading, // ringkas: pakai loading ringkasan
+    loading: summary.loading,
     error: summary.error,
-    refresh: async () => { await Promise.all([summary.refresh(), recent.refresh()]) },
+    refresh: summary.refresh,
   }
 }
 
