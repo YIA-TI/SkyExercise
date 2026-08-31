@@ -26,3 +26,26 @@ export async function fetchEffortLeaderboard() {
     effort: Number(r.total),
   }))
 }
+
+// Ranking XP ("Liga") — RPC baru & terpisah dari leaderboard_distance/effort di
+// atas, jadi ikut balikin profile_photo langsung (dua RPC lama itu tidak).
+// period: 'weekly' | 'monthly' (default) — dikirim ke RPC, reset otomatis
+// mengikuti jendela waktu berjalan.
+export async function fetchLeagueLeaderboard(period = 'monthly') {
+  const { data, error } = await supabase.rpc('leaderboard_league', { p_period: period })
+  if (error) throw error
+  return (data ?? []).map((r) => ({
+    athleteId: r.athlete_id,
+    name: r.name,
+    avatar: r.profile_photo,
+    xp: Number(r.xp),
+  }))
+}
+
+// Avatar seluruh roster — dipakai buat nge-merge foto profil ke leaderboard
+// Jarak/Effort (RPC lama itu cuma balikin name+total, tanpa foto).
+export async function fetchRosterAvatars() {
+  const { data, error } = await supabase.rpc('roster_avatars')
+  if (error) throw error
+  return new Map((data ?? []).map((r) => [r.athlete_id, r.profile_photo]))
+}

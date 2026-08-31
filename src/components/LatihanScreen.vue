@@ -9,24 +9,28 @@
           <p class="mui-h-sub">Misi latihan &amp; pencapaianmu</p>
         </div>
       </div>
-      <span class="mui-pill">Level {{ level }}</span>
+      <span class="mui-pill">{{ tier.label }}</span>
     </header>
 
-    <!-- Hero level / XP -->
+    <!-- Hero tier / XP -->
     <div class="q-hero">
       <div class="q-hero-glow"></div>
       <div class="q-hero-top">
-        <div class="q-level-badge">{{ level }}</div>
+        <div class="q-tier-badge"><img :src="`/tiers/${tier.badgeFile}`" :alt="tier.label" /></div>
         <div class="q-hero-info">
-          <p class="q-rank">{{ rankName }}</p>
-          <p class="q-rank-sub">{{ xpInLevel }} / {{ xpPerLevel }} XP</p>
+          <p class="q-rank">{{ tier.label }}</p>
+          <p class="q-rank-sub">{{ tier.tagline }}</p>
         </div>
         <div class="q-streak">
           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2s4 4 4 8a4 4 0 0 1-8 0c0-1 .5-2 .5-2S8 10 8 12a4 4 0 1 0 8 0c0-5-4-10-4-10z"/></svg>
           {{ streak }} hari
         </div>
       </div>
-      <div class="q-xpbar"><div class="q-xpfill" :style="{ width: levelPct + '%' }"></div></div>
+      <div class="q-xpbar"><div class="q-xpfill" :style="{ width: tier.pct + '%' }"></div></div>
+      <p class="q-tier-caption mono">
+        <template v-if="tier.next">{{ totalXp - tier.minXp }} / {{ tier.next.minXp - tier.minXp }} XP menuju {{ tier.next.label }}</template>
+        <template v-else>Tier tertinggi tercapai</template>
+      </p>
       <div class="q-hero-stats">
         <div><p class="q-stat-val mono">{{ completedCount }}</p><p class="q-stat-lbl">Quest Selesai</p></div>
         <div><p class="q-stat-val mono">{{ totalXp.toLocaleString('id-ID') }}</p><p class="q-stat-lbl">Total XP</p></div>
@@ -104,16 +108,39 @@
       </article>
     </section>
 
-    <!-- Achievements -->
+    <!-- Pencapaian (expandable) -->
     <section class="mui-block">
-      <h2 class="mui-section-title">Pencapaian</h2>
-      <div class="q-badges">
-        <div v-for="b in badges" :key="b.name" class="q-badge" :class="{ 'is-locked': !b.earned }">
-          <div class="q-badge-ic" v-html="b.icon"></div>
-          <p class="q-badge-name">{{ b.name }}</p>
-          <p class="q-badge-sub">{{ b.earned ? 'Diraih' : b.hint }}</p>
+      <button class="q-ach-toggle" type="button" @click="achievementsOpen = !achievementsOpen">
+        <span class="q-ach-toggle-left">
+          <h2 class="mui-section-title">Pencapaian</h2>
+          <span class="mui-tag mui-tag--gray">{{ unlockedAchCount }}/{{ totalAchCount }}</span>
+        </span>
+        <svg class="q-ach-chevron" :class="{ 'is-open': achievementsOpen }" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <transition name="q-ach-expand">
+        <div v-if="achievementsOpen" class="q-ach-list">
+          <div v-if="achLoading" class="q-ach-item">
+            <div class="mui-skel mui-skel--circle" style="width: 48px; height: 48px;"></div>
+            <div style="flex: 1;">
+              <div class="mui-skel mui-skel--text" style="width: 50%;"></div>
+              <div class="mui-skel mui-skel--text" style="width: 85%; margin-top: 8px;"></div>
+            </div>
+          </div>
+          <template v-else>
+            <div v-for="a in achievements" :key="a.id" class="q-ach-item" :class="{ 'is-locked': !a.unlockedAt }">
+              <div class="q-ach-badge"><img :src="`/badges/${a.badgeFile}`" :alt="a.name" /></div>
+              <div class="q-ach-body">
+                <div class="q-ach-top">
+                  <p class="q-ach-name">{{ a.name }}</p>
+                  <span class="mui-tag mui-tag--gray">{{ a.category }}</span>
+                </div>
+                <p class="q-ach-desc">{{ a.description }}</p>
+                <p v-if="a.unlockedAt" class="q-ach-unlocked">Diraih {{ formatAchDate(a.unlockedAt) }}</p>
+              </div>
+            </div>
+          </template>
         </div>
-      </div>
+      </transition>
     </section>
   </div>
 
@@ -122,10 +149,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { authState } from '../store/auth.js'
 import { useQuests } from '../composables/useQuests.js'
-import { useLeaderboard } from '../composables/useMemberData.js'
+import { useLeaderboard, useAchievements, checkAchievements } from '../composables/useMemberData.js'
+import { tierForXp } from '../lib/xpTier.js'
+import { showToast } from '../store/toast.js'
 import MemberTabBar from './MemberTabBar.vue'
 
 const initials = computed(() =>
@@ -134,21 +163,14 @@ const initials = computed(() =>
 
 const runIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>'
 const gymIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/></svg>'
-const fireIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2s4 4 4 8a4 4 0 0 1-8 0c0-1 .5-2 .5-2"/></svg>'
 
 // ── Data quest nyata (progress dihitung server-side dari Strava) ──
 const { quests: rawQuests, totalXp: totalXpRef, streak: streakRef, claim: claimQuest } = useQuests()
 
-// ── Progres pemain ──
-const xpPerLevel = 1000
+// ── Progres pemain — tier Bronze-Diamond berbasis total_xp kumulatif (selalu naik) ──
 const totalXp = computed(() => totalXpRef.value)
 const streak = computed(() => streakRef.value)
-const level = computed(() => Math.floor(totalXp.value / xpPerLevel) + 1)
-const xpInLevel = computed(() => totalXp.value % xpPerLevel)
-const levelPct = computed(() => (xpInLevel.value / xpPerLevel) * 100)
-
-const RANKS = ['Rekrut', 'Petugas', 'Senior', 'Veteran', 'Komandan', 'Elite ARFF']
-const rankName = computed(() => RANKS[Math.min(RANKS.length - 1, Math.floor(level.value / 2))])
+const tier = computed(() => tierForXp(totalXp.value))
 
 // Peringkat effort nyata (RPC) — posisi atlet sendiri di leaderboard.
 const { rows: effortRows } = useLeaderboard('effort')
@@ -194,21 +216,35 @@ async function claim(q) {
   if (q.claimed || q.current < q.target) return
   try {
     await claimQuest(q.id)
+    await runAchievementCheck()
   } catch (e) {
     alert('Gagal klaim: ' + (e?.message || e))
   }
 }
 
-// Pencapaian diturunkan dari data nyata (quest yang pernah diklaim, streak, level) — bukan dikarang.
-const hasClaimedRun = computed(() => quests.value.some((q) => q.claimed && q.id != null && rawQuests.value.find((r) => r.id === q.id)?.metric?.startsWith('run_')))
-const hasClaimedGym = computed(() => quests.value.some((q) => q.claimed && rawQuests.value.find((r) => r.id === q.id)?.metric === 'gym_sessions'))
+// ── Pencapaian (real, 12 badge tetap — lihat services/achievements.js) ──
+const achievementsOpen = ref(false)
+const { achievements, loading: achLoading, refresh: refreshAchievements } = useAchievements()
+const totalAchCount = computed(() => achievements.value?.length ?? 0)
+const unlockedAchCount = computed(() => (achievements.value ?? []).filter((a) => a.unlockedAt).length)
 
-const badges = computed(() => [
-  { name: 'Pelari Tangguh', earned: hasClaimedRun.value, icon: runIcon, hint: 'Klaim 1 quest lari' },
-  { name: 'Kuat Angkat', earned: hasClaimedGym.value, icon: gymIcon, hint: 'Klaim 1 quest gym' },
-  { name: 'Beruntun 7 Hari', earned: streak.value >= 7, icon: fireIcon, hint: `Streak ${streak.value}/7 hari` },
-  { name: 'Komandan Fisik', earned: level.value >= 10, icon: fireIcon, hint: `Level ${level.value}/10` },
-])
+function formatAchDate(iso) {
+  return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+// Evaluasi ulang kriteria (RPC) & toast perayaan utk yang baru unlock — dipanggil
+// saat halaman dimuat & tiap kali quest diklaim (aktivitas/XP baru paling mungkin
+// memenuhi kriteria tepat setelah klaim).
+async function runAchievementCheck() {
+  try {
+    const newlyUnlocked = await checkAchievements()
+    if (newlyUnlocked.length) await refreshAchievements()
+    newlyUnlocked.forEach((a) => showToast(`Achievement baru: ${a.name}!`))
+  } catch {
+    // Diam-diam abaikan — bukan alur kritis.
+  }
+}
+onMounted(runAchievementCheck)
 </script>
 
 <style scoped>
@@ -229,16 +265,15 @@ const badges = computed(() => [
   pointer-events: none;
 }
 .q-hero-top { position: relative; display: flex; align-items: center; gap: 14px; }
-.q-level-badge {
-  width: 52px; height: 52px; border-radius: 16px; display: grid; place-content: center;
-  font-size: 24px; font-weight: 700; flex-shrink: 0; color: #3a2a06;
-  font-family: "Chakra Petch", system-ui, sans-serif;
-  background: linear-gradient(135deg, #f4d27a 0%, #d1962a 55%, #b8862f 100%);
-  box-shadow: 0 10px 24px -8px rgba(184, 134, 47, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+.q-tier-badge {
+  width: 56px; height: 56px; flex-shrink: 0; display: grid; place-content: center;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.45));
 }
+.q-tier-badge img { width: 100%; height: 100%; object-fit: contain; }
 .q-hero-info { flex: 1; min-width: 0; }
 .q-rank { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.2px; color: #fbe8c8; }
 .q-rank-sub { margin: 2px 0 0; font-size: 12px; color: rgba(255, 255, 255, 0.6); }
+.q-tier-caption { margin: 0 0 10px; font-size: 11px; font-weight: 600; color: rgba(255, 255, 255, 0.55); text-align: right; }
 .q-streak {
   display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700;
   color: #ffd7b0; background: rgba(252, 76, 2, 0.2); padding: 6px 11px; border-radius: 999px;
@@ -339,19 +374,34 @@ const badges = computed(() => [
 .q-expand-enter-from, .q-expand-leave-to { opacity: 0; max-height: 0; margin-top: 0; }
 .q-expand-enter-to, .q-expand-leave-from { opacity: 1; max-height: 260px; }
 
-/* ── Achievements ── */
-.q-badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
-.q-badge {
-  background: #fff; border-radius: 18px; padding: 16px; text-align: center;
+/* ── Pencapaian (expandable) ── */
+.q-ach-toggle {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; border: none; background: none; cursor: pointer; padding: 0; font-family: inherit;
+}
+.q-ach-toggle-left { display: flex; align-items: center; gap: 8px; }
+.q-ach-chevron { color: #a8a29e; transition: transform 0.2s ease; flex-shrink: 0; }
+.q-ach-chevron.is-open { transform: rotate(180deg); }
+
+.q-ach-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.q-ach-item {
+  display: flex; align-items: center; gap: 14px;
+  background: #fff; border-radius: 18px; padding: 14px 16px;
   box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
 }
-.q-badge-ic {
-  width: 46px; height: 46px; border-radius: 14px; margin: 0 auto 10px; display: grid; place-content: center;
-  color: #ea580c; background: #fff2e8;
-}
-.q-badge-name { margin: 0; font-size: 13px; font-weight: 700; color: #1c1917; }
-.q-badge-sub { margin: 3px 0 0; font-size: 11px; color: #fc4c02; font-weight: 600; }
-.q-badge.is-locked { opacity: 0.55; filter: grayscale(0.6); }
-.q-badge.is-locked .q-badge-ic { color: #a8a29e; background: #f5f1ec; }
-.q-badge.is-locked .q-badge-sub { color: #a8a29e; }
+.q-ach-badge { flex: 0 0 auto; width: 48px; height: 48px; display: grid; place-content: center; }
+.q-ach-badge img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.18)); }
+.q-ach-item.is-locked .q-ach-badge img { filter: grayscale(1) opacity(0.35); }
+
+.q-ach-body { flex: 1; min-width: 0; }
+.q-ach-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.q-ach-name { margin: 0; font-size: 14px; font-weight: 700; color: #1c1917; }
+.q-ach-item.is-locked .q-ach-name { color: #78716c; }
+.q-ach-desc { margin: 3px 0 0; font-size: 12px; color: #78716c; line-height: 1.4; }
+.q-ach-unlocked { margin: 4px 0 0; font-size: 11px; font-weight: 700; color: #059669; }
+
+/* Transisi expand pencapaian — max-height lebih besar drpd .q-expand (bisa 12 item) */
+.q-ach-expand-enter-active, .q-ach-expand-leave-active { transition: all 0.25s ease; overflow: hidden; }
+.q-ach-expand-enter-from, .q-ach-expand-leave-to { opacity: 0; max-height: 0; }
+.q-ach-expand-enter-to, .q-ach-expand-leave-from { opacity: 1; max-height: 2000px; }
 </style>

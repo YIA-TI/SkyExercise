@@ -56,3 +56,6 @@ __screenshots__/
 
 # Referensi layout/desain lokal (bukan bagian dari source)
 example layout/
+
+# Supabase migrations (dikelola manual, jangan commit)
+supabase/migrations/

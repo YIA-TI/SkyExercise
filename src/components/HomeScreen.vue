@@ -215,8 +215,9 @@ import {
 } from '../store/stats.js'
 import { stravaState } from '../store/strava.js'
 import { useStravaConnection } from '../composables/useStravaConnection.js'
-import { useHomeStats, useActivities } from '../composables/useMemberData.js'
+import { useHomeStats, useActivities, checkAchievements } from '../composables/useMemberData.js'
 import { formatDateTime } from '../lib/normalize.js'
+import { showToast } from '../store/toast.js'
 import MemberTabBar from './MemberTabBar.vue'
 
 const router = useRouter()
@@ -238,8 +239,21 @@ async function handleSync() {
     await sync()
     // Ambil ulang data (statistik + My Activity) begitu sinkron selesai.
     await Promise.all([refreshStats(), refreshActivities()])
+    await runAchievementCheck()
   } finally {
     syncing.value = false
+  }
+}
+
+// Evaluasi ulang achievement (RPC) & toast perayaan utk yang baru unlock —
+// dipanggil saat Home dimuat & tiap kali selesai sinkron Strava (aktivitas baru
+// paling mungkin memenuhi kriteria tepat setelah sinkron).
+async function runAchievementCheck() {
+  try {
+    const newlyUnlocked = await checkAchievements()
+    newlyUnlocked.forEach((a) => showToast(`Achievement baru: ${a.name}!`))
+  } catch {
+    // Diam-diam abaikan — bukan alur kritis, jangan ganggu Home kalau gagal.
   }
 }
 
@@ -303,6 +317,7 @@ const homeEl = ref(null)
 onMounted(() => {
   // Ganti ref setelah mount
   homeEl.value = document.querySelector('.aeroguard-home')
+  runAchievementCheck()
 })
 
 function getCSSVar(name, fallback) {

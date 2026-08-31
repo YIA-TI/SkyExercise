@@ -5,7 +5,9 @@ import { authState } from '../store/auth.js'
 import { fetchProfile } from '../services/profile.js'
 import { fetchHomeStats } from '../services/stats.js'
 import { fetchActivities, fetchActivityDetail } from '../services/activities.js'
-import { fetchDistanceLeaderboard, fetchEffortLeaderboard } from '../services/leaderboard.js'
+import { fetchDistanceLeaderboard, fetchEffortLeaderboard, fetchLeagueLeaderboard, fetchRosterAvatars } from '../services/leaderboard.js'
+import { tierForRank } from '../lib/leagueTier.js'
+import { fetchMyAchievements, checkAchievements } from '../services/achievements.js'
 
 // Helper generik: jalankan `runner` saat mount + tiap deps berubah.
 function useAsync(runner, deps = []) {
@@ -61,11 +63,28 @@ export function useActivityDetail(activityId) {
   return { activity: data, loading, error, refresh }
 }
 
-// mode: ref/getter → 'running' | 'effort'
-export function useLeaderboard(mode) {
-  const { data, loading, error, refresh } = useAsync(
-    () => (unref(mode) === 'effort' ? fetchEffortLeaderboard() : fetchDistanceLeaderboard()),
-    [() => unref(mode)],
-  )
+// mode: ref/getter → 'running' | 'effort' | 'league'
+// leaguePeriod: ref/getter → 'weekly' | 'monthly' (cuma dipakai saat mode === 'league')
+export function useLeaderboard(mode, leaguePeriod) {
+  const { data, loading, error, refresh } = useAsync(async () => {
+    const m = unref(mode)
+    if (m === 'league') {
+      const rows = await fetchLeagueLeaderboard(unref(leaguePeriod) || 'monthly')
+      return rows.map((r, i) => ({ ...r, rank: i + 1, tier: tierForRank(i + 1, rows.length) }))
+    }
+    const rows = m === 'effort' ? await fetchEffortLeaderboard() : await fetchDistanceLeaderboard()
+    const avatarMap = await fetchRosterAvatars()
+    return rows.map((r) => ({ ...r, avatar: avatarMap.get(r.athleteId) ?? null }))
+  }, [() => unref(mode), () => unref(leaguePeriod)])
   return { rows: data, loading, error, refresh }
 }
+
+// Katalog 12 achievement + status unlock milik atlet yang login.
+export function useAchievements() {
+  const { data, loading, error, refresh } = useAsync(fetchMyAchievements)
+  return { achievements: data, loading, error, refresh }
+}
+
+// Evaluasi ulang kriteria (RPC) — dipanggil imperatif (mis. saat Home dimuat),
+// balikannya cuma achievement yang BARU unlock, dipakai utk toast perayaan.
+export { checkAchievements }

@@ -16,53 +16,88 @@
     <section class="mui-block">
       <h2 class="mui-section-title">Tambah Quest</h2>
       <form class="qf" @submit.prevent="submit">
-        <div class="qf-row">
-          <label class="qf-field">
-            <span>Judul</span>
-            <input v-model="form.title" type="text" placeholder="mis. Lari 5 KM" required />
-          </label>
-          <label class="qf-field qf-narrow">
-            <span>Reward (XP)</span>
-            <input v-model.number="form.reward" type="number" min="0" required />
-          </label>
-        </div>
+        <label class="qf-field">
+          <span>Judul</span>
+          <input v-model="form.title" type="text" placeholder="mis. Lari 5 KM" required />
+        </label>
 
         <label class="qf-field">
           <span>Deskripsi</span>
           <input v-model="form.description" type="text" placeholder="Keterangan singkat" />
         </label>
 
-        <div class="qf-row">
-          <label class="qf-field">
-            <span>Periode</span>
-            <select v-model="form.scope">
-              <option value="harian">Harian</option>
-              <option value="mingguan">Mingguan</option>
-            </select>
-          </label>
-          <label class="qf-field">
-            <span>{{ form.scope === 'mingguan' ? 'Tanggal (dalam minggu target)' : 'Tanggal' }}</span>
-            <input v-model="form.quest_date" type="date" required />
-          </label>
-          <label class="qf-field">
-            <span>Metrik</span>
-            <select v-model="form.metric">
-              <option value="run_distance">Jarak lari (km)</option>
-              <option value="run_sessions">Jumlah sesi lari</option>
-              <option value="gym_sessions">Jumlah sesi gym</option>
-              <option value="gym_duration">Durasi gym (menit)</option>
-            </select>
-          </label>
+        <div class="qf-field">
+          <span>Periode</span>
+          <div class="mui-toggle qf-scope-toggle">
+            <button type="button" :class="{ 'is-active': form.scope === 'harian' }" @click="form.scope = 'harian'">
+              <Sun :size="15" /> Harian
+            </button>
+            <button type="button" :class="{ 'is-active': form.scope === 'mingguan' }" @click="form.scope = 'mingguan'">
+              <CalendarDays :size="15" /> Mingguan
+            </button>
+          </div>
         </div>
+
+        <label class="qf-field">
+          <span>{{ form.scope === 'mingguan' ? 'Tanggal (dalam minggu target)' : 'Tanggal' }}</span>
+          <input v-model="form.quest_date" type="date" required />
+        </label>
         <p v-if="questDatePreview" class="qf-hint">Berlaku: {{ questDatePreview }}</p>
 
-        <label class="qf-field qf-narrow">
-          <span>Target ({{ targetUnit }})</span>
-          <input v-model.number="form.target" type="number" min="0" :step="targetStep" required />
-        </label>
+        <div class="qf-field">
+          <span>Metrik</span>
+          <div class="qf-metric-grid">
+            <button
+              v-for="m in METRIC_OPTIONS" :key="m.value" type="button"
+              class="qf-metric-card" :class="{ 'is-active': form.metric === m.value }"
+              @click="form.metric = m.value"
+            >
+              <component :is="m.icon" :size="18" />
+              <span class="qf-metric-label">{{ m.label }}</span>
+              <span class="qf-metric-unit">{{ METRIC_META[m.value].unit }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="qf-row">
+          <label class="qf-field qf-narrow">
+            <span>Target ({{ targetUnit }})</span>
+            <input v-model.number="form.target" type="number" min="0" :step="targetStep" required />
+          </label>
+          <label class="qf-field qf-narrow">
+            <span>Reward</span>
+            <div class="qf-reward-input">
+              <Trophy :size="15" class="qf-reward-icon" />
+              <input v-model.number="form.reward" type="number" min="0" required />
+              <span class="qf-reward-suffix">XP</span>
+            </div>
+          </label>
+        </div>
+
+        <!-- Preview live — WYSIWYG, bentuk kartunya sama persis dgn kartu di Daftar Quest -->
+        <div class="qf-preview">
+          <p class="qf-preview-label">Preview Quest</p>
+          <article class="ql-item" :class="'ql-item--' + form.scope">
+            <div class="ql-icon-badge">
+              <component :is="metricIcon(form.metric)" :size="18" />
+            </div>
+            <div class="ql-body">
+              <div class="ql-top">
+                <span class="ql-title">{{ form.title || 'Judul quest…' }}</span>
+                <span class="mui-tag" :class="form.scope === 'harian' ? 'mui-tag--blue' : 'mui-tag--orange'">{{ form.scope }}</span>
+              </div>
+              <p class="ql-meta">
+                {{ metricLabel(form.metric) }} · target {{ form.target || 0 }} {{ targetUnit }}
+                <template v-if="questDatePreview"> · {{ questDatePreview }}</template>
+              </p>
+            </div>
+            <span class="ql-xp-badge"><Trophy :size="12" /> {{ form.reward || 0 }} XP</span>
+          </article>
+        </div>
 
         <p v-if="formError" class="qf-error">{{ formError }}</p>
         <button class="qf-submit" type="submit" :disabled="saving">
+          <Rocket :size="16" />
           {{ saving ? 'Menyimpan…' : 'Tambah Quest' }}
         </button>
       </form>
@@ -73,6 +108,7 @@
       <h2 class="mui-section-title">Daftar Quest</h2>
       <div v-if="loading" class="ql-list">
         <div v-for="i in 3" :key="i" class="ql-item">
+          <div class="mui-skel mui-skel--circle" style="width: 38px; height: 38px; flex-shrink: 0;"></div>
           <div class="ql-body">
             <div class="mui-skel mui-skel--text" style="width: 45%;"></div>
             <div class="mui-skel mui-skel--text" style="width: 75%; margin-top: 8px;"></div>
@@ -81,14 +117,17 @@
         </div>
       </div>
       <div v-else class="ql-list">
-        <article v-for="q in quests" :key="q.id" class="ql-item" :class="{ 'is-off': !q.active }">
+        <article v-for="q in quests" :key="q.id" class="ql-item" :class="['ql-item--' + q.scope, { 'is-off': !q.active }]">
+          <div class="ql-icon-badge">
+            <component :is="metricIcon(q.metric)" :size="18" />
+          </div>
           <div class="ql-body">
             <div class="ql-top">
               <span class="ql-title">{{ q.title }}</span>
               <span class="mui-tag" :class="q.scope === 'harian' ? 'mui-tag--blue' : 'mui-tag--orange'">{{ q.scope }}</span>
             </div>
             <p class="ql-meta">
-              {{ metricLabel(q.metric) }} · target {{ q.target }} {{ q.unit }} · {{ q.reward }} XP
+              {{ metricLabel(q.metric) }} · target {{ q.target }} {{ q.unit }}
               <template v-if="questPeriodLabel(q.scope, q.quest_date)"> · {{ questPeriodLabel(q.scope, q.quest_date) }}</template>
             </p>
 
@@ -103,12 +142,20 @@
               </div>
             </div>
           </div>
-          <div class="ql-actions">
-            <button v-if="editingId !== q.id" class="ql-btn" type="button" @click="startEditDate(q)">Ubah Tanggal</button>
-            <button class="ql-btn" type="button" @click="toggleActive(q)">
-              {{ q.active ? 'Nonaktifkan' : 'Aktifkan' }}
-            </button>
-            <button class="ql-btn ql-btn--del" type="button" @click="hapus(q)">Hapus</button>
+          <div class="ql-side">
+            <span class="ql-xp-badge"><Trophy :size="12" /> {{ q.reward }} XP</span>
+            <div class="ql-actions">
+              <button v-if="editingId !== q.id" class="ql-icon-btn" type="button" title="Ubah Tanggal" aria-label="Ubah Tanggal" @click="startEditDate(q)">
+                <CalendarClock :size="15" />
+              </button>
+              <label class="ql-switch" :title="q.active ? 'Nonaktifkan' : 'Aktifkan'">
+                <input type="checkbox" :checked="q.active" @change="toggleActive(q)" />
+                <span class="ql-switch-track"><span class="ql-switch-thumb"></span></span>
+              </label>
+              <button class="ql-icon-btn ql-icon-btn--del" type="button" title="Hapus" aria-label="Hapus" @click="hapus(q)">
+                <Trash2 :size="15" />
+              </button>
+            </div>
           </div>
         </article>
         <p v-if="quests.length === 0" class="qf-muted">Belum ada quest.</p>
@@ -122,6 +169,7 @@
 
 <script setup>
 import { reactive, ref, computed, watch } from 'vue'
+import { Sun, CalendarDays, Footprints, Repeat, Dumbbell, Timer, Trophy, Rocket, CalendarClock, Trash2 } from '@lucide/vue'
 import { authState } from '../store/auth.js'
 import { useAdminQuests } from '../composables/useAdminQuests.js'
 import { questPeriodLabel } from '../services/questSummary.js'
@@ -156,6 +204,23 @@ const METRIC_LABELS = {
   gym_duration: 'Durasi gym',
 }
 function metricLabel(m) { return METRIC_LABELS[m] || m }
+
+// Ikon per metrik — dipakai di kartu picker (form) & badge kartu quest (daftar & preview).
+const METRIC_ICONS = {
+  run_distance: Footprints,
+  run_sessions: Repeat,
+  gym_sessions: Dumbbell,
+  gym_duration: Timer,
+}
+function metricIcon(m) { return METRIC_ICONS[m] || Footprints }
+
+// Opsi picker metrik (kartu 2x2 di form) — urutan sejajar dgn METRIC_ICONS/METRIC_META.
+const METRIC_OPTIONS = [
+  { value: 'run_distance', label: 'Jarak Lari', icon: Footprints },
+  { value: 'run_sessions', label: 'Sesi Lari', icon: Repeat },
+  { value: 'gym_sessions', label: 'Sesi Gym', icon: Dumbbell },
+  { value: 'gym_duration', label: 'Durasi Gym', icon: Timer },
+]
 
 // Target & satuan mengikuti metrik — jarak dalam km, sesi/hitungan dalam bilangan
 // bulat, durasi dalam menit. Mencegah kombinasi ganjil spt "5 menit" utk jarak lari.
@@ -272,13 +337,56 @@ async function hapus(q) {
 .qf-field { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 140px; }
 .qf-field.qf-narrow { flex: 0 1 130px; }
 .qf-field span { font-size: 12px; font-weight: 600; color: #57534e; }
-.qf-field input, .qf-field select {
+.qf-field input {
   border: 1.5px solid #ece7e2; border-radius: 12px; padding: 11px 12px;
   font-family: inherit; font-size: 14px; color: #1c1917; background: #fff; outline: none;
 }
-.qf-field input:focus, .qf-field select:focus { border-color: #fc4c02; }
+.qf-field input:focus { border-color: #fc4c02; }
 .qf-hint { margin: -4px 0 0; font-size: 12px; font-weight: 600; color: #ea580c; }
+
+/* Toggle Periode — pakai .mui-toggle bawaan design-system, cukup tambah gap ikon+label */
+.qf-scope-toggle button { gap: 7px; }
+
+/* Picker Metrik — kartu ikon 2x2, gaya "pilih dgn mata" ala form gamifikasi
+   (bukan dropdown teks polos) supaya langsung kelihatan bedanya tiap metrik. */
+.qf-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+.qf-metric-card {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  border: 1.5px solid #ece7e2; border-radius: 14px; padding: 12px 8px;
+  background: #fff; cursor: pointer; font-family: inherit; color: #57534e;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.qf-metric-card:hover { border-color: #fed7aa; }
+.qf-metric-card.is-active {
+  border-color: transparent; color: #fff;
+  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+}
+.qf-metric-label { font-size: 11.5px; font-weight: 700; text-align: center; }
+.qf-metric-unit { font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.75; }
+
+/* Reward (XP) — dibungkus spt "chip" koin, bukan angka input polos */
+.qf-reward-input {
+  display: flex; align-items: center; gap: 6px;
+  border: 1.5px solid #ece7e2; border-radius: 12px; padding: 0 12px;
+  background: #fff;
+}
+.qf-reward-input:focus-within { border-color: #fc4c02; }
+.qf-reward-icon { color: #f59e0b; flex: 0 0 auto; }
+.qf-reward-input input {
+  flex: 1; min-width: 0; border: none; padding: 11px 0; font-family: inherit;
+  font-size: 14px; font-weight: 700; color: #1c1917; background: transparent; outline: none;
+}
+.qf-reward-suffix { font-size: 11px; font-weight: 800; color: #a8a29e; letter-spacing: 0.3px; }
+
+.qf-preview { display: flex; flex-direction: column; gap: 6px; }
+.qf-preview-label { margin: 0; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #a8a29e; }
+
 .qf-submit {
+  display: inline-flex; align-items: center; gap: 8px;
   align-self: flex-start; border: none; cursor: pointer; font-family: inherit;
   font-size: 14px; font-weight: 700; color: #fff; padding: 12px 20px; border-radius: 12px;
   background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
@@ -288,21 +396,69 @@ async function hapus(q) {
 .qf-muted { color: #a8a29e; font-size: 13px; }
 
 .ql-list { display: flex; flex-direction: column; gap: 10px; }
+
+/* Kartu quest — aksen warna kiri per periode (biru=harian, oranye=mingguan),
+   ikon metrik dlm badge bulat, XP jadi badge "pencapaian" yg menonjol di kanan. */
 .ql-item {
+  position: relative;
   display: flex; align-items: flex-start; gap: 12px; background: #fff;
-  border-radius: 16px; padding: 14px 16px; box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
+  border-radius: 16px; padding: 14px 16px 14px 18px;
+  box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
+  border-left: 4px solid transparent;
+  transition: opacity 0.15s ease;
 }
+.ql-item--harian   { border-left-color: #0d9488; }
+.ql-item--mingguan { border-left-color: #ea580c; }
 .ql-item.is-off { opacity: 0.55; }
+
+.ql-icon-badge {
+  flex: 0 0 auto; width: 38px; height: 38px; display: grid; place-content: center;
+  border-radius: 12px; background: #f5f1ec; color: #57534e;
+}
+.ql-item--harian .ql-icon-badge   { background: #ccfbf1; color: #0f766e; }
+.ql-item--mingguan .ql-icon-badge { background: #ffedd5; color: #c2410c; }
+
 .ql-body { flex: 1; min-width: 0; }
 .ql-top { display: flex; align-items: center; gap: 8px; }
 .ql-title { font-size: 14px; font-weight: 700; color: #1c1917; }
 .ql-meta { margin: 4px 0 0; font-size: 12px; color: #57534e; }
-.ql-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+
+.ql-side { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+
+/* Badge XP — gradien emas, terasa spt lencana pencapaian bukan sekadar angka */
+.ql-xp-badge {
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+  font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 999px;
+  color: #78350f; background: linear-gradient(135deg, #fde68a, #f59e0b);
+}
+
+.ql-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.ql-icon-btn {
+  display: grid; place-content: center; width: 30px; height: 30px;
+  border: 1px solid #ece7e2; background: #f5f1ec; cursor: pointer;
+  color: #57534e; border-radius: 9px;
+}
+.ql-icon-btn--del { background: #fee2e2; border-color: #fecaca; color: #dc2626; }
+.ql-icon-btn:disabled { opacity: 0.6; cursor: default; }
+
+/* Switch aktif/nonaktif — gaya "power toggle" ala menu game, ganti tombol teks */
+.ql-switch { position: relative; display: inline-flex; cursor: pointer; }
+.ql-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.ql-switch-track {
+  width: 38px; height: 22px; border-radius: 999px; background: #e7e2da;
+  display: flex; align-items: center; padding: 2px; transition: background 0.15s ease;
+}
+.ql-switch-thumb {
+  width: 18px; height: 18px; border-radius: 50%; background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25); transition: transform 0.15s ease;
+}
+.ql-switch input:checked + .ql-switch-track { background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%); }
+.ql-switch input:checked + .ql-switch-track .ql-switch-thumb { transform: translateX(16px); }
+
 .ql-btn {
   border: 1px solid #ece7e2; background: #f5f1ec; cursor: pointer; font-family: inherit;
   font-size: 12px; font-weight: 700; color: #57534e; padding: 8px 12px; border-radius: 10px;
 }
-.ql-btn--del { background: #fee2e2; border-color: #fecaca; color: #dc2626; }
 .ql-btn--sm { padding: 6px 10px; font-size: 11.5px; }
 .ql-btn:disabled { opacity: 0.6; cursor: default; }
 
