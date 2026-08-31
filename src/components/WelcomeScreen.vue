@@ -80,7 +80,7 @@ function goSignIn() {
   justify-content: center;
   box-sizing: border-box;
   overflow: hidden;
-  font-family: "Manrope", "Barlow", system-ui, sans-serif;
+  font-family: "Chakra Petch", system-ui, sans-serif;
   /* Foto aktivitas fisik — latihan di gym, seperti pada desain Figma */
   background:
     #00294a

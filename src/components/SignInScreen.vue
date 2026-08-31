@@ -164,7 +164,7 @@ function handleAdmin() {
   padding: 24px;
   box-sizing: border-box;
   background: linear-gradient(122deg, rgba(255, 128, 43, 1) 0%, rgba(219, 208, 200, 1) 100%);
-  font-family: "Manrope", "Barlow", system-ui, sans-serif;
+  font-family: "Chakra Petch", system-ui, sans-serif;
 }
 
 .aeroguard-signin .phone-frame {

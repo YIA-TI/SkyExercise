@@ -10,9 +10,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Manrope', 'Barlow', 'system-ui', 'sans-serif'],
-        heading: ['"Barlow Condensed"', 'Barlow', 'sans-serif'],
-        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+        sans: ['"Chakra Petch"', 'system-ui', 'sans-serif'],
+        heading: ['"Chakra Petch"', 'system-ui', 'sans-serif'],
+        serif: ['"Chakra Petch"', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       colors: {

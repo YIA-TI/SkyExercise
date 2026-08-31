@@ -107,7 +107,7 @@ async function handleAuthorize() {
   padding: 24px;
   box-sizing: border-box;
   background: #f5f1ec;
-  font-family: "Manrope", "Barlow", system-ui, sans-serif;
+  font-family: "Chakra Petch", system-ui, sans-serif;
 }
 
 .so-card {
@@ -168,7 +168,7 @@ async function handleAuthorize() {
 
 .so-title {
   margin: 0;
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: "Chakra Petch", system-ui, sans-serif;
   font-size: 19px;
   font-weight: 600;
   color: #1c1917;

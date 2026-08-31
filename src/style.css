@@ -83,18 +83,17 @@
   }
 }
 
-/* Tipografi sporty-luxe (via UI/UX skill):
-   - Label/judul data  → Barlow Condensed (atletis, tegas)
-   - Identitas & hero   → Playfair Display (serif elegan, mewah)
-   - Angka statistik    → JetBrains Mono (tabular) */
+/* Tipografi gamifikasi — satu keluarga (Chakra Petch, techy/HUD) dipakai di
+   heading, hero/identitas, & body; angka statistik tetap JetBrains Mono (tabular). */
 .mui-h-title,
 .mui-section-title,
 .aeroguard-home .section-title,
 .aeroguard-home .stat-card-title,
 .q-title,
 .q-stat-lbl {
-  font-family: "Barlow Condensed", "Barlow", system-ui, sans-serif;
-  letter-spacing: 0.3px;
+  font-family: "Chakra Petch", system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.2px;
   text-transform: none;
 }
 
@@ -103,7 +102,7 @@
 .pf-hero-name,
 .aeroguard-welcome .title,
 .aeroguard-signin .title {
-  font-family: "Playfair Display", Georgia, serif;
-  font-weight: 600;
+  font-family: "Chakra Petch", system-ui, sans-serif;
+  font-weight: 700;
   letter-spacing: 0;
 }

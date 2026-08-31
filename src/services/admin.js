@@ -36,7 +36,7 @@ export async function fetchDivisionSummary(range = {}) {
 export async function fetchParticipants() {
   const { data, error } = await supabase
     .from('athletes')
-    .select('athlete_id, firstname, lastname, city, profile_photo')
+    .select('athlete_id, firstname, lastname, city, profile_photo, username')
     .order('firstname', { ascending: true })
   if (error) throw error
   return (data ?? []).map((a) => ({
@@ -44,6 +44,7 @@ export async function fetchParticipants() {
     name: nameOf(a),
     city: a.city,
     avatar: a.profile_photo,
+    username: a.username,
   }))
 }
 

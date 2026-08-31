@@ -444,7 +444,7 @@ const visibleActivities = computed(() =>
   background-size: 180px 180px, auto, auto;
   background-attachment: fixed;
   animation: bg-drift 18s ease-in-out infinite;
-  font-family: "Manrope", "Barlow", system-ui, sans-serif;
+  font-family: "Chakra Petch", system-ui, sans-serif;
   box-sizing: border-box;
 }
 

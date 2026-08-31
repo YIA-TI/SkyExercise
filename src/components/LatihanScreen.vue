@@ -232,7 +232,7 @@ const badges = computed(() => [
 .q-level-badge {
   width: 52px; height: 52px; border-radius: 16px; display: grid; place-content: center;
   font-size: 24px; font-weight: 700; flex-shrink: 0; color: #3a2a06;
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: "Chakra Petch", system-ui, sans-serif;
   background: linear-gradient(135deg, #f4d27a 0%, #d1962a 55%, #b8862f 100%);
   box-shadow: 0 10px 24px -8px rgba(184, 134, 47, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.5);
 }

@@ -77,7 +77,7 @@ onMounted(async () => {
   justify-content: center;
   padding: 24px;
   background: #f5f1ec;
-  font-family: "Manrope", "Barlow", system-ui, sans-serif;
+  font-family: "Chakra Petch", system-ui, sans-serif;
 }
 .cb-card {
   width: 100%;

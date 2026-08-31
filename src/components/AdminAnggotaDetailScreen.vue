@@ -372,7 +372,7 @@ const filteredActivities = computed(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: "Chakra Petch", system-ui, sans-serif;
   font-size: 21px;
   font-weight: 600;
   letter-spacing: -0.2px;

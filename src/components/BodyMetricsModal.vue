@@ -143,7 +143,7 @@ async function handleSubmit() {
 
 .bm-modal-title {
   margin: 0 0 6px;
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: "Chakra Petch", system-ui, sans-serif;
   font-size: 19px;
   font-weight: 700;
   color: #1c1917;

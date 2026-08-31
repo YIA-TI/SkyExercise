@@ -53,3 +53,6 @@ __screenshots__/
 
 # Playwright MCP scratch output (screenshot/snapshot dari verifikasi manual)
 .playwright-mcp/
+
+# Referensi layout/desain lokal (bukan bagian dari source)
+example layout/

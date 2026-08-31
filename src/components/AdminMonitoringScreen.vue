@@ -73,9 +73,11 @@
         </button>
       </div>
       <p class="qs-legend">
-        Badge menunjukkan capaian pada periode terpilih (mis. "3/4 minggu" untuk quest mingguan,
-        "12/28 hari" untuk quest harian). Kolom <strong>Hari Aktif (Bonus)</strong> mencatat hari
-        lari/gym meski tanpa quest yang cocok — nilai plus di luar sistem quest.
+        <strong>X/Y selesai</strong> merangkum jumlah quest tercapai pada rentang tanggal
+        terpilih. Status &amp; progress tiap quest di bawah menunjukkan capaian pada periode
+        aktif saat ini (hari ini untuk quest harian, minggu ini untuk quest mingguan) terhadap
+        target quest. <strong>Total Lari</strong> &amp; <strong>Total GYM</strong> merangkum
+        aktivitas nyata pada rentang tanggal terpilih, lepas dari sistem quest.
       </p>
 
       <div v-if="questLoading" class="qs-list qs-list--skel">
@@ -109,18 +111,43 @@
 
             <template v-if="expandedIds.has(pr.athleteId)">
               <div class="qs-quest-list">
-                <div v-for="qc in pr.questCols" :key="qc.questId" class="qs-quest-item">
+                <div v-for="qc in pr.questCols.filter((c) => c.scope !== 'bonus')" :key="qc.questId" class="qs-quest-item">
                   <div class="qs-quest-item-info">
                     <span class="qs-quest-item-name">{{ qc.title }}</span>
-                    <span v-if="qc.scope !== 'bonus'" class="qs-quest-item-scope">
+                    <span class="qs-quest-item-scope">
                       {{ qc.scope === 'mingguan' ? 'Mingguan' : 'Harian' }}<template v-if="columnMetaById.get(qc.questId)?.periodLabel"> · {{ columnMetaById.get(qc.questId).periodLabel }}</template>
                     </span>
                   </div>
-                  <span class="qs-badge" :class="[badgeClassQuest(qc), { 'is-bonus': qc.scope === 'bonus' }]">
-                    <span v-if="qc.scope !== 'bonus'" class="qs-badge-dot"></span>
-                    <template v-if="qc.scope === 'bonus'">{{ qc.achieved }} hari · {{ qc.totalKm }} km</template>
-                    <template v-else>{{ qc.total ? `${qc.achieved}/${qc.total} ${qc.unit}` : 'Belum ada' }}</template>
+                  <span class="qs-badge" :class="liveStatusClass(qc)">
+                    <span class="qs-badge-dot"></span>{{ LIVE_STATUS_LABEL[liveStatusClass(qc)] }}
                   </span>
+                  <span class="qs-progress mui-mono">{{ liveProgressText(qc) }}</span>
+                </div>
+
+                <div class="qs-totals">
+                  <div class="qs-total-card qs-total-card--lari" :class="{ 'is-empty': pr.totals.lariSesi === 0 }">
+                    <div class="qs-total-icon"><Footprints :size="18" :stroke-width="2.25" /></div>
+                    <div class="qs-total-body">
+                      <p class="qs-total-title">Total Lari</p>
+                      <div v-if="pr.totals.lariSesi > 0" class="qs-total-stats">
+                        <span class="qs-total-stat"><strong>{{ pr.totals.lariKm }}</strong> km</span>
+                        <span class="qs-total-stat"><strong>{{ pr.totals.lariSesi }}</strong> sesi</span>
+                        <span class="qs-total-stat"><strong>{{ pr.totals.lariMenit }}</strong> menit</span>
+                      </div>
+                      <p v-else class="qs-total-empty">Belum ada aktivitas lari</p>
+                    </div>
+                  </div>
+                  <div class="qs-total-card qs-total-card--gym" :class="{ 'is-empty': pr.totals.gymSesi === 0 }">
+                    <div class="qs-total-icon"><Dumbbell :size="18" :stroke-width="2.25" /></div>
+                    <div class="qs-total-body">
+                      <p class="qs-total-title">Total GYM</p>
+                      <div v-if="pr.totals.gymSesi > 0" class="qs-total-stats">
+                        <span class="qs-total-stat"><strong>{{ pr.totals.gymMenit }}</strong> menit</span>
+                        <span class="qs-total-stat"><strong>{{ pr.totals.gymSesi }}</strong> sesi</span>
+                      </div>
+                      <p v-else class="qs-total-empty">Belum ada aktivitas gym</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </template>
@@ -136,6 +163,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+import { Footprints, Dumbbell } from '@lucide/vue'
 import { authState } from '../store/auth.js'
 import { useAdminMonitoring, useQuestSummary } from '../composables/useAdminData.js'
 import { questPeriodLabel } from '../services/questSummary.js'
@@ -190,6 +218,26 @@ function badgeClassQuest(qc) {
   if (qc.achieved === 0) return 'is-none'
   if (qc.achieved === qc.total) return 'is-full'
   return 'is-partial'
+}
+
+// Status/Progress "live" per quest di daftar per-atlet — beda dari badgeClassQuest di atas
+// (itu hitung jumlah periode tercapai sepanjang rentang filter, dipakai chart & PDF).
+// Ini pakai capaian metrik nyata (km/sesi/menit) vs target pada periode aktif PALING AKHIR
+// dlm rentang filter (mis. hari ini utk quest harian, minggu ini utk quest mingguan).
+function liveStatusClass(qc) {
+  if (qc.metricValue === null || !qc.metricTarget) return 'is-na'
+  if (qc.metricValue <= 0) return 'is-none'
+  if (qc.metricValue >= qc.metricTarget) return 'is-full'
+  return 'is-partial'
+}
+const LIVE_STATUS_LABEL = { 'is-full': 'Selesai', 'is-partial': 'Berjalan', 'is-none': 'Belum Mulai', 'is-na': 'Belum Berlaku' }
+
+function formatMetric(v, unit) {
+  return unit === 'km' ? v.toFixed(1) : Math.round(v)
+}
+function liveProgressText(qc) {
+  if (qc.metricValue === null || !qc.metricTarget) return 'Belum ada data'
+  return `${formatMetric(qc.metricValue, qc.metricUnit)}/${formatMetric(qc.metricTarget, qc.metricUnit)} ${qc.metricUnit}`
 }
 
 // Lookup periodLabel per quest (dipakai di daftar quest per-atlet, key by questId
@@ -432,11 +480,12 @@ async function downloadQuestPdf() {
   flex-direction: column;
   gap: 10px;
 }
+/* 3 kolom: Nama Quest | Status (merah/kuning/hijau) | Progress (achieved/target unit) */
 .qs-quest-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   font-size: 12.5px;
   color: #57534e;
 }
@@ -449,16 +498,60 @@ async function downloadQuestPdf() {
 .qs-chevron { flex: 0 0 auto; color: #a8a29e; transition: transform 0.2s ease; }
 .qs-chevron.is-open { transform: rotate(90deg); }
 
+/* Kolom Status — pill warna merah/kuning/hijau (is-none/is-partial/is-full), terpisah
+   dari kolom Progress supaya keduanya bisa dibaca sekilas tanpa gabung jadi satu teks. */
 .qs-badge {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap;
 }
 .qs-badge.is-full    { background: #d1fae5; color: #059669; }
-.qs-badge.is-partial { background: #fff2e8; color: #c2410c; }
+.qs-badge.is-partial { background: #fef3c7; color: #b45309; }
 .qs-badge.is-none    { background: #fee2e2; color: #dc2626; }
 .qs-badge.is-na      { background: #f5f1ec; color: #a8a29e; }
-.qs-badge.is-bonus    { background: #ede9fe; color: #7c3aed; }
 
-/* Indikator visual penyelesaian quest — merah/orange/hijau, selalu berdampingan dgn teks */
+/* Indikator visual penyelesaian quest — merah/kuning/hijau, selalu berdampingan dgn teks */
 .qs-badge-dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; background: currentColor; }
+
+/* Kolom Progress — angka capaian vs target quest, rata kanan spy sejajar antar baris */
+.qs-progress { font-size: 12.5px; font-weight: 700; color: #1c1917; text-align: right; white-space: nowrap; }
+
+/* Total Lari/Total GYM — kartu stat bergaya "achievement", dibedakan tegas dari baris
+   quest biasa spy langsung kelihatan (bukan cuma baris teks kecil di ujung daftar). */
+.qs-totals { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+
+.qs-total-card {
+  flex: 1 1 220px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  transition: background 0.15s ease;
+}
+.qs-total-card--lari { background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border-color: #fed7aa; }
+.qs-total-card--gym  { background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-color: #ddd6fe; }
+.qs-total-card--lari .qs-total-icon { color: #ea580c; }
+.qs-total-card--gym  .qs-total-icon { color: #7c3aed; }
+
+.qs-total-icon {
+  flex: 0 0 auto;
+  width: 38px; height: 38px;
+  display: grid; place-content: center;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 6px 14px -8px rgba(17, 18, 20, 0.4);
+}
+
+.qs-total-body { min-width: 0; }
+.qs-total-title { margin: 0 0 3px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #78716c; }
+.qs-total-stats { display: flex; flex-wrap: wrap; gap: 10px; }
+.qs-total-stat { font-size: 12.5px; color: #78716c; }
+.qs-total-stat strong { font-size: 15px; font-weight: 800; color: #1c1917; margin-right: 2px; }
+.qs-total-empty { margin: 0; font-size: 12px; font-weight: 600; color: #a8a29e; font-style: italic; }
+
+/* State kosong — tetap kelihatan (bukan hilang), tapi diredupkan spy tidak berebut
+   perhatian dgn atlet yg sudah ada capaian. */
+.qs-total-card.is-empty { background: #f5f1ec; border-color: #e7e2da; }
+.qs-total-card.is-empty .qs-total-icon { background: rgba(255, 255, 255, 0.5); color: #a8a29e; }
 </style>

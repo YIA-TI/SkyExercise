@@ -110,10 +110,10 @@ export async function fetchQuestSummary(startDateStr, endDateStr) {
     { data: acts, error: actErr },
   ] = await Promise.all([
     supabase.from('athletes').select('athlete_id, firstname, lastname').order('firstname', { ascending: true }),
-    supabase.from('quests').select('id, title, scope, created_at, quest_date').eq('active', true).order('sort_order', { ascending: true }),
+    supabase.from('quests').select('id, title, scope, metric, target, unit, created_at, quest_date').eq('active', true).order('sort_order', { ascending: true }),
     supabase.from('quest_claims').select('athlete_id, quest_id, period_key')
       .in('period_key', [...weeks.map((w) => w.periodKey), ...days]),
-    supabase.from('activities').select('athlete_id, start_date, sport_type, distance')
+    supabase.from('activities').select('athlete_id, start_date, sport_type, distance, moving_time')
       .gte('start_date', dateStrStartISO(startDateStr)).lte('start_date', dateStrEndISO(endDateStr)),
   ])
   if (athErr) throw athErr
@@ -124,19 +124,38 @@ export async function fetchQuestSummary(startDateStr, endDateStr) {
   // claimedSet key: `${athleteId}:${questId}:${periodKey}` (periodKey minggu ATAU tanggal harian)
   const claimedSet = new Set((claims ?? []).map((c) => `${c.athlete_id}:${c.quest_id}:${c.period_key}`))
 
-  // dayActivityMap key: `${athleteId}:${'YYYY-MM-DD'}` -> { km, hasGym } — dari
-  // aktivitas lari/gym pada hari itu, lepas dari ada/tidaknya quest yang cocok.
+  // dayActivityMap key: `${athleteId}:${'YYYY-MM-DD'}` -> agregat lari/gym hari itu,
+  // lepas dari ada/tidaknya quest yang cocok. Dipakai baik utk kolom bonus lama maupun
+  // progress metrik quest (harian/mingguan) & Total Lari/Total GYM di bawah.
   const dayActivityMap = new Map()
   ;(acts ?? []).forEach((a) => {
     const isRun = RUN.includes(a.sport_type)
     const isGym = GYM.includes(a.sport_type)
     if (!isRun && !isGym) return
     const key = `${a.athlete_id}:${toDateStr(new Date(a.start_date))}`
-    const entry = dayActivityMap.get(key) ?? { km: 0, hasGym: false }
-    if (isRun) entry.km += (a.distance || 0) / 1000
-    if (isGym) entry.hasGym = true
+    const entry = dayActivityMap.get(key) ?? { runKm: 0, runSessions: 0, runMinutes: 0, gymMinutes: 0, gymSessions: 0 }
+    if (isRun) {
+      entry.runKm += (a.distance || 0) / 1000
+      entry.runSessions += 1
+      entry.runMinutes += (a.moving_time || 0) / 60
+    }
+    if (isGym) {
+      entry.gymMinutes += (a.moving_time || 0) / 60
+      entry.gymSessions += 1
+    }
     dayActivityMap.set(key, entry)
   })
+
+  // Nilai mentah suatu metrik quest ('run_distance'|'run_sessions'|'gym_sessions'|'gym_duration')
+  // dari agregat satu hari (dayActivityMap entry) — dipakai utk progress periode aktif.
+  function metricValueFromEntry(metric, entry) {
+    if (!entry) return 0
+    if (metric === 'run_distance') return entry.runKm
+    if (metric === 'run_sessions') return entry.runSessions
+    if (metric === 'gym_sessions') return entry.gymSessions
+    if (metric === 'gym_duration') return entry.gymMinutes
+    return 0
+  }
 
   const questList = quests ?? []
 
@@ -166,11 +185,21 @@ export async function fetchQuestSummary(startDateStr, endDateStr) {
           return claimedSet.has(`${a.athlete_id}:${q.id}:${w.periodKey}`)
         })
         const applicable = perWeek.filter((v) => v !== null)
+
+        // Progress metrik (Status/Progress quest live) = capaian pada minggu PALING
+        // AKHIR yang berlaku dlm rentang filter — beda dari achieved/total di atas
+        // (yg menghitung jumlah minggu tercapai sepanjang rentang, dipakai chart & PDF).
+        const lastApplicableIdx = perWeek.reduce((last, v, i) => (v !== null ? i : last), -1)
+        const metricValue = lastApplicableIdx === -1 ? null : +weekDayLists[lastApplicableIdx].reduce(
+          (s, d) => s + metricValueFromEntry(q.metric, dayActivityMap.get(`${a.athlete_id}:${d}`)), 0,
+        ).toFixed(2)
+
         return {
           questId: q.id, title: q.title, scope: 'mingguan', unit: 'minggu',
           achieved: applicable.filter(Boolean).length,
           total: applicable.length,
           perWeek,
+          metricValue, metricTarget: q.target, metricUnit: q.unit,
         }
       }
       // harian
@@ -179,20 +208,29 @@ export async function fetchQuestSummary(startDateStr, endDateStr) {
         wd.filter((d) => isApplicableDay(d) && claimedSet.has(`${a.athlete_id}:${q.id}:${d}`)).length,
       )
       const perWeekTotal = weekDayLists.map((wd) => wd.filter(isApplicableDay).length)
+
+      // Progress metrik = capaian pada hari PALING AKHIR yang berlaku dlm rentang filter.
+      const lastApplicableDay = days.filter(isApplicableDay).pop()
+      const metricValue = lastApplicableDay === undefined ? null
+        : +metricValueFromEntry(q.metric, dayActivityMap.get(`${a.athlete_id}:${lastApplicableDay}`)).toFixed(2)
+
       return {
         questId: q.id, title: q.title, scope: 'harian', unit: 'hari',
         achieved: perWeek.reduce((s, n) => s + n, 0),
         total: perWeekTotal.reduce((s, n) => s + n, 0),
         perWeek,
         perWeekTotal,
+        metricValue, metricTarget: q.target, metricUnit: q.unit,
       }
     })
 
     // Kolom bonus: hari ada aktivitas lari/gym + jaraknya, independen dari quest apa pun.
+    // Masih dihitung (dipakai PDF export), meski tak lagi ditampilkan di daftar quest
+    // per-atlet — digantikan baris "Total Lari"/"Total GYM" yg lebih lengkap di bawah.
     const dayDetail = (d) => {
       const entry = dayActivityMap.get(`${a.athlete_id}:${d}`)
       if (!entry) return null
-      return { dateStr: d, label: shortDate(new Date(`${d}T00:00:00`)), km: +entry.km.toFixed(1), hasGym: entry.hasGym }
+      return { dateStr: d, label: shortDate(new Date(`${d}T00:00:00`)), km: +entry.runKm.toFixed(1), hasGym: entry.gymSessions > 0 }
     }
     const activeDays = days.map(dayDetail).filter(Boolean)
     const totalKm = activeDays.reduce((s, d) => s + d.km, 0)
@@ -207,7 +245,24 @@ export async function fetchQuestSummary(startDateStr, endDateStr) {
       perWeekTotal: bonusPerWeekTotal,
     })
 
-    return { athleteId: a.athlete_id, name: nameOf(a), questCols }
+    // Total Lari & Total GYM: agregat aktivitas nyata pada seluruh rentang tanggal
+    // terpilih, lepas dari sistem quest — dipakai di baris ringkasan bawah per atlet.
+    const totals = days.reduce((acc, d) => {
+      const entry = dayActivityMap.get(`${a.athlete_id}:${d}`)
+      if (entry) {
+        acc.lariKm += entry.runKm
+        acc.lariSesi += entry.runSessions
+        acc.lariMenit += entry.runMinutes
+        acc.gymMenit += entry.gymMinutes
+        acc.gymSesi += entry.gymSessions
+      }
+      return acc
+    }, { lariKm: 0, lariSesi: 0, lariMenit: 0, gymMenit: 0, gymSesi: 0 })
+    totals.lariKm = +totals.lariKm.toFixed(1)
+    totals.lariMenit = Math.round(totals.lariMenit)
+    totals.gymMenit = Math.round(totals.gymMenit)
+
+    return { athleteId: a.athlete_id, name: nameOf(a), questCols, totals }
   })
 
   return { weeks, quests: questList, rows }
