@@ -243,11 +243,15 @@ export function useQuestSummary(range) {
   const { data, loading, error, refresh } = useAsync(
     () => fetchQuestSummary(unref(start), unref(end)),
     [() => unref(start), () => unref(end)],
-    ['activities', 'quests', 'quest_claims'],
+    ['athletes', 'activities', 'quests', 'quest_claims'],
   )
   return { summary: data, loading, error, refresh }
 }
 ```
+
+> **Correction found during Task 3 code review:** `fetchQuestSummary` also queries `athletes`
+> (it's the source of the row list itself — new participants, name edits). The original plan
+> text above omitted it from `realtimeTables`; the code block has been corrected in place.
 
 - [ ] **Step 2: Verify no regression in the admin screens**
 

@@ -49,7 +49,7 @@ directly afterward, unchanged.
 | `useAdminMonitoring` | `useAdminData.js` | `['athletes', 'activities']` |
 | `useAdminParticipants` | `useAdminData.js` | `['athletes']` |
 | `useAdminParticipantDetail` | `useAdminData.js` | `['athletes', 'activities']` |
-| `useQuestSummary` | `useAdminData.js` | `['activities', 'quests', 'quest_claims']` |
+| `useQuestSummary` | `useAdminData.js` | `['athletes', 'activities', 'quests', 'quest_claims']` |
 
 No changes to any `.vue` template or service (`*.js` under `services/`) — this phase only
 touches the two composable files plus the new shared `useAsync.js`.
