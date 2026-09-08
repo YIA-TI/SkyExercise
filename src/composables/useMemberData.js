@@ -1,6 +1,6 @@
 // src/composables/useMemberData.js
 // Hook data peserta — bungkus service jadi reaktif { data, loading, error, refresh }.
-import { ref, unref, watch, onMounted } from 'vue'
+import { unref } from 'vue'
 import { authState } from '../store/auth.js'
 import { fetchProfile } from '../services/profile.js'
 import { fetchHomeStats } from '../services/stats.js'
@@ -8,33 +8,13 @@ import { fetchActivities, fetchActivityDetail } from '../services/activities.js'
 import { fetchDistanceLeaderboard, fetchEffortLeaderboard, fetchLeagueLeaderboard, fetchRosterAvatars } from '../services/leaderboard.js'
 import { tierForRank } from '../lib/leagueTier.js'
 import { fetchMyAchievements, checkAchievements } from '../services/achievements.js'
-
-// Helper generik: jalankan `runner` saat mount + tiap deps berubah.
-function useAsync(runner, deps = []) {
-  const data = ref(null)
-  const loading = ref(true)
-  const error = ref(null)
-
-  async function refresh() {
-    loading.value = true
-    error.value = null
-    try {
-      data.value = await runner()
-    } catch (e) {
-      error.value = e
-    } finally {
-      loading.value = false
-    }
-  }
-
-  onMounted(refresh)
-  if (deps.length) watch(deps, refresh)
-  return { data, loading, error, refresh }
-}
+import { useAsync } from './useAsync.js'
 
 export function useProfile(athleteId) {
   const { data, loading, error, refresh } = useAsync(
     () => fetchProfile(unref(athleteId) ?? authState.athleteId),
+    [],
+    ['athletes'],
   )
   return { profile: data, loading, error, refresh }
 }
@@ -42,6 +22,8 @@ export function useProfile(athleteId) {
 export function useHomeStats() {
   const { data, loading, error, refresh } = useAsync(
     () => fetchHomeStats(authState.athleteId),
+    [],
+    ['activities'],
   )
   return { stats: data, loading, error, refresh }
 }
@@ -51,6 +33,7 @@ export function useActivities(filter) {
   const { data, loading, error, refresh } = useAsync(
     () => fetchActivities({ athleteId: authState.athleteId, filter: unref(filter) ?? 'Semua' }),
     [() => unref(filter)],
+    ['activities'],
   )
   return { activities: data, loading, error, refresh }
 }
@@ -59,6 +42,7 @@ export function useActivityDetail(activityId) {
   const { data, loading, error, refresh } = useAsync(
     () => fetchActivityDetail(unref(activityId)),
     [() => unref(activityId)],
+    ['activities'],
   )
   return { activity: data, loading, error, refresh }
 }
@@ -75,13 +59,13 @@ export function useLeaderboard(mode, leaguePeriod) {
     const rows = m === 'effort' ? await fetchEffortLeaderboard() : await fetchDistanceLeaderboard()
     const avatarMap = await fetchRosterAvatars()
     return rows.map((r) => ({ ...r, avatar: avatarMap.get(r.athleteId) ?? null }))
-  }, [() => unref(mode), () => unref(leaguePeriod)])
+  }, [() => unref(mode), () => unref(leaguePeriod)], ['activities', 'athlete_progress'])
   return { rows: data, loading, error, refresh }
 }
 
 // Katalog 12 achievement + status unlock milik atlet yang login.
 export function useAchievements() {
-  const { data, loading, error, refresh } = useAsync(fetchMyAchievements)
+  const { data, loading, error, refresh } = useAsync(fetchMyAchievements, [], ['athlete_achievements'])
   return { achievements: data, loading, error, refresh }
 }
 

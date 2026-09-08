@@ -54,8 +54,14 @@ __screenshots__/
 # Playwright MCP scratch output (screenshot/snapshot dari verifikasi manual)
 .playwright-mcp/
 
+# Ad-hoc test/smoke scripts (bukan bagian dari test suite resmi)
+_*_test.mjs
+_*.test.mjs
+
 # Referensi layout/desain lokal (bukan bagian dari source)
 example layout/
 
 # Supabase migrations (dikelola manual, jangan commit)
 supabase/migrations/
+.vercel
+.env*
