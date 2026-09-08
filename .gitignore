@@ -65,3 +65,4 @@ example layout/
 supabase/migrations/
 .vercel
 .env*
+.superpowers/
