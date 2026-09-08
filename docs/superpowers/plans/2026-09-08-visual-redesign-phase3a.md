@@ -1,0 +1,611 @@
+# Visual Redesign Phase 3a Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Recolor the shared design system (`mobile-ui.css` + global fonts/fallback) from the current light cream theme to a dark orange+violet glassmorphism theme, cascading the new look to the 15 screens that already import it.
+
+**Architecture:** Two small, cohesive CSS/HTML changes — global font loading + fallback background (3 tiny files), then a full recolor of every rule in the one shared stylesheet. No component `.vue` files change; no data or logic touched.
+
+**Tech Stack:** Plain CSS (no preprocessor), Google Fonts, Vite.
+
+---
+
+### Task 1: Global fonts + fallback background
+
+**Files:**
+- Modify: `index.html`
+- Modify: `src/style.css`
+- Modify: `src/assets/main.css`
+
+- [ ] **Step 1: Add Barlow Condensed + Barlow to the Google Fonts link**
+
+Find (in `index.html`):
+
+```html
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+```
+
+Replace with:
+
+```html
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+```
+
+(Chakra Petch stays loaded — screens not yet migrated in a later phase still use it directly. Nothing is removed here, only added.)
+
+- [ ] **Step 2: Swap the heading font to Barlow Condensed**
+
+Find (in `src/style.css`):
+
+```css
+/* Tipografi gamifikasi — satu keluarga (Chakra Petch, techy/HUD) dipakai di
+   heading, hero/identitas, & body; angka statistik tetap JetBrains Mono (tabular). */
+.mui-h-title,
+.mui-section-title,
+.aeroguard-home .section-title,
+.aeroguard-home .stat-card-title,
+.q-title,
+.q-stat-lbl {
+  font-family: "Chakra Petch", system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  text-transform: none;
+}
+
+.aeroguard-home .hello,
+.q-rank,
+.pf-hero-name,
+.aeroguard-welcome .title,
+.aeroguard-signin .title {
+  font-family: "Chakra Petch", system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+```
+
+Replace with:
+
+```css
+/* Tipografi baru (Phase 3a) — Barlow Condensed dipakai di heading/identitas
+   (kesan atletik/sporty, sesuai arah redesign visual). Selector yang masih
+   berada di layar belum-diredesain (.aeroguard-home, .aeroguard-welcome,
+   .aeroguard-signin) tetap kena perubahan ini juga — font heading konsisten
+   duluan sebelum warnanya ikut diredesain di fase berikutnya. Angka statistik
+   tetap JetBrains Mono (tabular), tak berubah. */
+.mui-h-title,
+.mui-section-title,
+.aeroguard-home .section-title,
+.aeroguard-home .stat-card-title,
+.q-title,
+.q-stat-lbl {
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  text-transform: none;
+}
+
+.aeroguard-home .hello,
+.q-rank,
+.pf-hero-name,
+.aeroguard-welcome .title,
+.aeroguard-signin .title {
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+```
+
+- [ ] **Step 3: Update the `#app` fallback background color**
+
+Find (in `src/assets/main.css`):
+
+```css
+/* Reset #app agar mengisi seluruh layar — latar krem + grain sebagai fallback
+   sebelum layar (.mui / .aeroguard-home) selesai dimuat, supaya tak ada kedip putih polos. */
+#app {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background-image: var(--grain), radial-gradient(760px 340px at 100% -6%, rgba(252, 76, 2, 0.18), transparent 60%);
+  background-color: #ece7e2;
+  background-repeat: repeat, no-repeat;
+  background-size: 180px 180px, auto;
+  background-attachment: fixed;
+}
+```
+
+Replace with:
+
+```css
+/* Reset #app agar mengisi seluruh layar — latar gelap + grain sebagai fallback
+   sebelum layar (.mui / .aeroguard-home) selesai dimuat, supaya tak ada kedip
+   warna lama (krem) sebelum tema gelap baru (Phase 3a) termuat. */
+#app {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  background-image: var(--grain), radial-gradient(760px 340px at 100% -6%, rgba(252, 76, 2, 0.18), transparent 60%);
+  background-color: #0f0a2e;
+  background-repeat: repeat, no-repeat;
+  background-size: 180px 180px, auto;
+  background-attachment: fixed;
+}
+```
+
+- [ ] **Step 4: Verify in the browser**
+
+Run: `cd "D:\porto\SkyExcercise" && npm run dev` (if not already running)
+Open `http://localhost:5173`, confirm the page loads with no console errors, and open browser devtools' Network tab to confirm the Barlow/Barlow Condensed font files load successfully (200 status, not 404).
+
+- [ ] **Step 5: Commit**
+
+The user reviews and commits all changes themselves — do not run `git add`/`git commit`/`git push`. Leave the change unstaged.
+
+---
+
+### Task 2: Recolor the shared design system (`mobile-ui.css`)
+
+**Files:**
+- Modify: `src/assets/mobile-ui.css`
+
+This replaces the entire file's color/background values for the new dark orange+violet
+glassmorphism theme. Structural rules (layout, sizing, flex/grid, media query breakpoints,
+animation timing) are unchanged — only colors, backgrounds, borders, and shadows change, plus
+the base `font-family`. The `.spin-icon`/`@keyframes mui-spin` block at the end (added in Phase 2)
+is untouched.
+
+- [ ] **Step 1: Replace the entire file**
+
+Replace the entire contents of `src/assets/mobile-ui.css` with:
+
+```css
+/* ─────────────────────────────────────────────────────────
+   mobile-ui.css — Design system (Phase 3a: dark orange+violet
+   glassmorphism, atletik/sporty). Dipakai bersama semua layar
+   member & admin yang sudah di-@import file ini.
+   ───────────────────────────────────────────────────────── */
+
+.mui {
+  position: relative;
+  z-index: 0;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  /* Latar gelap oranye→violet (identitas baru) — grain + radial glow oranye/violet
+     di dua sudut, plus drift lambat supaya terasa hidup. Garis diagonal (::before)
+     & motif rute (::after) ada di lapisan terpisah supaya masing-masing bisa
+     berdenyut (pulse) sendiri. */
+  background-image:
+    var(--grain),
+    radial-gradient(820px 420px at 100% -8%, rgba(252, 76, 2, 0.28), transparent 62%),
+    radial-gradient(760px 460px at -10% 108%, rgba(124, 58, 237, 0.30), transparent 58%),
+    linear-gradient(160deg, #3b1a0a 0%, #4c1d95 45%, #1e1b4b 75%, #0f0a2e 100%);
+  background-color: #0f0a2e;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+  background-size: 180px 180px, auto, auto, cover;
+  background-attachment: fixed;
+  animation: bg-drift 18s ease-in-out infinite;
+  font-family: "Barlow", system-ui, sans-serif;
+  box-sizing: border-box;
+}
+
+/* Garis diagonal ganda (oranye/violet, saling silang) — lapisan terpisah supaya
+   bisa berdenyut (pulse) sendiri, kesan "detak" energi ala sporty/motion-line. */
+.mui::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(135deg, rgba(252, 76, 2, 0.12) 0, rgba(252, 76, 2, 0.12) 3px, transparent 3px, transparent 46px),
+    repeating-linear-gradient(45deg, rgba(196, 181, 253, 0.08) 0, rgba(196, 181, 253, 0.08) 2px, transparent 2px, transparent 70px);
+  animation: stripe-pulse 3s ease-in-out infinite;
+}
+
+/* Motif rute GPS di sudut — sudah oranye, cocok dgn palet baru tanpa perlu diubah.
+   Lapisan terpisah dengan ritme pulse sendiri (denyut live-tracking). */
+.mui::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--route-line);
+  background-repeat: no-repeat;
+  background-size: 640px 640px;
+  background-position: 110% 110%;
+  animation: route-pulse 2.5s ease-in-out infinite;
+}
+
+.mui-col {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: clamp(16px, 3vw, 28px);
+  padding-bottom: 120px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.mui-col--wide {
+  max-width: 1080px;
+}
+
+/* ── Header (kaca buram di atas latar gelap) ── */
+.mui-header {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  color: #F8FAFC;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 18px 36px -28px rgba(0, 0, 0, 0.6);
+}
+.mui-header::before {
+  content: '';
+  position: absolute;
+  top: -70%;
+  right: -8%;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(252, 76, 2, 0.22) 0%, rgba(252, 76, 2, 0) 70%);
+  pointer-events: none;
+}
+
+.mui-header .h-left {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.mui-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  color: #ffffff;
+  flex-shrink: 0;
+  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+}
+
+.mui-h-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.mui-h-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: rgba(248, 250, 252, 0.65);
+}
+
+.mui-pill {
+  position: relative;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: #FDBA74;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(6px);
+  padding: 6px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* ── Section ── */
+.mui-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mui-section-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: #F8FAFC;
+}
+
+.mui-card {
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: 0 16px 32px -26px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Tag / badge ── */
+.mui-tag {
+  display: inline-block;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: -0.1px;
+}
+
+.mui-tag--orange { background: rgba(251, 146, 60, 0.18); color: #FDBA74; }
+.mui-tag--blue   { background: rgba(45, 212, 191, 0.18); color: #5EEAD4; }
+.mui-tag--green  { background: rgba(52, 211, 153, 0.18); color: #6EE7B7; }
+.mui-tag--gray   { background: rgba(255, 255, 255, 0.10); color: rgba(248, 250, 252, 0.75); }
+.mui-tag--accent { background: #fc4c02; color: #ffffff; }
+
+.mui-mono {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Segmented toggle ── */
+.mui-toggle {
+  display: flex;
+  gap: 5px;
+  padding: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 16px 32px -26px rgba(0, 0, 0, 0.6);
+}
+
+.mui-toggle button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(248, 250, 252, 0.65);
+  transition: all 0.15s ease;
+}
+
+.mui-toggle button.is-active {
+  color: #ffffff;
+  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+}
+
+/* ── Rank list (peringkat) ── */
+.mui-rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mui-rank {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 13px 16px;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mui-rank:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px -20px rgba(0, 0, 0, 0.6);
+}
+
+.mui-rank--me {
+  border-color: #fc4c02;
+  box-shadow: 0 0 0 3px rgba(252, 76, 2, 0.25);
+}
+
+.mui-rank-num {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.mui-rank-num--gold   { background: linear-gradient(135deg, #fde68a, #f59e0b); color: #78350f; }
+.mui-rank-num--silver { background: linear-gradient(135deg, #f5f1ec, #d6cfc8); color: #44403c; }
+.mui-rank-num--bronze { background: linear-gradient(135deg, #fdba74, #c2703d); color: #431407; }
+.mui-rank-num--normal { background: rgba(255, 255, 255, 0.12); color: rgba(248, 250, 252, 0.8); }
+
+.mui-rank-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #F8FAFC;
+}
+
+.mui-rank-unit {
+  font-size: 11.5px;
+  color: rgba(248, 250, 252, 0.5);
+  white-space: nowrap;
+}
+
+.mui-rank-value {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 16px;
+  font-weight: 700;
+  color: #F8FAFC;
+  white-space: nowrap;
+}
+
+@media (max-width: 400px) {
+  .mui-rank-unit { display: none; }
+}
+
+/* ── Skeleton (loading placeholder) — bar dgn shimmer, ukuran diatur per-pemakai
+   lewat width/height inline atau modifier class. Base & shimmer diredupkan
+   dibanding versi lama supaya pas di atas kartu kaca gelap, bukan kartu putih. ── */
+.mui-skel {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: 8px;
+}
+.mui-skel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  animation: mui-skel-shimmer 1.4s ease-in-out infinite;
+}
+.mui-skel--text   { height: 12px; border-radius: 6px; }
+.mui-skel--circle { border-radius: 50%; }
+
+@keyframes mui-skel-shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ── Tab bar (bottom nav mobile / sidebar desktop) — dipakai bersama
+   MemberTabBar & AdminTabBar, keduanya cukup @import file ini. Sudah gelap+blur
+   sebelumnya, di Phase 3a cuma dihangatkan sedikit ke arah violet (bukan hitam
+   polos) supaya senada dengan latar baru. ── */
+.m-tabbar {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 36px);
+  max-width: 460px;
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 22px;
+  background: rgba(30, 27, 75, 0.85);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.55);
+  z-index: 20;
+}
+
+.m-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 9px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 15px;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.55);
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.m-tab:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.m-tab--active {
+  color: #ffffff;
+  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+}
+
+/* ── Desktop ≥ 768px: sidebar kiri ── */
+@media (min-width: 768px) {
+  .m-tabbar {
+    /* Reset bottom pill */
+    bottom: auto;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 72px;
+    max-width: 72px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 8px;
+    border-radius: 22px;
+  }
+
+  .m-tab {
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 4px;
+    border-radius: 14px;
+    gap: 4px;
+    font-size: 9.5px;
+  }
+}
+
+/* ── Desktop lebar ≥ 1024px: sidebar sedikit lebih lebar ── */
+@media (min-width: 1024px) {
+  .m-tabbar {
+    left: 24px;
+    width: 80px;
+    max-width: 80px;
+    padding: 12px 10px;
+  }
+
+  .m-tab {
+    font-size: 10px;
+    padding: 11px 4px;
+  }
+}
+
+/* ── Spin icon (loading spinner inside buttons) — shared across all screens
+   that @import this file, so the animation isn't redefined per-component. ── */
+.spin-icon.is-spinning { animation: mui-spin 0.9s linear infinite; }
+@keyframes mui-spin { to { transform: rotate(360deg); } }
+```
+
+- [ ] **Step 2: Verify in the browser**
+
+With the dev server running, log in as admin and visit `/admin`, `/admin/peringkat`,
+`/admin/quests`. Confirm: dark orange/violet gradient background, glass-effect header/cards/
+toggle/rank rows, orange accent buttons/pills still legible, tab bar tinted violet-dark. Log in
+as a participant and visit `/latihan` and `/peringkat` — same check. Then visit `/home` (not
+yet migrated — still uses its own `.aeroguard-home` styling) and confirm it still renders in
+its OLD light styling, unaffected (only its `.mui-skel`/`.spin-icon` usages should look new;
+everything else on that screen stays as before).
+
+- [ ] **Step 3: Commit**
+
+Leave unstaged for the user.
