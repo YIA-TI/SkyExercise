@@ -5,6 +5,7 @@ import { authState } from '../store/auth.js'
 // ── FE baru (gaya Sandow / mobile-first) ── lazy: tiap screen jadi chunk
 // terpisah, cuma diunduh saat rute-nya dibuka (bukan di bundle awal).
 const WelcomeScreen         = () => import('../components/WelcomeScreen.vue')
+const WelcomeBackScreen     = () => import('../components/WelcomeBackScreen.vue')
 const SignInScreen          = () => import('../components/SignInScreen.vue')
 const HomeScreen            = () => import('../components/HomeScreen.vue')
 const StatsDetailScreen     = () => import('../components/StatsDetailScreen.vue')
@@ -26,6 +27,7 @@ const routes = [
   { path: '/',                name: 'Welcome',        component: WelcomeScreen,        meta: { requiresAuth: false } },
   { path: '/signin',          name: 'SignIn',         component: SignInScreen,         meta: { requiresAuth: false } },
   { path: '/strava/callback', name: 'StravaCallback', component: StravaCallbackScreen, meta: { requiresAuth: false } },
+  { path: '/welcome-back',    name: 'WelcomeBack',    component: WelcomeBackScreen,    meta: { requiresAuth: true, hideTabBar: true } },
 
   // ── Anggota ─────────────────────────────────────────────
   { path: '/home',             name: 'Home',            component: HomeScreen,           meta: { requiresAuth: true, role: 'anggota' } },

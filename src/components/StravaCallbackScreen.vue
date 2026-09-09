@@ -61,7 +61,7 @@ onMounted(async () => {
     }
 
     await refreshStravaStatus()
-    router.replace('/home')
+    router.replace('/welcome-back')
   } catch (e) {
     status.value = 'error'
     message.value = 'Gagal menghubungkan: ' + (e?.message || e)

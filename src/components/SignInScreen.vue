@@ -130,8 +130,8 @@ async function handleSignIn() {
   errorMsg.value = ''
   submitting.value = true
   try {
-    const role = await signInAdmin(email.value, password.value)
-    router.push(role === 'admin' ? '/admin' : '/home')
+    await signInAdmin(email.value, password.value)
+    router.push('/welcome-back')
   } catch (_e) {
     errorMsg.value = 'Email atau kata sandi salah.'
   } finally {
