@@ -26,16 +26,17 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { logout } from '../store/auth.js'
+import { authState, logout } from '../store/auth.js'
 
 const route = useRoute()
 const router = useRouter()
 
 const isMonitoring = computed(() => route.path === '/admin')
 
-function handleLogout() {
-  logout()
-  router.push('/')
+async function handleLogout() {
+  const name = authState.userName
+  await logout()
+  router.push({ path: '/goodbye', query: { name } })
 }
 </script>
 

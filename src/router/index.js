@@ -4,8 +4,8 @@ import { authState } from '../store/auth.js'
 
 // ── FE baru (gaya Sandow / mobile-first) ── lazy: tiap screen jadi chunk
 // terpisah, cuma diunduh saat rute-nya dibuka (bukan di bundle awal).
-const WelcomeScreen         = () => import('../components/WelcomeScreen.vue')
 const WelcomeBackScreen     = () => import('../components/WelcomeBackScreen.vue')
+const GoodbyeScreen         = () => import('../components/GoodbyeScreen.vue')
 const SignInScreen          = () => import('../components/SignInScreen.vue')
 const HomeScreen            = () => import('../components/HomeScreen.vue')
 const StatsDetailScreen     = () => import('../components/StatsDetailScreen.vue')
@@ -24,10 +24,21 @@ const AdminQuestScreen      = () => import('../components/AdminQuestScreen.vue')
 
 const routes = [
   // ── Publik ──────────────────────────────────────────────
-  { path: '/',                name: 'Welcome',        component: WelcomeScreen,        meta: { requiresAuth: false } },
+  // '/' tidak lagi menampilkan splash — langsung reroute sesuai status login
+  // (auth sudah pasti selesai resolve di titik ini, lihat main.js: initAuth()
+  // di-await dulu sebelum router/app di-mount).
+  {
+    path: '/',
+    name: 'Root',
+    redirect: () => {
+      if (!authState.isLoggedIn) return '/signin'
+      return authState.userRole === 'admin' ? '/admin' : '/home'
+    },
+  },
   { path: '/signin',          name: 'SignIn',         component: SignInScreen,         meta: { requiresAuth: false } },
   { path: '/strava/callback', name: 'StravaCallback', component: StravaCallbackScreen, meta: { requiresAuth: false } },
-  { path: '/welcome-back',    name: 'WelcomeBack',    component: WelcomeBackScreen,    meta: { requiresAuth: true, hideTabBar: true } },
+  { path: '/welcome-back',    name: 'WelcomeBack',    component: WelcomeBackScreen,    meta: { requiresAuth: true, hideTabBar: true, isSplash: true } },
+  { path: '/goodbye',         name: 'Goodbye',        component: GoodbyeScreen,        meta: { requiresAuth: false, hideTabBar: true, isSplash: true } },
 
   // ── Anggota ─────────────────────────────────────────────
   { path: '/home',             name: 'Home',            component: HomeScreen,           meta: { requiresAuth: true, role: 'anggota' } },

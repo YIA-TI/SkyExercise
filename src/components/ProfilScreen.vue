@@ -172,9 +172,10 @@ const tabs = [
 ]
 const activeTab = ref('info')
 
-function handleLogout() {
-  logout()
-  router.push('/')
+async function handleLogout() {
+  const name = authState.userName
+  await logout()
+  router.push({ path: '/goodbye', query: { name } })
 }
 
 function goGantiPassword() {

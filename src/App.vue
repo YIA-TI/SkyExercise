@@ -10,15 +10,18 @@ import AdminTabBar from './components/AdminTabBar.vue'
 // Modal jarang tampil (cuma isi awal / dibuka manual) — muat lazy, jangan ikut bundle awal.
 const BodyMetricsModal = defineAsyncComponent(() => import('./components/BodyMetricsModal.vue'))
 
-const showBodyMetricsModal = computed(() =>
-  authState.userRole === 'anggota' &&
-  ((!authState.loading && authState.needsBodyMetrics) || bodyMetricsModalState.open),
-)
-
 // Tab bar dirender di sini (bukan per-screen) supaya TIDAK ikut ter-animasi oleh
 // transisi pindah halaman di bawah — nav bar harus terasa statis/persisten.
 const route = useRoute()
 const showTabBar = computed(() => !route.meta.hideTabBar && route.meta.requiresAuth)
+
+// Jangan tampilkan modal isi data tubuh di atas splash (Welcome Back/Good Bye) —
+// baru muncul setelah splash selesai & mendarat di layar sungguhan (mis. Home).
+const showBodyMetricsModal = computed(() =>
+  authState.userRole === 'anggota' &&
+  !route.meta.isSplash &&
+  ((!authState.loading && authState.needsBodyMetrics) || bodyMetricsModalState.open),
+)
 </script>
 
 <template>
