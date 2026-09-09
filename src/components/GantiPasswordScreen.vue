@@ -60,7 +60,10 @@
       <p v-if="confirmError" class="gp-error">Konfirmasi kata sandi tidak cocok.</p>
       <p v-if="errorMsg" class="gp-error">{{ errorMsg }}</p>
 
-      <button class="gp-submit" type="submit" :disabled="!canSubmit">{{ saving ? 'Menyimpan…' : 'Simpan Kata Sandi Baru' }}</button>
+      <button class="gp-submit" type="submit" :disabled="!canSubmit">
+        <svg v-if="saving" class="spin-icon is-spinning" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        {{ saving ? 'Menyimpan…' : 'Simpan Kata Sandi Baru' }}
+      </button>
 
       <p v-if="success" class="gp-success">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -68,8 +71,6 @@
       </p>
     </form>
   </div>
-
-  <MemberTabBar />
 </div>
 </template>
 
@@ -77,7 +78,6 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '../lib/supabase.js'
-import MemberTabBar from './MemberTabBar.vue'
 
 const router = useRouter()
 
@@ -154,9 +154,9 @@ async function handleSubmit() {
   cursor: pointer;
   display: grid;
   place-content: center;
-  color: #1c1917;
-  background: #f5f1ec;
-  border: 1px solid #ece7e2;
+  color: #F8FAFC;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .gp-form { display: flex; flex-direction: column; }
@@ -167,7 +167,7 @@ async function handleSubmit() {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: -0.2px;
-  color: #292524;
+  color: #F8FAFC;
 }
 
 .gp-label:not(:first-child) { margin-top: 18px; }
@@ -178,13 +178,13 @@ async function handleSubmit() {
   gap: 10px;
   padding: 0 14px;
   border-radius: 14px;
-  background: #f5f1ec;
+  background: rgba(255, 255, 255, 0.08);
   border: 1.5px solid transparent;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .gp-input-wrap:focus-within {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
   border-color: #fc4c02;
   box-shadow: 0 0 0 4px rgba(252, 76, 2, 0.15);
 }
@@ -194,7 +194,7 @@ async function handleSubmit() {
   box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12);
 }
 
-.gp-input-icon { flex: 0 0 auto; color: #57534e; }
+.gp-input-icon { flex: 0 0 auto; color: rgba(248, 250, 252, 0.75); }
 
 .gp-input {
   flex: 1;
@@ -205,10 +205,11 @@ async function handleSubmit() {
   padding: 14px 0;
   font-family: inherit;
   font-size: 15px;
-  color: #1c1917;
+  color: #F8FAFC;
+  color-scheme: dark;
 }
 
-.gp-input::placeholder { color: #a8a29e; }
+.gp-input::placeholder { color: rgba(248, 250, 252, 0.5); }
 
 .gp-eye {
   flex: 0 0 auto;
@@ -218,15 +219,15 @@ async function handleSubmit() {
   border: none;
   padding: 0;
   cursor: pointer;
-  color: #57534e;
+  color: rgba(248, 250, 252, 0.75);
 }
 
-.gp-eye:hover { color: #1c1917; }
+.gp-eye:hover { color: #F8FAFC; }
 
 /* Indikator kekuatan */
 .gp-strength { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
 .gp-strength-track { flex: 1; display: flex; gap: 5px; }
-.gp-strength-bar { flex: 1; height: 6px; border-radius: 999px; background: #ece7e2; }
+.gp-strength-bar { flex: 1; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); }
 .gp-strength-label { font-size: 11.5px; font-weight: 700; white-space: nowrap; }
 
 .gp-error {
@@ -238,6 +239,10 @@ async function handleSubmit() {
 .gp-submit {
   margin-top: 24px;
   width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border: none;
   cursor: pointer;
   padding: 15px;

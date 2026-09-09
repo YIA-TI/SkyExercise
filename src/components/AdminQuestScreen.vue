@@ -97,7 +97,8 @@
 
         <p v-if="formError" class="qf-error">{{ formError }}</p>
         <button class="qf-submit" type="submit" :disabled="saving">
-          <Rocket :size="16" />
+          <svg v-if="saving" class="spin-icon is-spinning" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          <Rocket v-else :size="16" />
           {{ saving ? 'Menyimpan…' : 'Tambah Quest' }}
         </button>
       </form>
@@ -136,6 +137,7 @@
               <span v-if="questPeriodLabel(q.scope, editDate)" class="qf-hint">Berlaku: {{ questPeriodLabel(q.scope, editDate) }}</span>
               <div class="ql-edit-date-actions">
                 <button class="ql-btn ql-btn--sm" type="button" :disabled="savingDate" @click="saveDate(q)">
+                  <svg v-if="savingDate" class="spin-icon is-spinning" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
                   {{ savingDate ? 'Menyimpan…' : 'Simpan' }}
                 </button>
                 <button class="ql-btn ql-btn--sm" type="button" :disabled="savingDate" @click="cancelEditDate">Batal</button>
@@ -148,12 +150,14 @@
               <button v-if="editingId !== q.id" class="ql-icon-btn" type="button" title="Ubah Tanggal" aria-label="Ubah Tanggal" @click="startEditDate(q)">
                 <CalendarClock :size="15" />
               </button>
-              <label class="ql-switch" :title="q.active ? 'Nonaktifkan' : 'Aktifkan'">
-                <input type="checkbox" :checked="q.active" @change="toggleActive(q)" />
+              <label class="ql-switch" :class="{ 'is-disabled': togglingIds.has(q.id) }" :title="q.active ? 'Nonaktifkan' : 'Aktifkan'">
+                <input type="checkbox" :checked="q.active" :disabled="togglingIds.has(q.id)" @change="toggleActive(q)" />
                 <span class="ql-switch-track"><span class="ql-switch-thumb"></span></span>
               </label>
-              <button class="ql-icon-btn ql-icon-btn--del" type="button" title="Hapus" aria-label="Hapus" @click="hapus(q)">
-                <Trash2 :size="15" />
+              <svg class="spin-icon ql-toggle-spinner" :class="{ 'is-spinning': togglingIds.has(q.id) }" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              <button class="ql-icon-btn ql-icon-btn--del" type="button" title="Hapus" aria-label="Hapus" :disabled="deletingIds.has(q.id)" @click="hapus(q)">
+                <svg v-if="deletingIds.has(q.id)" class="spin-icon is-spinning" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                <Trash2 v-else :size="15" />
               </button>
             </div>
           </div>
@@ -162,8 +166,6 @@
       </div>
     </section>
   </div>
-
-  <AdminTabBar />
 </div>
 </template>
 
@@ -175,7 +177,6 @@ import { useAdminQuests } from '../composables/useAdminQuests.js'
 import { questPeriodLabel } from '../services/questSummary.js'
 import { backfillQuestClaims } from '../services/adminQuests.js'
 import { showToast } from '../store/toast.js'
-import AdminTabBar from './AdminTabBar.vue'
 
 const initials = computed(() =>
   (authState.userName || 'Admin').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
@@ -283,17 +284,25 @@ async function submit() {
 }
 
 async function toggleActive(q) {
+  if (togglingIds.value.has(q.id)) return
+  togglingIds.value = new Set(togglingIds.value).add(q.id)
   try {
     await update(q.id, { active: !q.active })
     showToast(q.active ? 'Quest dinonaktifkan' : 'Quest diaktifkan')
   } catch (e) {
     showToast(e?.message || 'Gagal mengubah status quest', 'error')
+  } finally {
+    const next = new Set(togglingIds.value)
+    next.delete(q.id)
+    togglingIds.value = next
   }
 }
 
 const editingId = ref(null)
 const editDate = ref('')
 const savingDate = ref(false)
+const togglingIds = ref(new Set())
+const deletingIds = ref(new Set())
 
 function startEditDate(q) {
   editingId.value = q.id
@@ -308,9 +317,9 @@ async function saveDate(q) {
   const newDate = editDate.value
   try {
     await update(q.id, { quest_date: newDate || null })
+    if (newDate) await runBackfill(q.id)
     cancelEditDate()
     showToast('Tanggal quest berhasil diperbarui')
-    if (newDate) await runBackfill(q.id)
   } catch (e) {
     showToast(e?.message || 'Gagal memperbarui tanggal', 'error')
   } finally {
@@ -319,12 +328,17 @@ async function saveDate(q) {
 }
 
 async function hapus(q) {
-  if (!window.confirm(`Hapus quest "${q.title}"?`)) return
+  if (deletingIds.value.has(q.id) || !window.confirm(`Hapus quest "${q.title}"?`)) return
+  deletingIds.value = new Set(deletingIds.value).add(q.id)
   try {
     await remove(q.id)
     showToast('Quest berhasil dihapus')
   } catch (e) {
     showToast(e?.message || 'Gagal menghapus quest', 'error')
+  } finally {
+    const next = new Set(deletingIds.value)
+    next.delete(q.id)
+    deletingIds.value = next
   }
 }
 </script>
@@ -336,10 +350,11 @@ async function hapus(q) {
 .qf-row { display: flex; gap: 12px; flex-wrap: wrap; }
 .qf-field { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 140px; }
 .qf-field.qf-narrow { flex: 0 1 130px; }
-.qf-field span { font-size: 12px; font-weight: 600; color: #57534e; }
+.qf-field span { font-size: 12px; font-weight: 600; color: rgba(248, 250, 252, 0.75); }
 .qf-field input {
-  border: 1.5px solid #ece7e2; border-radius: 12px; padding: 11px 12px;
-  font-family: inherit; font-size: 14px; color: #1c1917; background: #fff; outline: none;
+  border: 1.5px solid rgba(255, 255, 255, 0.14); border-radius: 12px; padding: 11px 12px;
+  font-family: inherit; font-size: 14px; color: #F8FAFC; background: rgba(255, 255, 255, 0.08); outline: none;
+  color-scheme: dark;
 }
 .qf-field input:focus { border-color: #fc4c02; }
 .qf-hint { margin: -4px 0 0; font-size: 12px; font-weight: 600; color: #ea580c; }
@@ -356,11 +371,11 @@ async function hapus(q) {
 }
 .qf-metric-card {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
-  border: 1.5px solid #ece7e2; border-radius: 14px; padding: 12px 8px;
-  background: #fff; cursor: pointer; font-family: inherit; color: #57534e;
+  border: 1.5px solid rgba(255, 255, 255, 0.14); border-radius: 14px; padding: 12px 8px;
+  background: rgba(255, 255, 255, 0.08); cursor: pointer; font-family: inherit; color: rgba(248, 250, 252, 0.75);
   transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
-.qf-metric-card:hover { border-color: #fed7aa; }
+.qf-metric-card:hover { border-color: rgba(251, 146, 60, 0.4); }
 .qf-metric-card.is-active {
   border-color: transparent; color: #fff;
   background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
@@ -371,19 +386,19 @@ async function hapus(q) {
 /* Reward (XP) — dibungkus spt "chip" koin, bukan angka input polos */
 .qf-reward-input {
   display: flex; align-items: center; gap: 6px;
-  border: 1.5px solid #ece7e2; border-radius: 12px; padding: 0 12px;
-  background: #fff;
+  border: 1.5px solid rgba(255, 255, 255, 0.14); border-radius: 12px; padding: 0 12px;
+  background: rgba(255, 255, 255, 0.08);
 }
 .qf-reward-input:focus-within { border-color: #fc4c02; }
 .qf-reward-icon { color: #f59e0b; flex: 0 0 auto; }
 .qf-reward-input input {
   flex: 1; min-width: 0; border: none; padding: 11px 0; font-family: inherit;
-  font-size: 14px; font-weight: 700; color: #1c1917; background: transparent; outline: none;
+  font-size: 14px; font-weight: 700; color: #F8FAFC; background: transparent; outline: none;
 }
-.qf-reward-suffix { font-size: 11px; font-weight: 800; color: #a8a29e; letter-spacing: 0.3px; }
+.qf-reward-suffix { font-size: 11px; font-weight: 800; color: rgba(248, 250, 252, 0.5); letter-spacing: 0.3px; }
 
 .qf-preview { display: flex; flex-direction: column; gap: 6px; }
-.qf-preview-label { margin: 0; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #a8a29e; }
+.qf-preview-label { margin: 0; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(248, 250, 252, 0.5); }
 
 .qf-submit {
   display: inline-flex; align-items: center; gap: 8px;
@@ -393,7 +408,7 @@ async function hapus(q) {
 }
 .qf-submit:disabled { opacity: 0.6; cursor: default; }
 .qf-error { margin: 0; color: #dc2626; font-size: 12.5px; font-weight: 600; }
-.qf-muted { color: #a8a29e; font-size: 13px; }
+.qf-muted { color: rgba(248, 250, 252, 0.5); font-size: 13px; }
 
 .ql-list { display: flex; flex-direction: column; gap: 10px; }
 
@@ -401,7 +416,10 @@ async function hapus(q) {
    ikon metrik dlm badge bulat, XP jadi badge "pencapaian" yg menonjol di kanan. */
 .ql-item {
   position: relative;
-  display: flex; align-items: flex-start; gap: 12px; background: #fff;
+  display: flex; align-items: flex-start; gap: 12px;
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 16px; padding: 14px 16px 14px 18px;
   box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
   border-left: 4px solid transparent;
@@ -413,15 +431,15 @@ async function hapus(q) {
 
 .ql-icon-badge {
   flex: 0 0 auto; width: 38px; height: 38px; display: grid; place-content: center;
-  border-radius: 12px; background: #f5f1ec; color: #57534e;
+  border-radius: 12px; background: rgba(255, 255, 255, 0.08); color: rgba(248, 250, 252, 0.75);
 }
-.ql-item--harian .ql-icon-badge   { background: #ccfbf1; color: #0f766e; }
-.ql-item--mingguan .ql-icon-badge { background: #ffedd5; color: #c2410c; }
+.ql-item--harian .ql-icon-badge   { background: rgba(45, 212, 191, 0.18); color: #5EEAD4; }
+.ql-item--mingguan .ql-icon-badge { background: rgba(251, 146, 60, 0.18); color: #FDBA74; }
 
 .ql-body { flex: 1; min-width: 0; }
 .ql-top { display: flex; align-items: center; gap: 8px; }
-.ql-title { font-size: 14px; font-weight: 700; color: #1c1917; }
-.ql-meta { margin: 4px 0 0; font-size: 12px; color: #57534e; }
+.ql-title { font-size: 14px; font-weight: 700; color: #F8FAFC; }
+.ql-meta { margin: 4px 0 0; font-size: 12px; color: rgba(248, 250, 252, 0.75); }
 
 .ql-side { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 
@@ -435,17 +453,17 @@ async function hapus(q) {
 .ql-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .ql-icon-btn {
   display: grid; place-content: center; width: 30px; height: 30px;
-  border: 1px solid #ece7e2; background: #f5f1ec; cursor: pointer;
-  color: #57534e; border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.08); cursor: pointer;
+  color: rgba(248, 250, 252, 0.75); border-radius: 9px;
 }
-.ql-icon-btn--del { background: #fee2e2; border-color: #fecaca; color: #dc2626; }
+.ql-icon-btn--del { background: rgba(220, 38, 38, 0.15); border-color: rgba(220, 38, 38, 0.3); color: #fca5a5; }
 .ql-icon-btn:disabled { opacity: 0.6; cursor: default; }
 
 /* Switch aktif/nonaktif — gaya "power toggle" ala menu game, ganti tombol teks */
 .ql-switch { position: relative; display: inline-flex; cursor: pointer; }
 .ql-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
 .ql-switch-track {
-  width: 38px; height: 22px; border-radius: 999px; background: #e7e2da;
+  width: 38px; height: 22px; border-radius: 999px; background: rgba(255, 255, 255, 0.16);
   display: flex; align-items: center; padding: 2px; transition: background 0.15s ease;
 }
 .ql-switch-thumb {
@@ -454,21 +472,26 @@ async function hapus(q) {
 }
 .ql-switch input:checked + .ql-switch-track { background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%); }
 .ql-switch input:checked + .ql-switch-track .ql-switch-thumb { transform: translateX(16px); }
+.ql-toggle-spinner { opacity: 0; }
+.ql-toggle-spinner.is-spinning { opacity: 1; }
+.ql-switch.is-disabled { opacity: 0.6; cursor: default; }
 
 .ql-btn {
-  border: 1px solid #ece7e2; background: #f5f1ec; cursor: pointer; font-family: inherit;
-  font-size: 12px; font-weight: 700; color: #57534e; padding: 8px 12px; border-radius: 10px;
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.08); cursor: pointer; font-family: inherit;
+  font-size: 12px; font-weight: 700; color: rgba(248, 250, 252, 0.75); padding: 8px 12px; border-radius: 10px;
 }
 .ql-btn--sm { padding: 6px 10px; font-size: 11.5px; }
 .ql-btn:disabled { opacity: 0.6; cursor: default; }
 
 .ql-edit-date {
   display: flex; flex-direction: column; gap: 6px; margin-top: 8px; padding-top: 8px;
-  border-top: 1px dashed #ece7e2;
+  border-top: 1px dashed rgba(255, 255, 255, 0.14);
 }
 .ql-edit-date input[type="date"] {
-  align-self: flex-start; border: 1.5px solid #ece7e2; border-radius: 10px; padding: 8px 10px;
-  font-family: inherit; font-size: 13px; color: #1c1917; background: #fff; outline: none;
+  align-self: flex-start; border: 1.5px solid rgba(255, 255, 255, 0.14); border-radius: 10px; padding: 8px 10px;
+  font-family: inherit; font-size: 13px; color: #F8FAFC; background: rgba(255, 255, 255, 0.08); outline: none;
+  color-scheme: dark;
 }
 .ql-edit-date input[type="date"]:focus { border-color: #fc4c02; }
 .ql-edit-date-actions { display: flex; gap: 8px; }

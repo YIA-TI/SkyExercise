@@ -15,6 +15,11 @@
       <span class="mui-pill">{{ meta.pill }}</span>
     </header>
 
+    <div v-if="loading && !stats" class="mui-card sd-hero">
+      <div class="mui-skel" style="width: 60%; height: 34px; margin: 0 auto;"></div>
+      <div class="mui-skel mui-skel--text" style="width: 80%; margin: 12px auto 0;"></div>
+    </div>
+    <template v-else>
     <!-- ── Jarak ── -->
     <template v-if="type === 'distance'">
       <div class="mui-card sd-hero">
@@ -114,9 +119,8 @@
         <div class="sd-mini"><p class="sd-mini-label">Zona</p><p class="sd-mini-value mui-mono">{{ effort.zone }}</p></div>
       </div>
     </template>
+    </template>
   </div>
-
-  <MemberTabBar />
 </div>
 </template>
 
@@ -130,13 +134,12 @@ import {
   effort as mockEffort,
 } from '../store/stats.js'
 import { useHomeStats } from '../composables/useMemberData.js'
-import MemberTabBar from './MemberTabBar.vue'
 
 const route = useRoute()
 const router = useRouter()
 
 // Statistik nyata (Strava via Supabase) — fallback ke skeleton mock saat loading/kosong.
-const { stats } = useHomeStats()
+const { stats, loading } = useHomeStats()
 const distance = computed(() => ({ ...mockDistance, ...(stats.value?.distance || {}) }))
 const heartRate = computed(() => ({ ...mockHeartRate, ...(stats.value?.heartRate || {}) }))
 const calories = computed(() => ({ ...mockCalories, ...(stats.value?.calories || {}) }))
@@ -160,17 +163,17 @@ function kembali() { router.push('/home') }
 
 .sd-back {
   width: 40px; height: 40px; border-radius: 12px; cursor: pointer;
-  display: grid; place-content: center; color: #1c1917;
-  background: #f5f1ec; border: 1px solid #ece7e2;
+  display: grid; place-content: center; color: #F8FAFC;
+  background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .sd-block { display: flex; flex-direction: column; gap: 12px; }
 
 /* Hero */
 .sd-hero { display: flex; flex-direction: column; gap: 12px; }
-.sd-hero-value { margin: 0; font-size: 40px; font-weight: 700; color: #1c1917; letter-spacing: -1.5px; }
-.sd-hero-value small { font-size: 15px; font-weight: 700; color: #a8a29e; margin-left: 5px; }
-.sd-hero-note { margin: 0; font-size: 13px; line-height: 19px; color: #57534e; }
+.sd-hero-value { margin: 0; font-size: 40px; font-weight: 700; color: #F8FAFC; letter-spacing: -1.5px; }
+.sd-hero-value small { font-size: 15px; font-weight: 700; color: rgba(248, 250, 252, 0.5); margin-left: 5px; }
+.sd-hero-note { margin: 0; font-size: 13px; line-height: 19px; color: rgba(248, 250, 252, 0.75); }
 
 /* Bars */
 .sd-bars { display: flex; align-items: flex-end; gap: 5px; height: 90px; }
@@ -179,20 +182,20 @@ function kembali() { router.push('/home') }
 /* Mini grid */
 .sd-mini-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .sd-mini-grid--2 { grid-template-columns: repeat(2, 1fr); width: 100%; }
-.sd-mini { background: #fff; border-radius: 16px; padding: 14px; box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5); }
-.sd-mini-label { margin: 0 0 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #a8a29e; }
-.sd-mini-value { margin: 0; font-size: 22px; font-weight: 700; color: #1c1917; letter-spacing: -0.5px; }
+.sd-mini { background: rgba(255, 255, 255, 0.10); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 16px; padding: 14px; box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5); }
+.sd-mini-label { margin: 0 0 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(248, 250, 252, 0.5); }
+.sd-mini-value { margin: 0; font-size: 22px; font-weight: 700; color: #F8FAFC; letter-spacing: -0.5px; }
 
 /* List rows */
 .sd-list { display: flex; flex-direction: column; gap: 12px; }
 .sd-row { display: flex; align-items: center; gap: 10px; }
 .sd-row--active { background: #fff7ed; margin: -6px -8px; padding: 6px 8px; border-radius: 12px; }
 .sd-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-.sd-ic { width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; display: grid; place-content: center; background: #fff2e8; color: #ea580c; }
+.sd-ic { width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; display: grid; place-content: center; background: rgba(251, 146, 60, 0.18); color: #FDBA74; }
 .sd-row-body { flex: 1; min-width: 0; }
-.sd-row-name { flex: 1; margin: 0; font-size: 13.5px; font-weight: 700; color: #1c1917; }
-.sd-row-time { margin: 2px 0 0; font-size: 11px; color: #a8a29e; }
-.sd-row-val { font-size: 13px; font-weight: 700; color: #1c1917; white-space: nowrap; }
-.sd-empty { text-align: center; color: #a8a29e; font-size: 13px; padding: 16px 0; }
+.sd-row-name { flex: 1; margin: 0; font-size: 13.5px; font-weight: 700; color: #F8FAFC; }
+.sd-row-time { margin: 2px 0 0; font-size: 11px; color: rgba(248, 250, 252, 0.5); }
+.sd-row-val { font-size: 13px; font-weight: 700; color: #F8FAFC; white-space: nowrap; }
+.sd-empty { text-align: center; color: rgba(248, 250, 252, 0.5); font-size: 13px; padding: 16px 0; }
 
 </style>

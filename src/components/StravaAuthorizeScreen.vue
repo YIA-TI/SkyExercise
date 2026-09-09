@@ -46,6 +46,7 @@
       <div class="so-actions">
         <button class="so-cancel" type="button" :disabled="authorizing" @click="handleCancel">Batalkan</button>
         <button class="so-authorize" type="button" :disabled="authorizing || capFull" @click="handleAuthorize">
+          <svg v-if="authorizing" class="so-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
           {{ authorizing ? 'Menghubungkan…' : 'Otorisasi' }}
         </button>
       </div>
@@ -225,6 +226,10 @@ async function handleAuthorize() {
 .so-cancel,
 .so-authorize {
   flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   border: none;
   cursor: pointer;
   padding: 13px;
@@ -234,6 +239,9 @@ async function handleAuthorize() {
   font-weight: 700;
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
+
+.so-spin { animation: so-spin 0.9s linear infinite; }
+@keyframes so-spin { to { transform: rotate(360deg); } }
 
 .so-cancel {
   background: #f5f1ec;

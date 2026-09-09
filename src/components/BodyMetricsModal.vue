@@ -43,6 +43,7 @@
       <p v-if="errorMsg" class="gp-error">{{ errorMsg }}</p>
 
       <button class="gp-submit" type="submit" :disabled="!canSubmit">
+        <svg v-if="saving" class="spin-icon is-spinning" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         {{ saving ? 'Menyimpan…' : 'Simpan Data Tubuh' }}
       </button>
     </form>
@@ -112,8 +113,8 @@ async function handleSubmit() {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(28, 25, 23, 0.6);
-  backdrop-filter: blur(2px);
+  background: rgba(15, 10, 46, 0.72);
+  backdrop-filter: blur(4px);
 }
 
 .bm-modal {
@@ -135,24 +136,24 @@ async function handleSubmit() {
   cursor: pointer;
   display: grid;
   place-content: center;
-  color: #57534e;
-  background: #f5f1ec;
+  color: rgba(248, 250, 252, 0.75);
+  background: rgba(255, 255, 255, 0.08);
   font-size: 14px;
 }
-.bm-modal-close:hover { background: #ece7e2; }
+.bm-modal-close:hover { background: rgba(255, 255, 255, 0.14); }
 
 .bm-modal-title {
   margin: 0 0 6px;
   font-family: "Chakra Petch", system-ui, sans-serif;
   font-size: 19px;
   font-weight: 700;
-  color: #1c1917;
+  color: #F8FAFC;
 }
 
 .bm-modal-sub {
   margin: 0 0 18px;
   font-size: 12.5px;
-  color: #78716c;
+  color: rgba(248, 250, 252, 0.65);
 }
 
 .gp-form { display: flex; flex-direction: column; }
@@ -163,7 +164,7 @@ async function handleSubmit() {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: -0.2px;
-  color: #292524;
+  color: #F8FAFC;
 }
 
 .gp-label:not(:first-child) { margin-top: 18px; }
@@ -174,13 +175,13 @@ async function handleSubmit() {
   gap: 10px;
   padding: 0 14px;
   border-radius: 14px;
-  background: #f5f1ec;
+  background: rgba(255, 255, 255, 0.08);
   border: 1.5px solid transparent;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .gp-input-wrap:focus-within {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
   border-color: #fc4c02;
   box-shadow: 0 0 0 4px rgba(252, 76, 2, 0.15);
 }
@@ -194,15 +195,16 @@ async function handleSubmit() {
   padding: 14px 0;
   font-family: inherit;
   font-size: 15px;
-  color: #1c1917;
+  color: #F8FAFC;
+  color-scheme: dark;
 }
 
-.gp-input::placeholder { color: #a8a29e; }
+.gp-input::placeholder { color: rgba(248, 250, 252, 0.5); }
 
 .bm-preview {
   margin: 16px 2px 0;
   font-size: 13px;
-  color: #57534e;
+  color: rgba(248, 250, 252, 0.75);
 }
 
 .gp-error {
@@ -214,6 +216,10 @@ async function handleSubmit() {
 .gp-submit {
   margin-top: 24px;
   width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   border: none;
   cursor: pointer;
   padding: 15px;

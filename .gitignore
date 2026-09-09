@@ -50,6 +50,7 @@ __screenshots__/
 
 #doc
 .docs/
+docs/
 
 # Playwright MCP scratch output (screenshot/snapshot dari verifikasi manual)
 .playwright-mcp/

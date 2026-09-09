@@ -156,8 +156,6 @@
       </template>
     </section>
   </div>
-
-  <AdminTabBar />
 </div>
 </template>
 
@@ -169,7 +167,6 @@ import { useAdminMonitoring, useQuestSummary } from '../composables/useAdminData
 import { questPeriodLabel } from '../services/questSummary.js'
 import { showToast } from '../store/toast.js'
 import { toDateStr } from '../lib/normalize.js'
-import AdminTabBar from './AdminTabBar.vue'
 import DateRangeFilter from './DateRangeFilter.vue'
 
 const displayName = computed(() => authState.userName || 'Rahmat Hidayat')
@@ -375,7 +372,10 @@ async function downloadQuestPdf() {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 18px;
   padding: 18px;
   box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
@@ -390,24 +390,27 @@ async function downloadQuestPdf() {
   place-content: center;
 }
 
-.ad-stat.is-blue .ad-stat-icon   { background: #ccfbf1; color: #0f766e; }
-.ad-stat.is-orange .ad-stat-icon { background: #ffedd5; color: #ea580c; }
-.ad-stat.is-green .ad-stat-icon  { background: #d1fae5; color: #059669; }
-.ad-stat.is-purple .ad-stat-icon { background: #f3e8ff; color: #9333ea; }
+.ad-stat.is-blue .ad-stat-icon   { background: rgba(45, 212, 191, 0.18); color: #5EEAD4; }
+.ad-stat.is-orange .ad-stat-icon { background: rgba(251, 146, 60, 0.18); color: #FDBA74; }
+.ad-stat.is-green .ad-stat-icon  { background: rgba(52, 211, 153, 0.18); color: #6EE7B7; }
+.ad-stat.is-purple .ad-stat-icon { background: rgba(167, 139, 250, 0.18); color: #C4B5FD; }
 
-.ad-stat-value { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; color: #1c1917; }
-.ad-stat-label { margin: 4px 0 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #a8a29e; }
+.ad-stat-value { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; color: #F8FAFC; }
+.ad-stat-label { margin: 4px 0 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(248, 250, 252, 0.5); }
 
 /* Grafik distribusi status quest — bar horizontal per status (belum/berjalan/selesai) */
 .ad-chart {
   margin-top: 14px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 18px;
   padding: 18px;
   box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
 }
 
-.ad-chart-title { margin: 0 0 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #a8a29e; }
+.ad-chart-title { margin: 0 0 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(248, 250, 252, 0.5); }
 
 .ad-chart-rows { display: flex; flex-direction: column; gap: 12px; }
 
@@ -418,13 +421,13 @@ async function downloadQuestPdf() {
   gap: 10px;
 }
 
-.ad-chart-label { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: #57534e; }
+.ad-chart-label { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: rgba(248, 250, 252, 0.75); }
 .ad-chart-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
 
-.ad-chart-track { height: 10px; border-radius: 6px; background: #f5f1ec; overflow: hidden; }
+.ad-chart-track { height: 10px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
 .ad-chart-fill { height: 100%; border-radius: 6px; transition: width 0.3s ease; }
 
-.ad-chart-value { font-size: 12.5px; font-weight: 700; color: #1c1917; text-align: right; }
+.ad-chart-value { font-size: 12.5px; font-weight: 700; color: #F8FAFC; text-align: right; }
 
 /* ----- Ringkasan quest ----- */
 .qs-head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
@@ -437,16 +440,19 @@ async function downloadQuestPdf() {
 }
 .qs-pdf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.qs-legend { margin: 0; font-size: 12px; line-height: 1.5; color: #78716c; }
-.qs-legend strong { color: #57534e; }
+.qs-legend { margin: 0; font-size: 12px; line-height: 1.5; color: rgba(248, 250, 252, 0.65); }
+.qs-legend strong { color: rgba(248, 250, 252, 0.75); }
 
-.qf-muted { color: #a8a29e; font-size: 13px; }
+.qf-muted { color: rgba(248, 250, 252, 0.5); font-size: 13px; }
 .qf-error { margin: 0; color: #dc2626; font-size: 12.5px; font-weight: 600; }
 
 /* Daftar personil x quest — tiap quest didaftar KE BAWAH per atlet (bukan kolom
    ke samping), diperluas per atlet supaya tetap ringkas utk banyak personil. */
 .qs-list {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 18px;
   box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
 }
@@ -455,7 +461,7 @@ async function downloadQuestPdf() {
 .qs-skel-row {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 16px;
-  border-bottom: 1px solid #f5f1ec;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
 }
 .qs-skel-row:last-child { border-bottom: none; }
 
@@ -465,17 +471,17 @@ async function downloadQuestPdf() {
   gap: 10px;
   padding: 12px 16px;
   cursor: pointer;
-  font-size: 13.5px; font-weight: 700; color: #1c1917;
-  border-bottom: 1px solid #f5f1ec;
+  font-size: 13.5px; font-weight: 700; color: #F8FAFC;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
   transition: background 0.15s ease;
 }
-.qs-athlete-row:hover { background: #f5f1ec; }
+.qs-athlete-row:hover { background: rgba(255, 255, 255, 0.16); }
 .qs-athlete-name { flex: 1; min-width: 0; }
 
 .qs-quest-list {
   padding: 6px 16px 12px 38px;
-  background: #faf8f6;
-  border-bottom: 1px solid #f5f1ec;
+  background: rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -487,15 +493,15 @@ async function downloadQuestPdf() {
   align-items: center;
   gap: 10px;
   font-size: 12.5px;
-  color: #57534e;
+  color: rgba(248, 250, 252, 0.75);
 }
 .qs-quest-item-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.qs-quest-item-name { font-weight: 700; color: #1c1917; }
+.qs-quest-item-name { font-weight: 700; color: #F8FAFC; }
 .qs-quest-item-scope {
-  font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #a8a29e;
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: rgba(248, 250, 252, 0.5);
 }
 
-.qs-chevron { flex: 0 0 auto; color: #a8a29e; transition: transform 0.2s ease; }
+.qs-chevron { flex: 0 0 auto; color: rgba(248, 250, 252, 0.5); transition: transform 0.2s ease; }
 .qs-chevron.is-open { transform: rotate(90deg); }
 
 /* Kolom Status — pill warna merah/kuning/hijau (is-none/is-partial/is-full), terpisah
@@ -504,16 +510,16 @@ async function downloadQuestPdf() {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap;
 }
-.qs-badge.is-full    { background: #d1fae5; color: #059669; }
-.qs-badge.is-partial { background: #fef3c7; color: #b45309; }
-.qs-badge.is-none    { background: #fee2e2; color: #dc2626; }
-.qs-badge.is-na      { background: #f5f1ec; color: #a8a29e; }
+.qs-badge.is-full    { background: rgba(52, 211, 153, 0.18); color: #6EE7B7; }
+.qs-badge.is-partial { background: rgba(251, 191, 36, 0.18); color: #FDE68A; }
+.qs-badge.is-none    { background: rgba(220, 38, 38, 0.15); color: #fca5a5; }
+.qs-badge.is-na      { background: rgba(255, 255, 255, 0.10); color: rgba(248, 250, 252, 0.75); }
 
 /* Indikator visual penyelesaian quest — merah/kuning/hijau, selalu berdampingan dgn teks */
 .qs-badge-dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; background: currentColor; }
 
 /* Kolom Progress — angka capaian vs target quest, rata kanan spy sejajar antar baris */
-.qs-progress { font-size: 12.5px; font-weight: 700; color: #1c1917; text-align: right; white-space: nowrap; }
+.qs-progress { font-size: 12.5px; font-weight: 700; color: #F8FAFC; text-align: right; white-space: nowrap; }
 
 /* Total Lari/Total GYM — kartu stat bergaya "achievement", dibedakan tegas dari baris
    quest biasa spy langsung kelihatan (bukan cuma baris teks kecil di ujung daftar). */
@@ -529,8 +535,8 @@ async function downloadQuestPdf() {
   border: 1px solid transparent;
   transition: background 0.15s ease;
 }
-.qs-total-card--lari { background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border-color: #fed7aa; }
-.qs-total-card--gym  { background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-color: #ddd6fe; }
+.qs-total-card--lari { background: linear-gradient(135deg, rgba(251, 146, 60, 0.15) 0%, rgba(251, 146, 60, 0.08) 100%); border-color: rgba(251, 146, 60, 0.3); }
+.qs-total-card--gym  { background: linear-gradient(135deg, rgba(167, 139, 250, 0.15) 0%, rgba(167, 139, 250, 0.08) 100%); border-color: rgba(167, 139, 250, 0.3); }
 .qs-total-card--lari .qs-total-icon { color: #ea580c; }
 .qs-total-card--gym  .qs-total-icon { color: #7c3aed; }
 
@@ -539,19 +545,19 @@ async function downloadQuestPdf() {
   width: 38px; height: 38px;
   display: grid; place-content: center;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.15);
   box-shadow: 0 6px 14px -8px rgba(17, 18, 20, 0.4);
 }
 
 .qs-total-body { min-width: 0; }
-.qs-total-title { margin: 0 0 3px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #78716c; }
+.qs-total-title { margin: 0 0 3px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(248, 250, 252, 0.65); }
 .qs-total-stats { display: flex; flex-wrap: wrap; gap: 10px; }
-.qs-total-stat { font-size: 12.5px; color: #78716c; }
-.qs-total-stat strong { font-size: 15px; font-weight: 800; color: #1c1917; margin-right: 2px; }
-.qs-total-empty { margin: 0; font-size: 12px; font-weight: 600; color: #a8a29e; font-style: italic; }
+.qs-total-stat { font-size: 12.5px; color: rgba(248, 250, 252, 0.65); }
+.qs-total-stat strong { font-size: 15px; font-weight: 800; color: #F8FAFC; margin-right: 2px; }
+.qs-total-empty { margin: 0; font-size: 12px; font-weight: 600; color: rgba(248, 250, 252, 0.5); font-style: italic; }
 
 /* State kosong — tetap kelihatan (bukan hilang), tapi diredupkan spy tidak berebut
    perhatian dgn atlet yg sudah ada capaian. */
-.qs-total-card.is-empty { background: #f5f1ec; border-color: #e7e2da; }
-.qs-total-card.is-empty .qs-total-icon { background: rgba(255, 255, 255, 0.5); color: #a8a29e; }
+.qs-total-card.is-empty { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.14); }
+.qs-total-card.is-empty .qs-total-icon { background: rgba(255, 255, 255, 0.10); color: rgba(248, 250, 252, 0.5); }
 </style>

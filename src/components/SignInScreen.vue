@@ -38,7 +38,7 @@
           class="input"
           type="email"
           name="email"
-          placeholder="komandan@angkasapura.co.id"
+          placeholder="nama@email.com"
           autocomplete="username"
         />
       </div>
@@ -56,7 +56,7 @@
           class="input"
           :type="showPassword ? 'text' : 'password'"
           name="password"
-          placeholder="Masukkan kata sandi"
+          placeholder="Kata sandi"
           autocomplete="current-password"
         />
         <button
@@ -81,8 +81,9 @@
       <p v-if="errorMsg" class="signin-error">{{ errorMsg }}</p>
 
       <button class="submit" type="submit" :disabled="submitting">
+        <svg v-if="submitting" class="signin-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         <span>{{ submitting ? 'Memproses…' : 'Masuk' }}</span>
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg v-if="!submitting" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <line x1="5" y1="12" x2="19" y2="12" />
           <polyline points="12 5 19 12 12 19" />
         </svg>
@@ -104,7 +105,6 @@
         <button type="button">Daftar</button>
       </p>
       <button class="forgot" type="button">Lupa Kata Sandi?</button>
-      <button class="admin-link" type="button" @click="handleAdmin">Masuk sebagai Admin (Monitoring)</button>
     </div>
   </div>
 </div>
@@ -148,32 +148,77 @@ async function handleStrava() {
   }
 }
 
-// Link "Masuk sebagai Admin" — sama dengan submit form (butuh kredensial admin).
-function handleAdmin() {
-  handleSignIn()
-}
 </script>
 
 <style>
-/* ========== SIGN IN SCREEN ========== */
+/* ========== SIGN IN SCREEN (Phase 3a: dark orange+violet glassmorphism,
+   diselaraskan dgn .mui di mobile-ui.css) ========== */
 .aeroguard-signin {
+  position: relative;
+  z-index: 0;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
   box-sizing: border-box;
-  background: linear-gradient(122deg, rgba(255, 128, 43, 1) 0%, rgba(219, 208, 200, 1) 100%);
-  font-family: "Chakra Petch", system-ui, sans-serif;
+  overflow: hidden;
+  /* Aksen latar sama dgn .mui (mobile-ui.css) — grain + glow oranye/violet +
+     drift lambat, supaya login page senada dgn layar member/admin. */
+  background-image:
+    var(--grain),
+    radial-gradient(820px 420px at 100% -8%, rgba(252, 76, 2, 0.28), transparent 62%),
+    radial-gradient(760px 460px at -10% 108%, rgba(124, 58, 237, 0.30), transparent 58%),
+    linear-gradient(160deg, #3b1a0a 0%, #4c1d95 45%, #1e1b4b 75%, #0f0a2e 100%);
+  background-color: #0f0a2e;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+  background-size: 180px 180px, auto, auto, cover;
+  background-attachment: fixed;
+  animation: bg-drift 18s ease-in-out infinite;
+  font-family: "Barlow", system-ui, sans-serif;
+}
+
+/* Garis diagonal ganda + motif rute GPS — aksen sama dgn .mui::before/::after,
+   lapisan terpisah supaya masing-masing berdenyut (pulse) sendiri. */
+.aeroguard-signin::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(135deg, rgba(252, 76, 2, 0.12) 0, rgba(252, 76, 2, 0.12) 3px, transparent 3px, transparent 46px),
+    repeating-linear-gradient(45deg, rgba(196, 181, 253, 0.08) 0, rgba(196, 181, 253, 0.08) 2px, transparent 2px, transparent 70px);
+  animation: stripe-pulse 3s ease-in-out infinite;
+}
+
+.aeroguard-signin::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--route-line);
+  background-repeat: no-repeat;
+  background-size: 640px 640px;
+  background-position: 110% 110%;
+  animation: route-pulse 2.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aeroguard-signin { animation: none; }
+  .aeroguard-signin::before, .aeroguard-signin::after { animation: none; }
 }
 
 .aeroguard-signin .phone-frame {
   width: 100%;
   max-width: 390px;
-  background: linear-gradient(0deg, rgb(255, 255, 255) 0%, rgb(244, 247, 251) 100%);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: 40px;
-  border: 6px solid #ffffff;
-  box-shadow: 0 30px 60px -20px rgba(0, 41, 74, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
   padding: 40px 28px 32px;
   box-sizing: border-box;
 }
@@ -203,7 +248,7 @@ function handleAdmin() {
 
 .aeroguard-signin .title {
   margin: 18px 0 0;
-  color: #1c1917;
+  color: #F8FAFC;
   font-size: 26px;
   font-weight: 700;
   letter-spacing: -0.8px;
@@ -212,7 +257,7 @@ function handleAdmin() {
 
 .aeroguard-signin .subtitle {
   margin: 8px 0 0;
-  color: #57534e;
+  color: rgba(248, 250, 252, 0.65);
   font-size: 13.5px;
   line-height: 20px;
   letter-spacing: -0.2px;
@@ -228,7 +273,7 @@ function handleAdmin() {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: -0.2px;
-  color: #393c43;
+  color: rgba(248, 250, 252, 0.85);
 }
 
 .aeroguard-signin .field-label:not(:first-child) {
@@ -241,20 +286,20 @@ function handleAdmin() {
   gap: 10px;
   padding: 0 14px;
   border-radius: 14px;
-  background: #f3f3f4;
-  border: 1.5px solid transparent;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .aeroguard-signin .input-wrap:focus-within {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
   border-color: #fc4c02;
   box-shadow: 0 0 0 4px rgba(252, 76, 2, 0.25);
 }
 
 .aeroguard-signin .input-icon {
   flex: 0 0 auto;
-  color: #57534e;
+  color: rgba(248, 250, 252, 0.55);
 }
 
 .aeroguard-signin .input {
@@ -266,11 +311,11 @@ function handleAdmin() {
   padding: 14px 0;
   font-family: inherit;
   font-size: 15px;
-  color: #1c1917;
+  color: #F8FAFC;
 }
 
 .aeroguard-signin .input::placeholder {
-  color: #a8a29e;
+  color: rgba(248, 250, 252, 0.4);
 }
 
 .aeroguard-signin .toggle-eye {
@@ -281,11 +326,11 @@ function handleAdmin() {
   border: none;
   padding: 0;
   cursor: pointer;
-  color: #57534e;
+  color: rgba(248, 250, 252, 0.55);
 }
 
 .aeroguard-signin .toggle-eye:hover {
-  color: #1c1917;
+  color: #F8FAFC;
 }
 
 .aeroguard-signin .submit {
@@ -304,8 +349,8 @@ function handleAdmin() {
   font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.3px;
-  background: #1c1917;
-  box-shadow: 0 16px 32px -16px rgba(17, 18, 20, 0.8);
+  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+  box-shadow: 0 16px 32px -16px rgba(252, 76, 2, 0.6);
   transition: all 0.2s ease-in-out;
 }
 
@@ -323,12 +368,16 @@ function handleAdmin() {
   transform: none;
 }
 
+.aeroguard-signin .signin-spin { animation: signin-spin 0.9s linear infinite; }
+@keyframes signin-spin { to { transform: rotate(360deg); } }
+
 .aeroguard-signin .signin-error {
   margin: 16px 0 0;
   padding: 10px 12px;
   border-radius: 12px;
-  background: #fee2e2;
-  color: #dc2626;
+  background: rgba(220, 38, 38, 0.18);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  color: #FCA5A5;
   font-size: 12.5px;
   font-weight: 600;
   text-align: center;
@@ -347,10 +396,10 @@ function handleAdmin() {
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  background: #ffffff;
-  border: 1.5px solid #e6e7e9;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
   cursor: pointer;
-  color: #1c1917;
+  color: #F8FAFC;
   transition: all 0.2s ease-in-out;
 }
 
@@ -373,7 +422,7 @@ function handleAdmin() {
 .aeroguard-signin .links p {
   margin: 0;
   font-size: 13px;
-  color: #57534e;
+  color: rgba(248, 250, 252, 0.65);
   letter-spacing: -0.2px;
 }
 
@@ -385,27 +434,12 @@ function handleAdmin() {
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
-  color: #fc4c02;
+  color: #FDBA74;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
 .aeroguard-signin .links .forgot {
   margin-top: 12px;
-}
-
-.aeroguard-signin .links .admin-link {
-  display: block;
-  margin: 16px auto 0;
-  padding-top: 14px;
-  border-top: 1px solid #f5f1ec;
-  color: #57534e;
-  font-size: 12px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.aeroguard-signin .links .admin-link:hover {
-  color: #1c1917;
 }
 </style>

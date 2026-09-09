@@ -1,7 +1,7 @@
 // src/services/leaderboard.js
 // Leaderboard via RPC security-definer (agregat lintas peserta, tetap hormati privasi RLS).
 import { supabase } from '../lib/supabase.js'
-import { startOfMonthISO, daysAgoISO } from '../lib/normalize.js'
+import { startOfMonthISO, startOfWeekISO } from '../lib/normalize.js'
 
 export async function fetchDistanceLeaderboard() {
   const { data, error } = await supabase.rpc('leaderboard_distance', {
@@ -17,7 +17,7 @@ export async function fetchDistanceLeaderboard() {
 
 export async function fetchEffortLeaderboard() {
   const { data, error } = await supabase.rpc('leaderboard_effort', {
-    period_start: daysAgoISO(7),
+    period_start: startOfWeekISO(),
   })
   if (error) throw error
   return (data ?? []).map((r) => ({

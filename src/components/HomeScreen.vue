@@ -38,7 +38,7 @@
         </div>
       </div>
       <button v-if="stravaState.connected" class="strava-sync" type="button" :disabled="syncing" @click="handleSync">
-        <svg class="strava-sync-ic" :class="{ 'is-spinning': syncing }" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg class="spin-icon" :class="{ 'is-spinning': syncing }" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <polyline points="23 4 23 10 17 10"/>
           <polyline points="1 20 1 14 7 14"/>
           <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
@@ -61,10 +61,14 @@
     <section class="stats-wrap">
       <div class="stats-head">
         <h2 class="section-title">Statistik</h2>
-        <span class="swipe-hint">Putar ↔</span>
+        <RefreshingBadge v-if="statsLoading && stats" />
+        <span v-else class="swipe-hint">Putar ↔</span>
       </div>
 
-      <div class="sphere" @pointerdown="onDown">
+      <div v-if="statsLoading && !stats" class="stats-skel">
+        <div class="mui-skel" style="width: 100%; height: 100%; border-radius: 26px;"></div>
+      </div>
+      <div v-else class="sphere" @pointerdown="onDown">
         <div class="sphere-stage" :class="{ 'is-dragging': dragging }">
           <article
             v-for="(c, i) in cards"
@@ -152,7 +156,8 @@
     <section class="stats-wrap">
       <div class="stats-head">
         <h2 class="section-title">My Activity</h2>
-        <span class="hchip">{{ filteredActivities.length }} aktivitas</span>
+        <RefreshingBadge v-if="activitiesLoading && rawActivities" />
+        <span v-else class="hchip">{{ filteredActivities.length }} aktivitas</span>
       </div>
 
       <div class="filter-row">
@@ -165,7 +170,16 @@
         >{{ f }}</button>
       </div>
 
-      <div class="act-list">
+      <div v-if="activitiesLoading && !rawActivities" class="act-list">
+        <div v-for="i in 4" :key="i" class="act-item">
+          <div class="mui-skel mui-skel--circle" style="width: 40px; height: 40px; flex-shrink: 0;"></div>
+          <div class="act-body">
+            <div class="mui-skel mui-skel--text" style="width: 60%;"></div>
+            <div class="mui-skel mui-skel--text" style="width: 40%; margin-top: 6px;"></div>
+          </div>
+        </div>
+      </div>
+      <div v-else class="act-list">
         <div
           v-for="a in visibleActivities"
           :key="a.id"
@@ -197,8 +211,6 @@
     </section>
 
   </div>
-
-  <MemberTabBar />
 </div>
 </template>
 
@@ -216,9 +228,9 @@ import {
 import { stravaState } from '../store/strava.js'
 import { useStravaConnection } from '../composables/useStravaConnection.js'
 import { useHomeStats, useActivities, checkAchievements } from '../composables/useMemberData.js'
+import RefreshingBadge from './RefreshingBadge.vue'
 import { formatDateTime } from '../lib/normalize.js'
 import { showToast } from '../store/toast.js'
-import MemberTabBar from './MemberTabBar.vue'
 
 const router = useRouter()
 
@@ -278,7 +290,7 @@ function goRincian(id) {
 }
 
 // ── Statistik (Strava) — nilai nyata, fallback ke skeleton mock saat loading/kosong ──
-const { stats, refresh: refreshStats } = useHomeStats()
+const { stats, loading: statsLoading, refresh: refreshStats } = useHomeStats()
 const distance = computed(() => ({ ...mockDistance, ...(stats.value?.distance || {}) }))
 const heartRate = computed(() => ({ ...mockHeartRate, ...(stats.value?.heartRate || {}) }))
 const calories = computed(() => ({ ...mockCalories, ...(stats.value?.calories || {}) }))
@@ -404,7 +416,7 @@ const filters = ['Semua', 'Lari', 'Gym']
 const activeFilter = ref('Semua')
 
 // Aktivitas nyata dari Strava (seluruh histori, difilter server-side lewat composable).
-const { activities: rawActivities, refresh: refreshActivities } = useActivities(activeFilter)
+const { activities: rawActivities, loading: activitiesLoading, refresh: refreshActivities } = useActivities(activeFilter)
 
 const filteredActivities = computed(() =>
   (rawActivities.value || []).map((a) => ({
@@ -429,6 +441,8 @@ const visibleActivities = computed(() =>
 </script>
 
 <style>
+@import '../assets/mobile-ui.css';
+
 /* ========== HOME DASHBOARD ========== */
 
 /* ── CSS Custom Properties untuk coverflow yang fluid ── */
@@ -453,10 +467,11 @@ const visibleActivities = computed(() =>
   background-image:
     var(--grain),
     radial-gradient(880px 440px at 100% -8%, rgba(252, 76, 2, 0.22), transparent 62%),
-    radial-gradient(800px 480px at -10% 108%, rgba(13, 148, 136, 0.16), transparent 58%);
-  background-color: #ece7e2;
-  background-repeat: repeat, no-repeat, no-repeat;
-  background-size: 180px 180px, auto, auto;
+    radial-gradient(800px 480px at -10% 108%, rgba(124, 58, 237, 0.30), transparent 58%),
+    linear-gradient(160deg, #3b1a0a 0%, #4c1d95 45%, #1e1b4b 75%, #0f0a2e 100%);
+  background-color: #0f0a2e;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+  background-size: 180px 180px, auto, auto, cover;
   background-attachment: fixed;
   animation: bg-drift 18s ease-in-out infinite;
   font-family: "Chakra Petch", system-ui, sans-serif;
@@ -473,7 +488,7 @@ const visibleActivities = computed(() =>
   pointer-events: none;
   background-image:
     repeating-linear-gradient(135deg, rgba(252, 76, 2, 0.09) 0, rgba(252, 76, 2, 0.09) 3px, transparent 3px, transparent 46px),
-    repeating-linear-gradient(45deg, rgba(13, 148, 136, 0.06) 0, rgba(13, 148, 136, 0.06) 2px, transparent 2px, transparent 70px);
+    repeating-linear-gradient(45deg, rgba(196, 181, 253, 0.08) 0, rgba(196, 181, 253, 0.08) 2px, transparent 2px, transparent 70px);
   animation: stripe-pulse 3s ease-in-out infinite;
 }
 
@@ -574,16 +589,18 @@ const visibleActivities = computed(() =>
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.4px;
-  color: #1c1917;
+  color: #F8FAFC;
 }
 
 /* ----- Greeting ----- */
 .aeroguard-home .greeting-card {
   position: relative; overflow: hidden;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 18px; border-radius: 22px; color: #1c1917;
-  background: linear-gradient(135deg, #ffffff 0%, #faf8f6 100%);
-  border: 1px solid #ece7e2;
+  padding: 16px 18px; border-radius: 22px; color: #F8FAFC;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: 0 18px 36px -28px rgba(15, 23, 42, 0.4);
 }
 .aeroguard-home .greeting-card::before {
@@ -601,15 +618,15 @@ const visibleActivities = computed(() =>
   flex-shrink: 0;
 }
 .aeroguard-home .hello { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
-.aeroguard-home .role { margin: 2px 0 0; font-size: 12px; color: #78716c; }
+.aeroguard-home .role { margin: 2px 0 0; font-size: 12px; color: rgba(248, 250, 252, 0.65); }
 .aeroguard-home .icon-btn {
   position: relative; display: grid; place-content: center; width: 40px; height: 40px;
-  border-radius: 12px; border: 1px solid #ece7e2; cursor: pointer; color: #57534e;
-  background: #f5f1ec; flex-shrink: 0;
+  border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.14); cursor: pointer; color: rgba(248, 250, 252, 0.75);
+  background: rgba(255, 255, 255, 0.08); flex-shrink: 0;
 }
 .aeroguard-home .icon-btn .dot {
   position: absolute; top: 9px; right: 10px; width: 8px; height: 8px; border-radius: 50%;
-  background: #fc4c02; border: 2px solid #ffffff;
+  background: #fc4c02; border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 /* ----- Konektor Strava ----- */
@@ -620,8 +637,8 @@ const visibleActivities = computed(() =>
   gap: 12px;
   padding: 14px 16px;
   border-radius: 18px;
-  background: linear-gradient(135deg, #fff2e8 0%, #ffe3cf 100%);
-  border: 1px solid #ffd8b8;
+  background: rgba(251, 146, 60, 0.12);
+  border: 1px solid rgba(251, 146, 60, 0.25);
   flex-wrap: wrap;
 }
 @media (min-width: 400px) {
@@ -636,8 +653,8 @@ const visibleActivities = computed(() =>
   box-shadow: 0 8px 18px -8px rgba(252, 100, 45, 0.7);
 }
 .aeroguard-home .strava-card.is-disconnected .strava-icon { filter: grayscale(0.4); opacity: 0.75; }
-.aeroguard-home .strava-title { margin: 0; font-size: 13.5px; font-weight: 700; color: #1c1917; }
-.aeroguard-home .strava-sub { margin: 2px 0 0; font-size: 11.5px; color: #78716c; }
+.aeroguard-home .strava-title { margin: 0; font-size: 13.5px; font-weight: 700; color: #F8FAFC; }
+.aeroguard-home .strava-sub { margin: 2px 0 0; font-size: 11.5px; color: rgba(248, 250, 252, 0.65); }
 .aeroguard-home .strava-sync {
   flex: 0 0 auto;
   display: inline-flex;
@@ -657,8 +674,7 @@ const visibleActivities = computed(() =>
 }
 .aeroguard-home .strava-sync:hover:not(:disabled) { transform: translateY(-1px); }
 .aeroguard-home .strava-sync:disabled { opacity: 0.75; cursor: default; }
-.aeroguard-home .strava-sync-ic.is-spinning { animation: strava-spin 0.9s linear infinite; }
-@keyframes strava-spin { to { transform: rotate(360deg); } }
+.aeroguard-home .stats-skel { height: calc(var(--card-h) + 50px); }
 
 /* ----- Reminder mingguan: berat badan ----- */
 .aeroguard-home .weight-reminder {
@@ -667,8 +683,9 @@ const visibleActivities = computed(() =>
   gap: 12px;
   padding: 12px 14px;
   border-radius: 16px;
-  background: #fff2e8;
-  color: #c2410c;
+  background: rgba(251, 146, 60, 0.12);
+  border: 1px solid rgba(251, 146, 60, 0.25);
+  color: #FDBA74;
 }
 .aeroguard-home .weight-reminder-text { flex: 1; min-width: 0; font-size: 12.5px; font-weight: 600; }
 .aeroguard-home .weight-reminder-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
@@ -678,20 +695,20 @@ const visibleActivities = computed(() =>
   background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
 }
 .aeroguard-home .weight-reminder-dismiss {
-  border: none; background: none; cursor: pointer; color: #c2410c; font-size: 13px;
+  border: none; background: none; cursor: pointer; color: #FDBA74; font-size: 13px;
   padding: 4px; line-height: 1;
 }
 
 /* ----- Section wrap ----- */
 .aeroguard-home .stats-wrap { display: flex; flex-direction: column; gap: 12px; }
 .aeroguard-home .stats-head { display: flex; align-items: center; justify-content: space-between; }
-.aeroguard-home .swipe-hint { font-size: 12px; font-weight: 600; color: #a8a29e; }
+.aeroguard-home .swipe-hint { font-size: 12px; font-weight: 600; color: rgba(248, 250, 252, 0.5); }
 .aeroguard-home .hchip {
   font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
-  background: #f5f1ec; color: #57534e; white-space: nowrap;
+  background: rgba(255, 255, 255, 0.10); color: rgba(248, 250, 252, 0.75); white-space: nowrap;
 }
-.aeroguard-home .hchip--orange { background: #fff2e8; color: #c2410c; }
-.aeroguard-home .hchip--green { background: #d1fae5; color: #059669; }
+.aeroguard-home .hchip--orange { background: rgba(251, 146, 60, 0.18); color: #FDBA74; }
+.aeroguard-home .hchip--green { background: rgba(52, 211, 153, 0.18); color: #6EE7B7; }
 
 /* ----- Sphere coverflow (pakai CSS custom properties) ----- */
 .aeroguard-home .sphere {
@@ -700,7 +717,11 @@ const visibleActivities = computed(() =>
   perspective: 1200px;
   touch-action: pan-y;
   user-select: none;
-  overflow: hidden;  /* clip kartu yang keluar viewport */
+  /* Hanya clip horizontal (kartu yang keluar viewport) — vertikal dibiarkan
+     visible supaya glow/box-shadow kartu tengah tak terpotong tajam di tepi
+     bawah (dulu "overflow: hidden" ikut motong shadow, kelihatan batas kotak). */
+  overflow-x: hidden;
+  overflow-y: visible;
   /* Kartu samping memudar sebelum kena batas overflow, jadi terlihat "menghilang
      halus" bukan "terpotong" tajam di tepi. */
   -webkit-mask-image: linear-gradient(to right, transparent 0, #000 48px, #000 calc(100% - 48px), transparent 100%);
@@ -720,7 +741,10 @@ const visibleActivities = computed(() =>
   margin-left: calc(var(--card-w) / -2);
   box-sizing: border-box;
   cursor: pointer;
-  background: #ffffff;
+  /* Kartu samping tetap solid (bukan transparan tipis) supaya tak "hilang" di
+     atas latar — lihat catatan di bawah soal kenapa blur tak dipakai di sini. */
+  background: rgba(30, 27, 75, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 26px;
   padding: var(--card-pad);
   overflow: hidden;
@@ -733,8 +757,19 @@ const visibleActivities = computed(() =>
 .aeroguard-home .stat-card.no-anim {
   transition: none;
 }
+/* Blur (backdrop-filter) hanya dipakai di kartu tengah (rotasi ~0deg, nyaris
+   datar) — kartu samping tetap solid tanpa blur supaya aman dari bug WebKit
+   yang dikenal soal backdrop-filter di dalam elemen ber-perspective/rotateY.
+   Opacity latar & blur dinaikkan (dari 0.10/14px) supaya efek glass tak
+   terlalu tembus pandang. */
 .aeroguard-home .stat-card.is-center {
-  box-shadow: 0 30px 55px -20px rgba(252, 76, 2, 0.45);
+  background: rgba(30, 27, 75, 0.42);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  /* Diperkecil jangkauannya (dari 0 30px 55px -20px) — glow sebesar itu
+     "bocor" sampai dekat batas section berikutnya & masih kelihatan terpotong
+     meski overflow-y sudah visible. Sekarang muat di buffer .sphere sendiri. */
+  box-shadow: 0 14px 28px -14px rgba(252, 76, 2, 0.4);
 }
 .aeroguard-home .stat-card:focus,
 .aeroguard-home .stat-card:focus-visible { outline: none; }
@@ -745,10 +780,10 @@ const visibleActivities = computed(() =>
   display: flex; flex-direction: column; gap: 12px; height: 100%;
 }
 .aeroguard-home .stat-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.aeroguard-home .stat-card-title { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; color: #1c1917; }
-.aeroguard-home .stat-big { margin: 0; font-size: clamp(26px, 5vw, 34px); font-weight: 700; color: #1c1917; letter-spacing: -1px; }
-.aeroguard-home .stat-big small { font-size: 13px; font-weight: 700; color: #a8a29e; margin-left: 4px; }
-.aeroguard-home .stat-note { margin: 0; font-size: 11.5px; color: #78716c; }
+.aeroguard-home .stat-card-title { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; color: #F8FAFC; }
+.aeroguard-home .stat-big { margin: 0; font-size: clamp(26px, 5vw, 34px); font-weight: 700; color: #F8FAFC; letter-spacing: -1px; }
+.aeroguard-home .stat-big small { font-size: 13px; font-weight: 700; color: rgba(248, 250, 252, 0.5); margin-left: 4px; }
+.aeroguard-home .stat-note { margin: 0; font-size: 11.5px; color: rgba(248, 250, 252, 0.65); }
 .aeroguard-home .stat-more {
   margin-top: auto; display: inline-flex; align-items: center; gap: 2px;
   font-size: 12px; font-weight: 700; color: #fc4c02;
@@ -762,7 +797,7 @@ const visibleActivities = computed(() =>
 .aeroguard-home .sphere-dots { display: flex; justify-content: center; gap: 7px; }
 .aeroguard-home .sphere-dot {
   width: 7px; height: 7px; border-radius: 50%; border: none; cursor: pointer; padding: 0;
-  background: #d6cfc8; transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.25); transition: all 0.2s ease;
 }
 .aeroguard-home .sphere-dot.is-active { width: 20px; border-radius: 999px; background: #fc4c02; }
 
@@ -772,9 +807,10 @@ const visibleActivities = computed(() =>
 }
 .aeroguard-home .filter-row::-webkit-scrollbar { display: none; }
 .aeroguard-home .filter-chip {
-  flex: 0 0 auto; border: none; cursor: pointer; font-family: inherit;
+  flex: 0 0 auto; border: 1px solid rgba(255, 255, 255, 0.16); cursor: pointer; font-family: inherit;
   font-size: 12.5px; font-weight: 700; padding: 8px 16px; border-radius: 999px;
-  background: #ffffff; color: #57534e; transition: all 0.15s ease;
+  background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  color: rgba(248, 250, 252, 0.75); transition: all 0.15s ease;
   box-shadow: 0 10px 24px -20px rgba(17, 18, 20, 0.5);
 }
 .aeroguard-home .filter-chip.is-active {
@@ -799,7 +835,9 @@ const visibleActivities = computed(() =>
 }
 
 .aeroguard-home .act-item {
-  display: flex; align-items: center; gap: 12px; background: #ffffff;
+  display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 16px; padding: 12px 14px; box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
   cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease;
   min-width: 0;
@@ -809,28 +847,30 @@ const visibleActivities = computed(() =>
   box-shadow: 0 18px 34px -22px rgba(17, 18, 20, 0.45);
 }
 .aeroguard-home .act-ic { width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0; display: grid; place-content: center; }
-.aeroguard-home .act-ic.is-orange { background: #ffedd5; color: #ea580c; }
-.aeroguard-home .act-ic.is-blue { background: #ccfbf1; color: #0f766e; }
-.aeroguard-home .act-ic.is-green { background: #d1fae5; color: #059669; }
-.aeroguard-home .act-ic.is-cyan { background: #cffafe; color: #0891b2; }
+.aeroguard-home .act-ic.is-orange { background: rgba(251, 146, 60, 0.18); color: #FDBA74; }
+.aeroguard-home .act-ic.is-blue { background: rgba(45, 212, 191, 0.18); color: #5EEAD4; }
+.aeroguard-home .act-ic.is-green { background: rgba(52, 211, 153, 0.18); color: #6EE7B7; }
+.aeroguard-home .act-ic.is-cyan { background: rgba(45, 212, 191, 0.18); color: #5EEAD4; }
 .aeroguard-home .act-body { flex: 1; min-width: 0; overflow: hidden; }
-.aeroguard-home .act-name { margin: 0; font-size: 13.5px; font-weight: 700; color: #1c1917; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.aeroguard-home .act-meta { margin: 3px 0 0; font-size: 11.5px; color: #57534e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.aeroguard-home .act-time { font-size: 12px; font-weight: 700; color: #78716c; white-space: nowrap; flex-shrink: 0; }
-.aeroguard-home .act-empty { grid-column: 1 / -1; text-align: center; color: #a8a29e; padding: 24px; font-size: 13px; }
+.aeroguard-home .act-name { margin: 0; font-size: 13.5px; font-weight: 700; color: #F8FAFC; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.aeroguard-home .act-meta { margin: 3px 0 0; font-size: 11.5px; color: rgba(248, 250, 252, 0.75); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.aeroguard-home .act-time { font-size: 12px; font-weight: 700; color: rgba(248, 250, 252, 0.65); white-space: nowrap; flex-shrink: 0; }
+.aeroguard-home .act-empty { grid-column: 1 / -1; text-align: center; color: rgba(248, 250, 252, 0.5); padding: 24px; font-size: 13px; }
 
 .aeroguard-home .act-toggle {
   align-self: center;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: none;
   cursor: pointer;
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 700;
-  color: #57534e;
-  background: #ffffff;
+  color: rgba(248, 250, 252, 0.75);
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   padding: 10px 18px;
   border-radius: 999px;
   box-shadow: 0 10px 24px -20px rgba(17, 18, 20, 0.5);

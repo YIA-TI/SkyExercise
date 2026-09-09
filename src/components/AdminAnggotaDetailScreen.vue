@@ -14,7 +14,12 @@
       <span v-if="member" class="mui-tag" :class="member.aktif ? 'mui-tag--green' : 'mui-tag--gray'">{{ member.aktif ? 'Aktif' : 'Nonaktif' }}</span>
     </header>
 
-    <template v-if="member">
+    <div v-if="loading && !detail" class="ins-card">
+      <div class="mui-skel mui-skel--circle" style="width: 64px; height: 64px; margin: 0 auto;"></div>
+      <div class="mui-skel mui-skel--text" style="width: 50%; margin: 12px auto 0;"></div>
+      <div class="mui-skel mui-skel--text" style="width: 35%; margin: 8px auto 0;"></div>
+    </div>
+    <template v-else-if="member">
       <!-- Filter tanggal — jadi dasar semua ringkasan & daftar di bawah -->
       <section class="mui-block">
         <h2 class="mui-section-title">Periode</h2>
@@ -72,7 +77,7 @@
         </div>
 
         <button class="ins-card-cta" type="button" :disabled="syncingStrava" @click="syncFromStrava()">
-          <svg class="ins-sync-ic" :class="{ 'is-spinning': syncingStrava }" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg class="ins-sync-ic spin-icon" :class="{ 'is-spinning': syncingStrava }" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <polyline points="23 4 23 10 17 10"/>
             <polyline points="1 20 1 14 7 14"/>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
@@ -129,8 +134,6 @@
 
     <p v-else class="ins-notfound">Data anggota tidak ditemukan.</p>
   </div>
-
-  <AdminTabBar />
 </div>
 </template>
 
@@ -141,7 +144,6 @@ import { useAdminParticipantDetail } from '../composables/useAdminData.js'
 import { syncParticipantStrava } from '../services/admin.js'
 import { showToast } from '../store/toast.js'
 import { calcBmi, bmiCategory, daysAgoDateStr, toDateStr } from '../lib/normalize.js'
-import AdminTabBar from './AdminTabBar.vue'
 import DateRangeFilter from './DateRangeFilter.vue'
 
 const route = useRoute()
@@ -150,7 +152,7 @@ const router = useRouter()
 const athleteId = computed(() => Number(route.params.id))
 const filterStart = ref(daysAgoDateStr(30))
 const filterEnd = ref(toDateStr(new Date()))
-const { detail, refresh: refreshDetail } = useAdminParticipantDetail(athleteId, { start: filterStart, end: filterEnd })
+const { detail, loading, refresh: refreshDetail } = useAdminParticipantDetail(athleteId, { start: filterStart, end: filterEnd })
 
 const cardTabs = [
   { key: 'info', label: 'Info' },
@@ -293,9 +295,9 @@ const filteredActivities = computed(() => {
   cursor: pointer;
   display: grid;
   place-content: center;
-  color: #1c1917;
-  background: #f5f1ec;
-  border: 1px solid #ece7e2;
+  color: #F8FAFC;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 /* Kartu spotlight — identitas + statistik + info, panel gelap ala reactbits
@@ -417,7 +419,7 @@ const filteredActivities = computed(() => {
   color: rgba(255, 255, 255, 0.55);
   transition: background 0.15s ease, color 0.15s ease;
 }
-.ins-card-tab.is-active { background: #ffffff; color: #1c1917; }
+.ins-card-tab.is-active { background: rgba(255, 255, 255, 0.16); color: #FDBA74; border: 1px solid rgba(255, 255, 255, 0.25); }
 
 .ins-card-tab-content { position: relative; width: 100%; margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
 
@@ -468,8 +470,6 @@ const filteredActivities = computed(() => {
 .ins-act-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 
 .ins-sync-ic { flex-shrink: 0; }
-.ins-sync-ic.is-spinning { animation: ins-sync-spin 0.9s linear infinite; }
-@keyframes ins-sync-spin { to { transform: rotate(360deg); } }
 
 .ins-filter-row {
   display: flex;
@@ -489,10 +489,12 @@ const filteredActivities = computed(() => {
   font-weight: 700;
   padding: 8px 16px;
   border-radius: 999px;
-  background: #ffffff;
-  color: #57534e;
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(248, 250, 252, 0.75);
   transition: all 0.15s ease;
-  box-shadow: 0 10px 24px -20px rgba(17, 18, 20, 0.5);
 }
 
 .ins-filter-chip.is-active {
@@ -519,32 +521,34 @@ const filteredActivities = computed(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 16px;
   padding: 12px 14px;
-  box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
 }
 
 .ins-act-ic { width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0; display: grid; place-content: center; }
-.ins-act-ic.is-orange { background: #ffedd5; color: #ea580c; }
-.ins-act-ic.is-blue   { background: #ccfbf1; color: #0f766e; }
+.ins-act-ic.is-orange { background: rgba(251, 146, 60, 0.18); color: #FDBA74; }
+.ins-act-ic.is-blue   { background: rgba(45, 212, 191, 0.18); color: #5EEAD4; }
 
 .ins-act-body { flex: 1; min-width: 0; }
-.ins-act-name { margin: 0; font-size: 13.5px; font-weight: 700; color: #1c1917; }
-.ins-act-meta { margin: 3px 0 0; font-size: 11.5px; color: #57534e; }
-.ins-act-date { font-size: 11.5px; font-weight: 700; color: #a8a29e; white-space: nowrap; }
+.ins-act-name { margin: 0; font-size: 13.5px; font-weight: 700; color: #F8FAFC; }
+.ins-act-meta { margin: 3px 0 0; font-size: 11.5px; color: rgba(248, 250, 252, 0.75); }
+.ins-act-date { font-size: 11.5px; font-weight: 700; color: rgba(248, 250, 252, 0.5); white-space: nowrap; }
 
 .ins-act-empty {
   grid-column: 1 / -1;
   text-align: center;
-  color: #a8a29e;
+  color: rgba(248, 250, 252, 0.5);
   padding: 24px;
   font-size: 13px;
 }
 
 .ins-notfound {
   text-align: center;
-  color: #a8a29e;
+  color: rgba(248, 250, 252, 0.5);
   padding: 40px;
   font-size: 14px;
 }

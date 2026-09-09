@@ -89,8 +89,12 @@
               <button
                 v-if="statusOf(q) === 'ready'"
                 class="q-claim"
+                :disabled="claimingIds.has(q.id)"
                 @click.stop="claim(q)"
-              >Klaim {{ q.reward }} XP</button>
+              >
+                <svg v-if="claimingIds.has(q.id)" class="spin-icon is-spinning" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                Klaim {{ q.reward }} XP
+              </button>
               <span v-else-if="statusOf(q) === 'done'" class="q-claimed">✓ Reward diklaim</span>
               <span v-else-if="statusOf(q) === 'locked'" class="q-locked-note">Terkunci — selesaikan quest sebelumnya</span>
               <span v-else class="q-inprogress">Lanjutkan latihan untuk menyelesaikan</span>
@@ -102,9 +106,13 @@
         <button
           v-if="statusOf(q) === 'ready' && openId !== q.id"
           class="q-claim-mini"
+          :disabled="claimingIds.has(q.id)"
           @click.stop="claim(q)"
           aria-label="Klaim reward"
-        >Klaim</button>
+        >
+          <svg v-if="claimingIds.has(q.id)" class="spin-icon is-spinning" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Klaim
+        </button>
       </article>
     </section>
 
@@ -143,8 +151,6 @@
       </transition>
     </section>
   </div>
-
-  <MemberTabBar />
 </div>
 </template>
 
@@ -155,7 +161,6 @@ import { useQuests } from '../composables/useQuests.js'
 import { useLeaderboard, useAchievements, checkAchievements } from '../composables/useMemberData.js'
 import { tierForXp } from '../lib/xpTier.js'
 import { showToast } from '../store/toast.js'
-import MemberTabBar from './MemberTabBar.vue'
 
 const initials = computed(() =>
   (authState.userName || 'Citra Dewi').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
@@ -182,6 +187,7 @@ const effortRank = computed(() => {
 // ── Quest ──
 const tab = ref('harian')
 const openId = ref(null)
+const claimingIds = ref(new Set())
 
 // Map hasil RPC quest_status → bentuk kartu.
 const quests = computed(() => (rawQuests.value || []).map((q) => ({
@@ -213,12 +219,17 @@ function toggle(q) {
   openId.value = openId.value === q.id ? null : q.id
 }
 async function claim(q) {
-  if (q.claimed || q.current < q.target) return
+  if (q.claimed || q.current < q.target || claimingIds.value.has(q.id)) return
+  claimingIds.value = new Set(claimingIds.value).add(q.id)
   try {
     await claimQuest(q.id)
     await runAchievementCheck()
   } catch (e) {
     alert('Gagal klaim: ' + (e?.message || e))
+  } finally {
+    const next = new Set(claimingIds.value)
+    next.delete(q.id)
+    claimingIds.value = next
   }
 }
 
@@ -300,14 +311,14 @@ onMounted(runAchievementCheck)
 .q-dot {
   width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
   display: grid; place-content: center; color: #fff;
-  background: #d6cfc8; z-index: 1;
+  background: rgba(255, 255, 255, 0.08); z-index: 1;
 }
-.q-line { flex: 1; width: 3px; background: #e7e1db; margin: 4px 0; border-radius: 2px; }
+.q-line { flex: 1; width: 3px; background: rgba(255, 255, 255, 0.14); margin: 4px 0; border-radius: 2px; }
 
 .q-node.done .q-dot { background: linear-gradient(135deg, #34d399, #059669); }
 .q-node.ready .q-dot { background: linear-gradient(45deg, #fc642d, #ff914d); box-shadow: 0 0 0 4px rgba(252, 76, 2, 0.2); animation: pulse 1.6s ease-in-out infinite; }
 .q-node.progress .q-dot { background: linear-gradient(135deg, #60a5fa, #0d9488); }
-.q-node.locked .q-dot { background: #d6cfc8; color: #fff; }
+.q-node.locked .q-dot { background: rgba(255, 255, 255, 0.08); color: #fff; }
 
 @keyframes pulse {
   0%, 100% { box-shadow: 0 0 0 4px rgba(252, 76, 2, 0.2); }
@@ -317,7 +328,7 @@ onMounted(runAchievementCheck)
 /* Kartu quest */
 .q-card {
   flex: 1; min-width: 0; cursor: pointer;
-  background: #fff; border-radius: 18px; padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.10); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 18px; padding: 14px 16px;
   box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
@@ -325,49 +336,53 @@ onMounted(runAchievementCheck)
 .q-node.locked .q-card { opacity: 0.6; }
 
 .q-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.q-title { font-size: 14px; font-weight: 700; color: #1c1917; letter-spacing: -0.2px; }
+.q-title { font-size: 14px; font-weight: 700; color: #F8FAFC; letter-spacing: -0.2px; }
 .q-reward {
   display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0;
-  font-size: 11.5px; font-weight: 700; color: #c2410c; background: #fff2e8;
+  font-size: 11.5px; font-weight: 700; color: #FDBA74; background: rgba(251, 146, 60, 0.18);
   padding: 4px 9px; border-radius: 999px;
 }
 .q-xp-ic { color: #fc4c02; }
-.q-desc { margin: 6px 0 10px; font-size: 12px; color: #57534e; line-height: 17px; }
+.q-desc { margin: 6px 0 10px; font-size: 12px; color: rgba(248, 250, 252, 0.75); line-height: 17px; }
 
 .q-prog { display: flex; align-items: center; gap: 10px; }
-.q-prog-track { flex: 1; height: 8px; border-radius: 999px; background: #f5f1ec; overflow: hidden; }
+.q-prog-track { flex: 1; height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
 .q-prog-fill {
   height: 100%; border-radius: 999px;
   background: linear-gradient(90deg, #fc642d, #ff914d);
   transition: width 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 .q-node.done .q-prog-fill { background: linear-gradient(90deg, #34d399, #059669); }
-.q-prog-num { font-size: 11.5px; font-weight: 700; color: #57534e; white-space: nowrap; }
+.q-prog-num { font-size: 11.5px; font-weight: 700; color: rgba(248, 250, 252, 0.75); white-space: nowrap; }
 
 /* Detail */
-.q-detail { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e7e1db; }
+.q-detail { margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(255, 255, 255, 0.14); }
 .q-tasks { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.q-tasks li { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: #57534e; }
+.q-tasks li { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: rgba(248, 250, 252, 0.75); }
 .q-tasks li svg { color: #059669; flex-shrink: 0; }
 .q-claim {
-  width: 100%; border: none; cursor: pointer; font-family: inherit;
+  width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border: none; cursor: pointer; font-family: inherit;
   font-size: 13.5px; font-weight: 700; color: #fff; padding: 12px; border-radius: 12px;
   background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
   box-shadow: 0 14px 24px -12px rgba(252, 76, 2, 0.8);
   transition: transform 0.15s ease;
 }
-.q-claim:hover { transform: scale(1.02); }
-.q-claim:active { transform: scale(0.97); }
+.q-claim:hover:not(:disabled) { transform: scale(1.02); }
+.q-claim:active:not(:disabled) { transform: scale(0.97); }
+.q-claim:disabled { opacity: 0.7; cursor: default; }
 .q-claimed { display: block; text-align: center; font-size: 12.5px; font-weight: 700; color: #059669; }
-.q-locked-note, .q-inprogress { display: block; text-align: center; font-size: 12px; color: #a8a29e; }
+.q-locked-note, .q-inprogress { display: block; text-align: center; font-size: 12px; color: rgba(248, 250, 252, 0.5); }
 
 /* Aksi mini kanan */
 .q-claim-mini {
-  align-self: center; flex-shrink: 0; border: none; cursor: pointer; font-family: inherit;
+  align-self: center; flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px;
+  border: none; cursor: pointer; font-family: inherit;
   font-size: 12px; font-weight: 700; color: #fff; padding: 10px 14px; border-radius: 12px;
   background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
   box-shadow: 0 12px 22px -12px rgba(252, 76, 2, 0.8);
 }
+.q-claim-mini:disabled { opacity: 0.7; cursor: default; }
 
 /* Transisi expand */
 .q-expand-enter-active, .q-expand-leave-active { transition: all 0.25s ease; overflow: hidden; }
@@ -380,13 +395,13 @@ onMounted(runAchievementCheck)
   width: 100%; border: none; background: none; cursor: pointer; padding: 0; font-family: inherit;
 }
 .q-ach-toggle-left { display: flex; align-items: center; gap: 8px; }
-.q-ach-chevron { color: #a8a29e; transition: transform 0.2s ease; flex-shrink: 0; }
+.q-ach-chevron { color: rgba(248, 250, 252, 0.5); transition: transform 0.2s ease; flex-shrink: 0; }
 .q-ach-chevron.is-open { transform: rotate(180deg); }
 
 .q-ach-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
 .q-ach-item {
   display: flex; align-items: center; gap: 14px;
-  background: #fff; border-radius: 18px; padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.10); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 18px; padding: 14px 16px;
   box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
 }
 .q-ach-badge { flex: 0 0 auto; width: 48px; height: 48px; display: grid; place-content: center; }
@@ -395,9 +410,9 @@ onMounted(runAchievementCheck)
 
 .q-ach-body { flex: 1; min-width: 0; }
 .q-ach-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.q-ach-name { margin: 0; font-size: 14px; font-weight: 700; color: #1c1917; }
-.q-ach-item.is-locked .q-ach-name { color: #78716c; }
-.q-ach-desc { margin: 3px 0 0; font-size: 12px; color: #78716c; line-height: 1.4; }
+.q-ach-name { margin: 0; font-size: 14px; font-weight: 700; color: #F8FAFC; }
+.q-ach-item.is-locked .q-ach-name { color: rgba(248, 250, 252, 0.65); }
+.q-ach-desc { margin: 3px 0 0; font-size: 12px; color: rgba(248, 250, 252, 0.65); line-height: 1.4; }
 .q-ach-unlocked { margin: 4px 0 0; font-size: 11px; font-weight: 700; color: #059669; }
 
 /* Transisi expand pencapaian — max-height lebih besar drpd .q-expand (bisa 12 item) */

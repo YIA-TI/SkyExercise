@@ -1,6 +1,7 @@
 /* ─────────────────────────────────────────────────────────
-   mobile-ui.css — Design system baru (gaya Sandow / mobile-first)
-   Dipakai bersama semua layar member & admin versi baru.
+   mobile-ui.css — Design system (Phase 3a: dark orange+violet
+   glassmorphism, atletik/sporty). Dipakai bersama semua layar
+   member & admin yang sudah di-@import file ini.
    ───────────────────────────────────────────────────────── */
 
 .mui {
@@ -10,24 +11,26 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  /* Latar bold ala peta rute Strava — grain + gradient besar & jenuh, plus drift
-     lambat supaya terasa hidup. Garis diagonal (::before) & motif rute (::after)
-     ada di lapisan terpisah supaya masing-masing bisa berdenyut (pulse) sendiri. */
+  /* Latar gelap oranye→violet (identitas baru) — grain + radial glow oranye/violet
+     di dua sudut, plus drift lambat supaya terasa hidup. Garis diagonal (::before)
+     & motif rute (::after) ada di lapisan terpisah supaya masing-masing bisa
+     berdenyut (pulse) sendiri. */
   background-image:
     var(--grain),
-    radial-gradient(820px 420px at 100% -8%, rgba(252, 76, 2, 0.22), transparent 62%),
-    radial-gradient(760px 460px at -10% 108%, rgba(13, 148, 136, 0.16), transparent 58%);
-  background-color: #ece7e2;
-  background-repeat: repeat, no-repeat, no-repeat;
-  background-size: 180px 180px, auto, auto;
+    radial-gradient(820px 420px at 100% -8%, rgba(252, 76, 2, 0.28), transparent 62%),
+    radial-gradient(760px 460px at -10% 108%, rgba(124, 58, 237, 0.30), transparent 58%),
+    linear-gradient(160deg, #3b1a0a 0%, #4c1d95 45%, #1e1b4b 75%, #0f0a2e 100%);
+  background-color: #0f0a2e;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+  background-size: 180px 180px, auto, auto, cover;
   background-attachment: fixed;
   animation: bg-drift 18s ease-in-out infinite;
-  font-family: "Chakra Petch", system-ui, sans-serif;
+  font-family: "Barlow", system-ui, sans-serif;
   box-sizing: border-box;
 }
 
-/* Garis diagonal ganda (oranye/teal, saling silang) — lapisan terpisah supaya
-   bisa berdenyut (pulse) sendiri, kesan "detak" energi ala Strava. */
+/* Garis diagonal ganda (oranye/violet, saling silang) — lapisan terpisah supaya
+   bisa berdenyut (pulse) sendiri, kesan "detak" energi ala sporty/motion-line. */
 .mui::before {
   content: "";
   position: absolute;
@@ -35,13 +38,13 @@
   z-index: -1;
   pointer-events: none;
   background-image:
-    repeating-linear-gradient(135deg, rgba(252, 76, 2, 0.09) 0, rgba(252, 76, 2, 0.09) 3px, transparent 3px, transparent 46px),
-    repeating-linear-gradient(45deg, rgba(13, 148, 136, 0.06) 0, rgba(13, 148, 136, 0.06) 2px, transparent 2px, transparent 70px);
+    repeating-linear-gradient(135deg, rgba(252, 76, 2, 0.12) 0, rgba(252, 76, 2, 0.12) 3px, transparent 3px, transparent 46px),
+    repeating-linear-gradient(45deg, rgba(196, 181, 253, 0.08) 0, rgba(196, 181, 253, 0.08) 2px, transparent 2px, transparent 70px);
   animation: stripe-pulse 3s ease-in-out infinite;
 }
 
-/* Motif rute GPS di sudut — lapisan terpisah dengan ritme pulse sendiri (denyut
-   live-tracking), letaknya tak ikut drift latar utama. */
+/* Motif rute GPS di sudut — sudah oranye, cocok dgn palet baru tanpa perlu diubah.
+   Lapisan terpisah dengan ritme pulse sendiri (denyut live-tracking). */
 .mui::after {
   content: "";
   position: absolute;
@@ -72,7 +75,7 @@
   max-width: 1080px;
 }
 
-/* ── Header (terang + aksen, beda dari nav bawah) ── */
+/* ── Header (kaca buram di atas latar gelap) ── */
 .mui-header {
   position: relative;
   overflow: hidden;
@@ -82,10 +85,12 @@
   gap: 12px;
   padding: 16px 18px;
   border-radius: 22px;
-  background: linear-gradient(135deg, #ffffff 0%, #faf8f6 100%);
-  color: #1c1917;
-  border: 1px solid #ece7e2;
-  box-shadow: 0 18px 36px -28px rgba(15, 23, 42, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #F8FAFC;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 18px 36px -28px rgba(0, 0, 0, 0.6);
 }
 .mui-header::before {
   content: '';
@@ -95,7 +100,7 @@
   width: 220px;
   height: 220px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(252, 76, 2, 0.16) 0%, rgba(252, 76, 2, 0) 70%);
+  background: radial-gradient(circle, rgba(252, 76, 2, 0.22) 0%, rgba(252, 76, 2, 0) 70%);
   pointer-events: none;
 }
 
@@ -130,7 +135,7 @@
 .mui-h-sub {
   margin: 2px 0 0;
   font-size: 12px;
-  color: #78716c;
+  color: rgba(248, 250, 252, 0.65);
 }
 
 .mui-pill {
@@ -139,9 +144,11 @@
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.4px;
-  color: #c2410c;
-  background: #fff2e8;
-  border: 1px solid #ffe3cf;
+  color: #FDBA74;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   padding: 6px 12px;
   border-radius: 999px;
   white-space: nowrap;
@@ -159,14 +166,17 @@
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.4px;
-  color: #1c1917;
+  color: #F8FAFC;
 }
 
 .mui-card {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 20px;
   padding: 18px;
-  box-shadow: 0 16px 32px -26px rgba(17, 18, 20, 0.4);
+  box-shadow: 0 16px 32px -26px rgba(0, 0, 0, 0.6);
 }
 
 /* ── Tag / badge ── */
@@ -179,10 +189,10 @@
   letter-spacing: -0.1px;
 }
 
-.mui-tag--orange { background: #fff2e8; color: #c2410c; }
-.mui-tag--blue   { background: #ccfbf1; color: #0f766e; }
-.mui-tag--green  { background: #d1fae5; color: #059669; }
-.mui-tag--gray   { background: #f5f1ec; color: #57534e; }
+.mui-tag--orange { background: rgba(251, 146, 60, 0.18); color: #FDBA74; }
+.mui-tag--blue   { background: rgba(45, 212, 191, 0.18); color: #5EEAD4; }
+.mui-tag--green  { background: rgba(52, 211, 153, 0.18); color: #6EE7B7; }
+.mui-tag--gray   { background: rgba(255, 255, 255, 0.10); color: rgba(248, 250, 252, 0.75); }
 .mui-tag--accent { background: #fc4c02; color: #ffffff; }
 
 .mui-mono {
@@ -195,9 +205,12 @@
   display: flex;
   gap: 5px;
   padding: 5px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 14px;
-  box-shadow: 0 16px 32px -26px rgba(17, 18, 20, 0.4);
+  box-shadow: 0 16px 32px -26px rgba(0, 0, 0, 0.6);
 }
 
 .mui-toggle button {
@@ -214,7 +227,7 @@
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
-  color: #57534e;
+  color: rgba(248, 250, 252, 0.65);
   transition: all 0.15s ease;
 }
 
@@ -234,21 +247,23 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-radius: 16px;
   padding: 13px 16px;
-  border: 1.5px solid transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .mui-rank:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 28px -20px rgba(17, 18, 20, 0.5);
+  box-shadow: 0 14px 28px -20px rgba(0, 0, 0, 0.6);
 }
 
 .mui-rank--me {
   border-color: #fc4c02;
-  box-shadow: 0 0 0 3px rgba(252, 76, 2, 0.15);
+  box-shadow: 0 0 0 3px rgba(252, 76, 2, 0.25);
 }
 
 .mui-rank-num {
@@ -265,7 +280,7 @@
 .mui-rank-num--gold   { background: linear-gradient(135deg, #fde68a, #f59e0b); color: #78350f; }
 .mui-rank-num--silver { background: linear-gradient(135deg, #f5f1ec, #d6cfc8); color: #44403c; }
 .mui-rank-num--bronze { background: linear-gradient(135deg, #fdba74, #c2703d); color: #431407; }
-.mui-rank-num--normal { background: #f5f1ec; color: #57534e; }
+.mui-rank-num--normal { background: rgba(255, 255, 255, 0.12); color: rgba(248, 250, 252, 0.8); }
 
 .mui-rank-name {
   flex: 1;
@@ -275,12 +290,12 @@
   gap: 8px;
   font-size: 14px;
   font-weight: 700;
-  color: #1c1917;
+  color: #F8FAFC;
 }
 
 .mui-rank-unit {
   font-size: 11.5px;
-  color: #a8a29e;
+  color: rgba(248, 250, 252, 0.65);
   white-space: nowrap;
 }
 
@@ -289,7 +304,7 @@
   font-variant-numeric: tabular-nums;
   font-size: 16px;
   font-weight: 700;
-  color: #1c1917;
+  color: #F8FAFC;
   white-space: nowrap;
 }
 
@@ -298,18 +313,19 @@
 }
 
 /* ── Skeleton (loading placeholder) — bar dgn shimmer, ukuran diatur per-pemakai
-   lewat width/height inline atau modifier class. ── */
+   lewat width/height inline atau modifier class. Base & shimmer diredupkan
+   dibanding versi lama supaya pas di atas kartu kaca gelap, bukan kartu putih. ── */
 .mui-skel {
   position: relative;
   overflow: hidden;
-  background: #ece7e2;
+  background: rgba(255, 255, 255, 0.10);
   border-radius: 8px;
 }
 .mui-skel::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
   animation: mui-skel-shimmer 1.4s ease-in-out infinite;
 }
 .mui-skel--text   { height: 12px; border-radius: 6px; }
@@ -321,7 +337,9 @@
 }
 
 /* ── Tab bar (bottom nav mobile / sidebar desktop) — dipakai bersama
-   MemberTabBar & AdminTabBar, keduanya cukup @import file ini. ── */
+   MemberTabBar & AdminTabBar, keduanya cukup @import file ini. Sudah gelap+blur
+   sebelumnya, di Phase 3a cuma dihangatkan sedikit ke arah violet (bukan hitam
+   polos) supaya senada dengan latar baru. ── */
 .m-tabbar {
   position: fixed;
   bottom: 16px;
@@ -334,9 +352,16 @@
   gap: 4px;
   padding: 8px;
   border-radius: 22px;
-  background: rgba(17, 18, 20, 0.92);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.45);
+  background: rgba(24, 21, 60, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  /* Shadow berlapis (jauh+lembut & dekat+lebih pekat) supaya nav terlihat
+     "mengambang" di atas konten, bukan menyatu dgn latar. */
+  box-shadow:
+    0 24px 48px -16px rgba(0, 0, 0, 0.7),
+    0 8px 18px -6px rgba(0, 0, 0, 0.55),
+    0 1px 0 rgba(255, 255, 255, 0.06) inset;
   z-index: 20;
 }
 
@@ -413,3 +438,8 @@
     padding: 11px 4px;
   }
 }
+
+/* ── Spin icon (loading spinner inside buttons) — shared across all screens
+   that @import this file, so the animation isn't redefined per-component. ── */
+.spin-icon.is-spinning { animation: mui-spin 0.9s linear infinite; }
+@keyframes mui-spin { to { transform: rotate(360deg); } }

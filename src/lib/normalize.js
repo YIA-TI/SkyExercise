@@ -54,6 +54,21 @@ export function daysAgoISO(n) {
   return new Date(Date.now() - n * 86400000).toISOString()
 }
 
+// Date → Senin minggu ini jam 00:00 lokal — awal window "minggu ini" (Senin-Minggu).
+export function startOfWeek(d = new Date()) {
+  const date = new Date(d)
+  const day = (date.getDay() + 6) % 7 // Senin = 0
+  date.setDate(date.getDate() - day)
+  date.setHours(0, 0, 0, 0)
+  return date
+}
+
+// ISO timestamp Senin minggu ini jam 00:00 lokal — dipakai membatasi query
+// "minggu ini" (Senin-Minggu), gantikan jendela rolling 7 hari (daysAgoISO(7)).
+export function startOfWeekISO() {
+  return startOfWeek().toISOString()
+}
+
 // ISO timestamp awal bulan berjalan (waktu lokal) — dipakai untuk membatasi
 // query aktivitas ke bulan berjalan.
 export function startOfMonthISO() {

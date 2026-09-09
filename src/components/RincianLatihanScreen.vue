@@ -49,8 +49,6 @@
 
     <p v-else class="rl-empty">Aktivitas tidak ditemukan.</p>
   </div>
-
-  <MemberTabBar />
 </div>
 </template>
 
@@ -58,7 +56,6 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useActivityDetail } from '../composables/useMemberData.js'
-import MemberTabBar from './MemberTabBar.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -107,12 +104,12 @@ const ringkasan = computed(() => {
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  border: 1px solid #ece7e2;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   cursor: pointer;
   display: grid;
   place-content: center;
-  color: #1c1917;
-  background: #f5f1ec;
+  color: #F8FAFC;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .rl-strava {
@@ -129,8 +126,8 @@ const ringkasan = computed(() => {
 
 .rl-dot { width: 7px; height: 7px; border-radius: 50%; background: #fff; }
 
-.rl-session-title { margin: 0 0 4px; font-size: 15px; font-weight: 700; color: #1c1917; }
-.rl-session-type { margin: 0; font-size: 12.5px; color: #57534e; }
+.rl-session-title { margin: 0 0 4px; font-size: 15px; font-weight: 700; color: #F8FAFC; }
+.rl-session-type { margin: 0; font-size: 12.5px; color: rgba(248, 250, 252, 0.75); }
 
 .rl-summary {
   display: grid;
@@ -139,21 +136,24 @@ const ringkasan = computed(() => {
 }
 
 .rl-sum-card {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 16px;
   padding: 16px;
   box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
 }
 
-.rl-sum-label { margin: 0 0 8px; font-size: 12px; color: #57534e; }
-.rl-sum-value { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; color: #1c1917; }
-.rl-sum-unit { font-size: 12px; font-weight: 700; color: #a8a29e; margin-left: 3px; }
+.rl-sum-label { margin: 0 0 8px; font-size: 12px; color: rgba(248, 250, 252, 0.75); }
+.rl-sum-value { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; color: #F8FAFC; }
+.rl-sum-unit { font-size: 12px; font-weight: 700; color: rgba(248, 250, 252, 0.5); margin-left: 3px; }
 
-.rl-note { margin: 4px 2px 0; font-size: 11.5px; color: #a8a29e; line-height: 16px; }
+.rl-note { margin: 4px 2px 0; font-size: 11.5px; color: rgba(248, 250, 252, 0.5); line-height: 16px; }
 
 .rl-empty {
   text-align: center;
-  color: #a8a29e;
+  color: rgba(248, 250, 252, 0.5);
   padding: 40px;
   font-size: 14px;
 }

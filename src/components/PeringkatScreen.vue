@@ -9,7 +9,8 @@
           <p class="mui-h-sub">Divisi ARFF · {{ currentRankData.length }} anggota</p>
         </div>
       </div>
-      <span class="mui-pill">Posisi #{{ myRank }}</span>
+      <RefreshingBadge v-if="loading && rows" />
+      <span v-else class="mui-pill">Posisi #{{ myRank }}</span>
     </header>
 
     <div class="mui-toggle">
@@ -28,7 +29,13 @@
     </div>
 
     <div v-if="activeMode === 'league'" class="lb-league-card">
-      <div class="lb-league-badges">
+      <div v-if="loading && !rows" class="lb-league-badges">
+        <div v-for="i in 4" :key="i" class="lb-league-badge">
+          <div class="mui-skel mui-skel--circle" style="width: 18px; height: 18px;"></div>
+          <div class="mui-skel mui-skel--text" style="width: 30px; margin-top: 4px;"></div>
+        </div>
+      </div>
+      <div v-else class="lb-league-badges">
         <div
           v-for="t in tierOrder" :key="t.key" class="lb-league-badge"
           :class="{ 'is-current': myTier === t.key }" :style="{ color: t.color }"
@@ -46,8 +53,15 @@
       </div>
     </div>
 
+    <div v-if="loading && !rows" class="lb-podium">
+      <div v-for="i in 3" :key="i" class="lb-podium-item">
+        <div class="mui-skel mui-skel--circle" style="width: 50px; height: 50px;"></div>
+        <div class="mui-skel mui-skel--text" style="width: 70px; margin-top: 8px;"></div>
+        <div class="mui-skel" style="width: 100%; height: 44px; margin-top: 4px;"></div>
+      </div>
+    </div>
     <!-- Podium top-3 — juara 1 di tengah & lebih tinggi, ala panggung -->
-    <div v-if="podium.length" class="lb-podium">
+    <div v-else-if="podium.length" class="lb-podium">
       <div v-for="p in podium" :key="p.id" class="lb-podium-item" :class="['lb-podium-item--rank' + p.rank, { 'is-me': p.isMe }]">
         <div class="lb-podium-avatar">
           <Crown v-if="p.rank === 1" :size="16" class="lb-podium-crown" />
@@ -64,7 +78,13 @@
       </div>
     </div>
 
-    <div class="mui-rank-list">
+    <div v-if="loading && !rows" class="mui-rank-list">
+      <div v-for="i in 4" :key="i" class="mui-rank">
+        <div class="mui-skel mui-skel--circle" style="width: 34px; height: 34px; flex-shrink: 0;"></div>
+        <div class="mui-skel mui-skel--text" style="width: 60%;"></div>
+      </div>
+    </div>
+    <div v-else class="mui-rank-list">
       <div v-for="item in restRankData" :key="item.id" class="mui-rank" :class="{ 'mui-rank--me': item.isMe }">
         <div class="mui-rank-num mui-rank-num--normal">{{ item.rank }}</div>
         <div class="lb-row-avatar">
@@ -81,8 +101,6 @@
       </div>
     </div>
   </div>
-
-  <MemberTabBar />
 </div>
 </template>
 
@@ -92,7 +110,7 @@ import { Crown, Shield, Award, Star, Gem } from '@lucide/vue'
 import { authState } from '../store/auth.js'
 import { useLeaderboard } from '../composables/useMemberData.js'
 import { LEAGUE_TIER_ORDER } from '../lib/leagueTier.js'
-import MemberTabBar from './MemberTabBar.vue'
+import RefreshingBadge from './RefreshingBadge.vue'
 
 const activeMode = ref('running')
 const leaguePeriod = ref('monthly')
@@ -110,7 +128,7 @@ const tierOrder = LEAGUE_TIER_ORDER
 const TIER_ICON = { bronze: Shield, silver: Award, gold: Star, diamond: Gem }
 
 // Leaderboard nyata (RPC): jarak/bulan, effort/minggu, atau liga (XP mingguan/bulanan).
-const { rows } = useLeaderboard(activeMode, leaguePeriod)
+const { rows, loading } = useLeaderboard(activeMode, leaguePeriod)
 
 const currentRankData = computed(() =>
   (rows.value || []).map((r) => ({
@@ -159,7 +177,10 @@ function initialsOf(name) {
   align-items: flex-end;
   justify-content: center;
   gap: 10px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 20px;
   box-shadow: 0 16px 32px -26px rgba(17, 18, 20, 0.4);
   padding: 22px 14px 16px;
@@ -179,12 +200,12 @@ function initialsOf(name) {
   overflow: hidden;
   display: grid; place-content: center;
   font-size: 14px; font-weight: 800;
-  border: 3px solid #fff;
+  border: 3px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 10px 20px -10px rgba(17, 18, 20, 0.5);
 }
 .lb-podium-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .lb-podium-item--rank1 .lb-podium-avatar { width: 64px; height: 64px; font-size: 18px; background: linear-gradient(135deg, #fde68a, #f59e0b); color: #78350f; }
-.lb-podium-item--rank2 .lb-podium-avatar { background: linear-gradient(135deg, #f5f1ec, #d6cfc8); color: #44403c; }
+.lb-podium-item--rank2 .lb-podium-avatar { background: linear-gradient(135deg, #e5e7eb, #94a3b8); color: #1e293b; }
 .lb-podium-item--rank3 .lb-podium-avatar { background: linear-gradient(135deg, #fdba74, #c2703d); color: #431407; }
 .lb-podium-item.is-me .lb-podium-avatar { box-shadow: 0 0 0 3px #fc4c02, 0 10px 20px -10px rgba(17, 18, 20, 0.5); }
 
@@ -199,11 +220,11 @@ function initialsOf(name) {
 .lb-podium-name {
   margin: 0; max-width: 100%;
   display: flex; align-items: center; gap: 4px;
-  font-size: 12px; font-weight: 700; color: #1c1917;
+  font-size: 12px; font-weight: 700; color: #F8FAFC;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .lb-podium-name .mui-tag { font-size: 8.5px; padding: 2px 6px; flex-shrink: 0; }
-.lb-podium-value { margin: 0; font-size: 12px; font-weight: 700; color: #57534e; }
+.lb-podium-value { margin: 0; font-size: 12px; font-weight: 700; color: rgba(248, 250, 252, 0.75); }
 
 .lb-podium-bar {
   width: 100%;
@@ -213,7 +234,7 @@ function initialsOf(name) {
   font-size: 18px; font-weight: 800; color: #fff;
 }
 .lb-podium-item--rank1 .lb-podium-bar { height: 64px; background: linear-gradient(180deg, #fbbf24, #f59e0b); }
-.lb-podium-item--rank2 .lb-podium-bar { height: 44px; background: linear-gradient(180deg, #e7e2da, #c7bfb6); color: #44403c; }
+.lb-podium-item--rank2 .lb-podium-bar { height: 44px; background: linear-gradient(180deg, #cbd5e1, #94a3b8); color: #1e293b; }
 .lb-podium-item--rank3 .lb-podium-bar { height: 36px; background: linear-gradient(180deg, #fdba74, #c2703d); }
 
 /* Container liga — strip badge tier + toggle periode, dipakai cuma saat mode Liga aktif */
@@ -221,7 +242,10 @@ function initialsOf(name) {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 20px;
   padding: 16px 18px;
   box-shadow: 0 16px 32px -26px rgba(17, 18, 20, 0.4);
@@ -245,7 +269,7 @@ function initialsOf(name) {
   transition: opacity 0.15s ease, background 0.15s ease;
 }
 .lb-league-badge span { font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; }
-.lb-league-badge.is-current { opacity: 1; background: #f5f1ec; }
+.lb-league-badge.is-current { opacity: 1; background: rgba(255, 255, 255, 0.08); }
 
 .lb-league-card-bottom {
   display: flex;
@@ -254,12 +278,12 @@ function initialsOf(name) {
   gap: 10px;
   flex-wrap: wrap;
 }
-.lb-league-sub { margin: 0; font-size: 12px; color: #78716c; flex: 1; min-width: 160px; }
+.lb-league-sub { margin: 0; font-size: 12px; color: rgba(248, 250, 252, 0.65); flex: 1; min-width: 160px; }
 
 .lb-period-toggle {
   flex: 0 0 auto;
   padding: 3px;
-  background: #f5f1ec;
+  background: rgba(255, 255, 255, 0.08);
   box-shadow: none;
 }
 .lb-period-toggle button { padding: 7px 12px; font-size: 12px; }
@@ -271,8 +295,8 @@ function initialsOf(name) {
   border-radius: 50%;
   overflow: hidden;
   display: grid; place-content: center;
-  font-weight: 700; font-size: 11px; color: #44403c;
-  background: #f5f1ec;
+  font-weight: 700; font-size: 11px; color: rgba(248, 250, 252, 0.85);
+  background: rgba(255, 255, 255, 0.08);
 }
 .lb-row-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -282,7 +306,8 @@ function initialsOf(name) {
   font-weight: 800;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #f5f1ec;
+  background: rgba(255, 255, 255, 0.10);
+  color: rgba(248, 250, 252, 0.75);
   white-space: nowrap;
 }
 </style>

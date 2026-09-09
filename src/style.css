@@ -83,15 +83,19 @@
   }
 }
 
-/* Tipografi gamifikasi — satu keluarga (Chakra Petch, techy/HUD) dipakai di
-   heading, hero/identitas, & body; angka statistik tetap JetBrains Mono (tabular). */
+/* Tipografi baru (Phase 3a) — Barlow Condensed dipakai di heading/identitas
+   (kesan atletik/sporty, sesuai arah redesign visual). Selector yang masih
+   berada di layar belum-diredesain (.aeroguard-home, .aeroguard-welcome,
+   .aeroguard-signin) tetap kena perubahan ini juga — font heading konsisten
+   duluan sebelum warnanya ikut diredesain di fase berikutnya. Angka statistik
+   tetap JetBrains Mono (tabular), tak berubah. */
 .mui-h-title,
 .mui-section-title,
 .aeroguard-home .section-title,
 .aeroguard-home .stat-card-title,
 .q-title,
 .q-stat-lbl {
-  font-family: "Chakra Petch", system-ui, sans-serif;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
   font-weight: 600;
   letter-spacing: 0.2px;
   text-transform: none;
@@ -102,7 +106,7 @@
 .pf-hero-name,
 .aeroguard-welcome .title,
 .aeroguard-signin .title {
-  font-family: "Chakra Petch", system-ui, sans-serif;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
   font-weight: 700;
   letter-spacing: 0;
 }

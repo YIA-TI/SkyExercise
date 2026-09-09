@@ -9,7 +9,8 @@
           <p class="mui-h-sub">Direktori anggota ARFF</p>
         </div>
       </div>
-      <span class="mui-pill">{{ anggotaList.length }} Anggota</span>
+      <RefreshingBadge v-if="loading && participants" />
+      <span v-else class="mui-pill">{{ anggotaList.length }} Anggota</span>
     </header>
 
     <div class="an-search">
@@ -17,7 +18,14 @@
       <input v-model="search" type="text" placeholder="Cari nama anggota..." />
     </div>
 
-    <div class="an-list">
+    <div v-if="loading && !participants" class="an-list">
+      <article v-for="i in 6" :key="i" class="an-card">
+        <div class="mui-skel mui-skel--circle" style="width: 48px; height: 48px;"></div>
+        <div class="mui-skel mui-skel--text" style="width: 60%; margin-top: 10px;"></div>
+        <div class="mui-skel mui-skel--text" style="width: 40%; margin-top: 6px;"></div>
+      </article>
+    </div>
+    <div v-else class="an-list">
       <article
         v-for="a in filteredAnggota"
         :key="a.id"
@@ -66,8 +74,6 @@
       <p v-if="filteredAnggota.length === 0" class="an-empty">Tidak ada data ditemukan.</p>
     </div>
   </div>
-
-  <AdminTabBar />
 </div>
 </template>
 
@@ -76,7 +82,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { authState } from '../store/auth.js'
 import { useAdminParticipants } from '../composables/useAdminData.js'
-import AdminTabBar from './AdminTabBar.vue'
+import RefreshingBadge from './RefreshingBadge.vue'
 
 const router = useRouter()
 const search = ref('')
@@ -90,7 +96,7 @@ function initialsOf(name) {
 }
 
 // Direktori peserta nyata dari Supabase.
-const { participants } = useAdminParticipants()
+const { participants, loading } = useAdminParticipants()
 const anggotaList = computed(() =>
   (participants.value || []).map((p) => ({
     id: p.athleteId,
@@ -134,10 +140,12 @@ async function copyUsername(a) {
   align-items: center;
   gap: 10px;
   padding: 0 16px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border-radius: 16px;
-  border: 1.5px solid transparent;
-  color: #57534e;
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  color: rgba(248, 250, 252, 0.75);
   box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -155,7 +163,7 @@ async function copyUsername(a) {
   padding: 14px 0;
   font-family: inherit;
   font-size: 14px;
-  color: #1c1917;
+  color: #F8FAFC;
 }
 
 .an-list {
@@ -168,7 +176,10 @@ async function copyUsername(a) {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 16px;
   padding: 16px;
   box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
@@ -200,8 +211,8 @@ async function copyUsername(a) {
   font-weight: 700;
   font-size: 14px;
   text-transform: uppercase;
-  color: #44403c;
-  background: #f5f1ec;
+  color: rgba(248, 250, 252, 0.85);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .an-avatar-img {
@@ -217,26 +228,26 @@ async function copyUsername(a) {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  border: 2px solid #ffffff;
+  border: 2px solid rgba(15, 10, 46, 0.6);
 }
 
-.an-avatar-dot.is-on { background: #059669; }
-.an-avatar-dot.is-off { background: #a8a29e; }
+.an-avatar-dot.is-on { background: #059669; box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.35); }
+.an-avatar-dot.is-off { background: #a8a29e; box-shadow: 0 0 0 1px rgba(168, 162, 158, 0.35); }
 
-.an-name { font-size: 15px; font-weight: 700; color: #1c1917; }
-.an-role { margin: 0 0 10px; font-size: 12.5px; color: #78716c; }
+.an-name { font-size: 15px; font-weight: 700; color: #F8FAFC; }
+.an-role { margin: 0 0 10px; font-size: 12.5px; color: rgba(248, 250, 252, 0.65); }
 
 .an-meta-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px 12px;
   padding: 10px 0;
-  border-top: 1px solid #f0ece6;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .an-meta-item { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.an-meta-label { font-size: 10.5px; color: #a8a29e; }
-.an-meta-value { font-size: 12.5px; font-weight: 600; color: #292524; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.an-meta-label { font-size: 10.5px; color: rgba(248, 250, 252, 0.5); }
+.an-meta-value { font-size: 12.5px; font-weight: 600; color: #F8FAFC; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .an-contact {
   display: flex;
@@ -244,12 +255,12 @@ async function copyUsername(a) {
   justify-content: space-between;
   gap: 8px;
   padding-top: 10px;
-  border-top: 1px solid #f0ece6;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .an-contact-value {
   font-size: 12.5px;
-  color: #57534e;
+  color: rgba(248, 250, 252, 0.75);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -264,20 +275,20 @@ async function copyUsername(a) {
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: #a8a29e;
+  color: rgba(248, 250, 252, 0.5);
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
 .an-copy-btn:hover {
-  background: #f5f1ec;
-  color: #57534e;
+  background: rgba(255, 255, 255, 0.16);
+  color: rgba(248, 250, 252, 0.75);
 }
 
 .an-empty {
   grid-column: 1 / -1;
   text-align: center;
-  color: #a8a29e;
+  color: rgba(248, 250, 252, 0.5);
   padding: 32px;
   font-size: 14px;
 }

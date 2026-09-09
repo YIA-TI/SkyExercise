@@ -36,15 +36,16 @@
   .mui::after, .aeroguard-home::after { animation: none; }
 }
 
-/* Reset #app agar mengisi seluruh layar — latar krem + grain sebagai fallback
-   sebelum layar (.mui / .aeroguard-home) selesai dimuat, supaya tak ada kedip putih polos. */
+/* Reset #app agar mengisi seluruh layar — latar gelap + grain sebagai fallback
+   sebelum layar (.mui / .aeroguard-home) selesai dimuat, supaya tak ada kedip
+   warna lama (krem) sebelum tema gelap baru (Phase 3a) termuat. */
 #app {
   width: 100%;
   min-height: 100vh;
   margin: 0;
   padding: 0;
   background-image: var(--grain), radial-gradient(760px 340px at 100% -6%, rgba(252, 76, 2, 0.18), transparent 60%);
-  background-color: #ece7e2;
+  background-color: #0f0a2e;
   background-repeat: repeat, no-repeat;
   background-size: 180px 180px, auto;
   background-attachment: fixed;

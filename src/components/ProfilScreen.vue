@@ -9,7 +9,8 @@
           <p class="mui-h-sub">Anggota ARFF aktif</p>
         </div>
       </div>
-      <span class="mui-pill">Aktif</span>
+      <RefreshingBadge v-if="profileLoading && profile" />
+      <span v-else class="mui-pill">Aktif</span>
     </header>
 
     <!-- Kartu spotlight: identitas + statistik + pengaturan, satu panel gelap -->
@@ -19,21 +20,36 @@
         Aktif Bertugas
       </span>
 
-      <div class="pf-avatar-wrap">
+      <div v-if="profileLoading && !profile" class="pf-avatar-wrap">
+        <div class="mui-skel mui-skel--circle" style="width: 100%; height: 100%;"></div>
+      </div>
+      <div v-else class="pf-avatar-wrap">
         <img v-if="profile?.avatar" :src="profile.avatar" class="pf-avatar-img" alt="" />
         <div v-else class="pf-avatar-fallback">{{ initials }}</div>
       </div>
 
-      <p class="pf-name">
-        {{ authState.userName || '—' }}
-        <svg v-if="stravaState.connected" class="pf-verified" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#fc4c02" aria-hidden="true">
-          <path d="M12 2l2.4 2.2 3.2-.6.6 3.2L21 9l-1.8 2.8L21 15l-2.8 1.2-.6 3.2-3.2-.6L12 22l-2.4-2.2-3.2.6-.6-3.2L3 15l1.8-2.8L3 9l2.8-1.2.6-3.2 3.2.6L12 2z"/>
-          <path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </p>
-      <p class="pf-role">Anggota ARFF · {{ profile?.city || '—' }}</p>
+      <template v-if="profileLoading && !profile">
+        <div class="mui-skel mui-skel--text" style="width: 140px; height: 21px;"></div>
+        <div class="mui-skel mui-skel--text" style="width: 100px; margin-top: 8px;"></div>
+      </template>
+      <template v-else>
+        <p class="pf-name">
+          {{ authState.userName || '—' }}
+          <svg v-if="stravaState.connected" class="pf-verified" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#a1a1aa" aria-hidden="true">
+            <path d="M12 2l2.4 2.2 3.2-.6.6 3.2L21 9l-1.8 2.8L21 15l-2.8 1.2-.6 3.2-3.2-.6L12 22l-2.4-2.2-3.2.6-.6-3.2L3 15l1.8-2.8L3 9l2.8-1.2.6-3.2 3.2.6L12 2z"/>
+            <path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </p>
+        <p class="pf-role">Anggota ARFF · {{ profile?.city || '—' }}</p>
+      </template>
 
-      <div class="pf-stats">
+      <div v-if="statsLoading && !stats" class="pf-stats">
+        <div v-for="i in 4" :key="i" class="pf-stat">
+          <div class="mui-skel mui-skel--text" style="width: 70%; margin: 0 auto;"></div>
+          <div class="mui-skel mui-skel--text" style="width: 90%; margin: 6px auto 0;"></div>
+        </div>
+      </div>
+      <div v-else class="pf-stats">
         <div v-for="s in quickStats" :key="s.label" class="pf-stat">
           <p class="pf-stat-value mui-mono">{{ s.value }}</p>
           <p class="pf-stat-label">{{ s.label }}</p>
@@ -50,10 +66,18 @@
 
       <div class="pf-tab-content">
         <template v-if="activeTab === 'info'">
-          <div v-for="info in infoDiri" :key="info.label" class="pf-linkrow">
-            <span class="pf-linkrow-label">{{ info.label }}</span>
-            <span class="pf-linkrow-value">{{ info.value }}</span>
-          </div>
+          <template v-if="profileLoading && !profile">
+            <div v-for="i in 4" :key="i" class="pf-linkrow">
+              <div class="mui-skel mui-skel--text" style="width: 40%;"></div>
+              <div class="mui-skel mui-skel--text" style="width: 30%;"></div>
+            </div>
+          </template>
+          <template v-else>
+            <div v-for="info in infoDiri" :key="info.label" class="pf-linkrow">
+              <span class="pf-linkrow-label">{{ info.label }}</span>
+              <span class="pf-linkrow-value">{{ info.value }}</span>
+            </div>
+          </template>
         </template>
         <template v-else>
           <div v-if="stravaState.connected" class="pf-linkrow">
@@ -82,7 +106,14 @@
     <!-- Grafik jarak 7 hari (Strava — recent run totals) -->
     <section class="mui-block">
       <h2 class="mui-section-title">Jarak 7 Hari Terakhir</h2>
-      <div class="mui-card">
+      <div v-if="statsLoading && !stats" class="mui-card">
+        <div class="pf-chart">
+          <div v-for="i in 7" :key="i" class="pf-chart-col">
+            <div class="mui-skel" style="width: 100%; height: 60%; border-radius: 6px;"></div>
+          </div>
+        </div>
+      </div>
+      <div v-else class="mui-card">
         <div class="pf-chart">
           <div v-for="(h, i) in distance.bars" :key="i" class="pf-chart-col">
             <span class="pf-chart-bar" :style="{ height: h + '%' }"></span>
@@ -101,8 +132,6 @@
       </button>
     </section>
   </div>
-
-  <MemberTabBar />
 </div>
 </template>
 
@@ -115,13 +144,13 @@ import { stravaState, disconnectStrava } from '../store/strava.js'
 import { useProfile, useHomeStats, useLeaderboard } from '../composables/useMemberData.js'
 import { calcBmi, bmiCategory } from '../lib/normalize.js'
 import { openBodyMetricsModal } from '../store/bodyMetricsModal.js'
-import MemberTabBar from './MemberTabBar.vue'
+import RefreshingBadge from './RefreshingBadge.vue'
 
 const router = useRouter()
 
 // Data nyata: profil + statistik (grafik jarak 7 hari).
-const { profile } = useProfile()
-const { stats } = useHomeStats()
+const { profile, loading: profileLoading } = useProfile()
+const { stats, loading: statsLoading } = useHomeStats()
 const distance = computed(() => ({ ...mockDistance, ...(stats.value?.distance || {}) }))
 
 // Peringkat effort nyata (RPC) — cari posisi atlet sendiri di leaderboard.
@@ -204,8 +233,8 @@ const icons = {
 <style scoped>
 @import '../assets/mobile-ui.css';
 
-/* Kartu spotlight — panel gelap ala reactbits "Profile 5", warna disesuaikan ke
-   tema Strava/AeroGuard kita (stone gelap + aksen oranye, bukan hitam netral). */
+/* Kartu spotlight — tema "black hole" galaxy: hitam pekat + glow putih/silver
+   lembut ala event horizon, taburan bintang, TANPA aksen warna brand (oranye). */
 .pf-card {
   position: relative;
   overflow: hidden;
@@ -215,21 +244,26 @@ const icons = {
   text-align: center;
   border-radius: 26px;
   padding: 28px 20px 22px;
-  background: linear-gradient(160deg, #292524 0%, #1c1917 65%, #17140f 100%);
+  background: radial-gradient(120% 90% at 50% -15%, #262626 0%, #0a0a0a 45%, #000000 100%);
   color: #ffffff;
-  box-shadow: 0 24px 60px -30px rgba(28, 25, 23, 0.7);
+  box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.85);
 }
 
+/* Starfield + glow "singularity" — satu pseudo-elemen, murni putih/abu-abu. */
 .pf-card::before {
   content: '';
   position: absolute;
-  top: -30%;
-  right: -12%;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(252, 76, 2, 0.25) 0%, rgba(252, 76, 2, 0) 70%);
+  inset: 0;
   pointer-events: none;
+  background:
+    radial-gradient(1.5px 1.5px at 15% 25%, rgba(255, 255, 255, 0.9), transparent 60%),
+    radial-gradient(1.5px 1.5px at 75% 15%, rgba(255, 255, 255, 0.7), transparent 60%),
+    radial-gradient(1px 1px at 45% 62%, rgba(255, 255, 255, 0.6), transparent 60%),
+    radial-gradient(1px 1px at 85% 72%, rgba(255, 255, 255, 0.8), transparent 60%),
+    radial-gradient(1.5px 1.5px at 30% 85%, rgba(255, 255, 255, 0.5), transparent 60%),
+    radial-gradient(1px 1px at 60% 42%, rgba(255, 255, 255, 0.6), transparent 60%),
+    radial-gradient(1px 1px at 10% 55%, rgba(255, 255, 255, 0.5), transparent 60%),
+    radial-gradient(220px 220px at 50% 0%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 70%);
 }
 
 .pf-status {
@@ -273,8 +307,8 @@ const icons = {
   place-content: center;
   font-size: 28px;
   font-weight: 700;
-  color: #ffffff;
-  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+  color: #09090b;
+  background: linear-gradient(135deg, #e4e4e7 0%, #52525b 100%);
 }
 
 .pf-name {
@@ -330,7 +364,7 @@ const icons = {
   color: rgba(255, 255, 255, 0.55);
   transition: background 0.15s ease, color 0.15s ease;
 }
-.pf-tab.is-active { background: #ffffff; color: #1c1917; }
+.pf-tab.is-active { background: rgba(255, 255, 255, 0.16); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.25); }
 
 .pf-tab-content { position: relative; width: 100%; margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
 
@@ -355,7 +389,7 @@ const icons = {
   background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
 }
-.pf-linkrow-ic--strava { color: #fc4c02; }
+.pf-linkrow-ic--strava { color: #d4d4d8; }
 .pf-linkrow-label { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, 0.6); }
 .pf-linkrow-value { font-size: 13.5px; font-weight: 700; color: #ffffff; white-space: nowrap; }
 .pf-linkrow-action {
@@ -387,11 +421,11 @@ const icons = {
 }
 .pf-cta:hover { transform: translateY(-1px); }
 .pf-cta.is-connect {
-  color: #ffffff;
-  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
-  box-shadow: 0 16px 32px -16px rgba(252, 76, 2, 0.7);
+  color: #09090b;
+  background: linear-gradient(135deg, #f4f4f5 0%, #a1a1aa 100%);
+  box-shadow: 0 16px 32px -16px rgba(255, 255, 255, 0.2);
 }
-.pf-cta.is-logout { color: #1c1917; background: #ffffff; }
+.pf-cta.is-logout { color: #f4f4f5; background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.25); }
 
 /* Ikon aksi cepat — setara "social row" di referensi, dipakai utk pengaturan ringan */
 .pf-quick-icons { position: relative; display: flex; gap: 10px; margin-top: 14px; }
@@ -424,14 +458,14 @@ const icons = {
   width: 100%;
   padding: 14px;
   border-radius: 16px;
-  border: none;
+  border: 1px solid rgba(220, 38, 38, 0.3);
   cursor: pointer;
-  background: #fee2e2;
-  color: #dc2626;
+  background: rgba(220, 38, 38, 0.15);
+  color: #fca5a5;
   font-family: inherit;
   font-size: 14px;
   font-weight: 700;
   transition: background 0.15s ease;
 }
-.pf-danger:hover { background: #fecaca; }
+.pf-danger:hover { background: rgba(220, 38, 38, 0.28); }
 </style>

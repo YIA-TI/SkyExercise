@@ -3,7 +3,7 @@
 // Semua field diturunkan dari kolom nyata (lihat docs/database-schema.md) — tidak ada
 // yang dikarang: tanpa best_efforts/splits_metric (tak disimpan), tanpa BMI/langkah/makro.
 import { supabase } from '../lib/supabase.js'
-import { isRun, kmFromMeters, speedToPace, daysAgoISO } from '../lib/normalize.js'
+import { isRun, kmFromMeters, speedToPace, startOfWeek } from '../lib/normalize.js'
 
 function formatTanggal(iso) {
   return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
@@ -19,17 +19,18 @@ function effortZone(total) {
 export async function fetchHomeStats(athleteId) {
   if (!athleteId) return null
 
-  // Dibatasi 7 hari terakhir — semua statistik Home adalah ringkasan mingguan.
+  const weekStart = startOfWeek()
+  // Dibatasi minggu berjalan (Senin–Minggu) — semua statistik Home adalah ringkasan mingguan.
   const { data, error } = await supabase
     .from('activities')
     .select('*')
     .eq('athlete_id', athleteId)
-    .gte('start_date', daysAgoISO(7))
+    .gte('start_date', weekStart.toISOString())
     .order('start_date', { ascending: false })
     .limit(200)
   if (error) throw error
 
-  const acts = data ?? [] // sudah dalam jendela 7 hari — jadi `acts` = `week`
+  const acts = data ?? [] // sudah dalam jendela minggu ini (Senin–Minggu) — jadi `acts` = `week`
   const todayStr = new Date().toISOString().slice(0, 10)
 
   const week = acts
@@ -53,7 +54,7 @@ export async function fetchHomeStats(athleteId) {
       pace: lastRun ? (speedToPace(lastRun.average_speed) ?? '—') : '—',
       bestPace: bestSpeed ? (speedToPace(bestSpeed) ?? '—') : '—',
       elevation: lastRun?.total_elevation != null ? Math.round(lastRun.total_elevation) : '—',
-      // bar relatif terhadap lari terpanjang minggu ini (7 terbaru, urut lama→baru)
+      // bar relatif terhadap lari terpanjang minggu ini (Senin–Minggu)
       bars: weekRuns.slice(0, 7).reverse().map((a) => Math.round(((a.distance || 0) / 1000 / maxRunKm) * 100)),
       recent: runs.slice(0, 4).map((a) => ({
         name: a.name || 'Lari',
@@ -88,15 +89,15 @@ export async function fetchHomeStats(athleteId) {
       zone: effortZone(week.reduce((s, a) => s + (a.suffer_score || 0), 0)),
       // total sesi (lari + gym) minggu ini — dipakai kartu "Total Sesi"
       weekSessions: week.length,
-      // total suffer_score per hari, 7 hari terakhir (lama→baru), relatif thd hari tertinggi
-      bars: dailyEffortBars(acts),
+      // total suffer_score per hari, minggu ini (Senin–Minggu), relatif thd hari tertinggi
+      bars: dailyEffortBars(acts, weekStart),
     },
   }
 }
 
-function dailyEffortBars(acts) {
+function dailyEffortBars(acts, weekStart) {
   const days = [...Array(7)].map((_, i) => {
-    const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (6 - i))
+    const d = new Date(weekStart); d.setDate(d.getDate() + i)
     return d.toISOString().slice(0, 10)
   })
   const totals = days.map((day) =>
