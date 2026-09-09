@@ -146,14 +146,6 @@
           {{ exportingQuest ? 'Menyiapkan…' : 'Download PDF' }}
         </button>
       </div>
-      <p class="qs-legend">
-        <strong>X/Y selesai</strong> merangkum jumlah quest tercapai pada rentang tanggal
-        terpilih. Status &amp; progress tiap quest di bawah menunjukkan capaian pada periode
-        aktif saat ini (hari ini untuk quest harian, minggu ini untuk quest mingguan) terhadap
-        target quest. <strong>Total Lari</strong> &amp; <strong>Total GYM</strong> merangkum
-        aktivitas nyata pada rentang tanggal terpilih, lepas dari sistem quest.
-      </p>
-
       <div v-if="questLoading" class="qs-list qs-list--skel">
         <div v-for="i in 5" :key="i" class="qs-skel-row">
           <div class="mui-skel mui-skel--text" style="width: 38%;"></div>
@@ -641,9 +633,6 @@ async function downloadQuestPdf() {
   background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
 }
 .qs-pdf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.qs-legend { margin: 0; font-size: 12px; line-height: 1.5; color: rgba(248, 250, 252, 0.65); }
-.qs-legend strong { color: rgba(248, 250, 252, 0.75); }
 
 .qf-muted { color: rgba(248, 250, 252, 0.5); font-size: 13px; }
 .qf-error { margin: 0; color: #dc2626; font-size: 12.5px; font-weight: 600; }
