@@ -7,7 +7,16 @@
 import { reactive, readonly } from 'vue'
 import { supabase } from '../lib/supabase.js'
 
-const WEIGHT_REMINDER_DAYS = 7
+// Notif update BMI muncul tiap hari Minggu (bukan rolling N-hari) — selama belum
+// ada update berat badan sejak awal hari Minggu ybs.
+function isSunday() {
+  return new Date().getDay() === 0
+}
+function startOfToday() {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d.getTime()
+}
 
 const state = reactive({
   isLoggedIn: false,
@@ -18,7 +27,7 @@ const state = reactive({
   userId: null,
   loading: true,
   needsBodyMetrics: false,  // peserta belum isi weight/height sama sekali
-  needsWeightReminder: false, // sudah isi, tapi weight_updated_at > 7 hari
+  needsWeightReminder: false, // sudah isi, tapi belum update lagi & hari ini Minggu
 })
 
 // Tentukan peran + profil dari sesi Supabase.
@@ -57,9 +66,9 @@ async function resolveRole(session) {
   state.userEmail = session.user.email || ''
   state.isLoggedIn = true
   state.needsBodyMetrics = !ath?.weight || !ath?.height
-  state.needsWeightReminder = !state.needsBodyMetrics && (
+  state.needsWeightReminder = !state.needsBodyMetrics && isSunday() && (
     !ath.weight_updated_at ||
-    Date.now() - new Date(ath.weight_updated_at).getTime() > WEIGHT_REMINDER_DAYS * 86400000
+    new Date(ath.weight_updated_at).getTime() < startOfToday()
   )
 
   // Segarkan status koneksi Strava (dynamic import agar tak ada siklus di top-level).

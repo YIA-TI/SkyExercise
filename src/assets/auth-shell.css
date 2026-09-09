@@ -1,0 +1,294 @@
+/* ========== SHARED AUTH SHELL (Sign In / Admin Login) — Phase 3a: dark
+   orange+violet glassmorphism, diselaraskan dgn .mui di mobile-ui.css.
+   Dipakai bareng oleh SignInScreen (anggota, Strava) & AdminLoginScreen
+   (admin, email/password) via @import — bukan diduplikasi per komponen. ========== */
+.aeroguard-signin {
+  position: relative;
+  z-index: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  overflow: hidden;
+  /* Aksen latar sama dgn .mui (mobile-ui.css) — grain + glow oranye/violet +
+     drift lambat, supaya login page senada dgn layar member/admin. */
+  background-image:
+    var(--grain),
+    radial-gradient(820px 420px at 100% -8%, rgba(252, 76, 2, 0.28), transparent 62%),
+    radial-gradient(760px 460px at -10% 108%, rgba(124, 58, 237, 0.30), transparent 58%),
+    linear-gradient(160deg, #3b1a0a 0%, #4c1d95 45%, #1e1b4b 75%, #0f0a2e 100%);
+  background-color: #0f0a2e;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+  background-size: 180px 180px, auto, auto, cover;
+  background-attachment: fixed;
+  animation: bg-drift 18s ease-in-out infinite;
+  font-family: "Barlow", system-ui, sans-serif;
+}
+
+/* Garis diagonal ganda + motif rute GPS — aksen sama dgn .mui::before/::after,
+   lapisan terpisah supaya masing-masing berdenyut (pulse) sendiri. */
+.aeroguard-signin::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(135deg, rgba(252, 76, 2, 0.12) 0, rgba(252, 76, 2, 0.12) 3px, transparent 3px, transparent 46px),
+    repeating-linear-gradient(45deg, rgba(196, 181, 253, 0.08) 0, rgba(196, 181, 253, 0.08) 2px, transparent 2px, transparent 70px);
+  animation: stripe-pulse 3s ease-in-out infinite;
+}
+
+.aeroguard-signin::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--route-line);
+  background-repeat: no-repeat;
+  background-size: 640px 640px;
+  background-position: 110% 110%;
+  animation: route-pulse 2.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aeroguard-signin { animation: none; }
+  .aeroguard-signin::before, .aeroguard-signin::after { animation: none; }
+}
+
+.aeroguard-signin .phone-frame {
+  width: 100%;
+  max-width: 390px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
+  padding: 40px 28px 32px;
+  box-sizing: border-box;
+}
+
+.aeroguard-signin .top-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.aeroguard-signin .badge {
+  display: grid;
+  place-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+  box-shadow: 0 12px 24px -10px rgba(252, 100, 45, 0.7);
+}
+
+.aeroguard-signin .badge-icon {
+  width: 30px;
+  height: 30px;
+  filter: drop-shadow(0 2px 3px rgba(0, 20, 40, 0.35));
+}
+
+.aeroguard-signin .title {
+  margin: 18px 0 0;
+  color: #F8FAFC;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  line-height: 32px;
+}
+
+.aeroguard-signin .subtitle {
+  margin: 8px 0 0;
+  color: rgba(248, 250, 252, 0.65);
+  font-size: 13.5px;
+  line-height: 20px;
+  letter-spacing: -0.2px;
+}
+
+.aeroguard-signin .form {
+  margin-top: 28px;
+}
+
+.aeroguard-signin .field-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: rgba(248, 250, 252, 0.85);
+}
+
+.aeroguard-signin .field-label:not(:first-child) {
+  margin-top: 18px;
+}
+
+.aeroguard-signin .input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.aeroguard-signin .input-wrap:focus-within {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: #fc4c02;
+  box-shadow: 0 0 0 4px rgba(252, 76, 2, 0.25);
+}
+
+.aeroguard-signin .input-icon {
+  flex: 0 0 auto;
+  color: rgba(248, 250, 252, 0.55);
+}
+
+.aeroguard-signin .input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 14px 0;
+  font-family: inherit;
+  font-size: 15px;
+  color: #F8FAFC;
+}
+
+.aeroguard-signin .input::placeholder {
+  color: rgba(248, 250, 252, 0.4);
+}
+
+.aeroguard-signin .toggle-eye {
+  flex: 0 0 auto;
+  display: grid;
+  place-content: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: rgba(248, 250, 252, 0.55);
+}
+
+.aeroguard-signin .toggle-eye:hover {
+  color: #F8FAFC;
+}
+
+.aeroguard-signin .submit {
+  margin-top: 24px;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+  box-shadow: 0 16px 32px -16px rgba(252, 76, 2, 0.6);
+  transition: all 0.2s ease-in-out;
+}
+
+.aeroguard-signin .submit:hover {
+  transform: scale(1.02);
+}
+
+.aeroguard-signin .submit:active {
+  transform: scale(0.97);
+}
+
+.aeroguard-signin .submit:disabled {
+  opacity: 0.7;
+  cursor: default;
+  transform: none;
+}
+
+.aeroguard-signin .signin-spin { animation: signin-spin 0.9s linear infinite; }
+@keyframes signin-spin { to { transform: rotate(360deg); } }
+
+.aeroguard-signin .signin-error {
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(220, 38, 38, 0.18);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  color: #FCA5A5;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.aeroguard-signin .social-row {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 26px;
+}
+
+.aeroguard-signin .social-button {
+  display: grid;
+  place-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+  color: #F8FAFC;
+  transition: all 0.2s ease-in-out;
+}
+
+.aeroguard-signin .social-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -12px rgba(0, 41, 74, 0.4);
+}
+
+.aeroguard-signin .social-button.strava {
+  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.aeroguard-signin .links {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.aeroguard-signin .links p {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(248, 250, 252, 0.65);
+  letter-spacing: -0.2px;
+}
+
+.aeroguard-signin .links button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #FDBA74;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.aeroguard-signin .links .forgot {
+  margin-top: 12px;
+}
+

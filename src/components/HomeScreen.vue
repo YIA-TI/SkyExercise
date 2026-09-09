@@ -50,7 +50,7 @@
 
     <!-- Reminder mingguan: update berat badan -->
     <div v-if="showWeightReminder" class="weight-reminder">
-      <span class="weight-reminder-text">Sudah 7 hari — update berat badan kamu untuk BMI yang akurat.</span>
+      <span class="weight-reminder-text">Waktunya update mingguan — perbarui berat badan kamu untuk BMI yang akurat.</span>
       <div class="weight-reminder-actions">
         <button class="weight-reminder-btn" type="button" @click="goUpdateWeight">Update</button>
         <button class="weight-reminder-dismiss" type="button" aria-label="Tutup" @click="dismissWeightReminder">✕</button>

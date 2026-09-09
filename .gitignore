@@ -64,6 +64,8 @@ example layout/
 
 # Supabase migrations (dikelola manual, jangan commit)
 supabase/migrations/
+supabase/cron_setup.sql
+supabase/schema_baseline.sql
 .vercel
 .env*
 .superpowers/

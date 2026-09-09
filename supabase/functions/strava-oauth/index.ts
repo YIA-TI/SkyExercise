@@ -35,6 +35,17 @@ Deno.serve(async (req) => {
     if (!userId) throw new Error('Gagal memprovisi user Supabase untuk peserta')
 
     // 2. Upsert profil peserta (SummaryAthlete dari respons token).
+    //    `weight` HANYA diisi sebagai initial default saat baris atlet baru dibuat —
+    //    re-auth berikutnya (login ulang lewat Strava) TIDAK boleh menimpa nilai
+    //    weight yang sudah di-set manual oleh peserta lewat BodyMetricsModal,
+    //    kalau tidak `needsBodyMetrics` di FE jadi true lagi tiap login (lihat
+    //    migrasi 20260819140551_body_metrics.sql).
+    const { data: existingAthlete } = await db
+      .from('athletes')
+      .select('athlete_id')
+      .eq('athlete_id', a.id)
+      .maybeSingle()
+
     await db.from('athletes').upsert({
       athlete_id: a.id,
       username: a.username ?? null,
@@ -43,7 +54,7 @@ Deno.serve(async (req) => {
       sex: a.sex ?? null,
       city: a.city ?? null,
       country: a.country ?? null,
-      weight: a.weight ?? null,
+      ...(existingAthlete ? {} : { weight: a.weight ?? null }),
       profile_photo: a.profile ?? null,
       user_id: userId,
       updated_at: new Date().toISOString(),

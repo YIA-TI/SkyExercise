@@ -36,30 +36,104 @@
         </div>
       </div>
 
-      <div class="ad-chart">
-        <p class="ad-chart-title">Distribusi Status Quest Personil</p>
-        <div v-if="questLoading" class="ad-chart-rows">
-          <div v-for="i in 3" :key="i" class="ad-chart-row">
-            <div class="mui-skel mui-skel--text" style="width: 100px;"></div>
-            <div class="mui-skel" style="height: 10px; border-radius: 6px;"></div>
-            <div class="mui-skel mui-skel--text" style="width: 24px;"></div>
-          </div>
-        </div>
-        <template v-else>
-          <div class="ad-chart-rows">
-            <div v-for="b in questStatusChart" :key="b.key" class="ad-chart-row">
-              <span class="ad-chart-label">
-                <span class="ad-chart-dot" :style="{ background: b.color }"></span>
-                {{ b.label }}
-              </span>
-              <div class="ad-chart-track">
-                <div class="ad-chart-fill" :style="{ width: b.pct + '%', background: b.color }"></div>
-              </div>
-              <span class="ad-chart-value mui-mono">{{ b.count }}</span>
+      <div class="ad-charts-grid">
+        <div class="ad-chart">
+          <p class="ad-chart-title">Distribusi Status Quest Personil</p>
+          <div v-if="questLoading" class="ad-chart-rows">
+            <div v-for="i in 3" :key="i" class="ad-chart-row">
+              <div class="mui-skel mui-skel--text" style="width: 100px;"></div>
+              <div class="mui-skel" style="height: 10px; border-radius: 6px;"></div>
+              <div class="mui-skel mui-skel--text" style="width: 24px;"></div>
             </div>
           </div>
-          <p v-if="questStatusTotal === 0" class="qf-muted">Belum ada data quest pada periode ini.</p>
+          <template v-else>
+            <div class="ad-chart-rows">
+              <div v-for="b in questStatusChart" :key="b.key" class="ad-chart-row">
+                <span class="ad-chart-label">
+                  <span class="ad-chart-dot" :style="{ background: b.color }"></span>
+                  {{ b.label }}
+                </span>
+                <div class="ad-chart-track">
+                  <div class="ad-chart-fill" :style="{ width: b.pct + '%', background: b.color }"></div>
+                </div>
+                <span class="ad-chart-value mui-mono">{{ b.count }}</span>
+              </div>
+            </div>
+            <p v-if="questStatusTotal === 0" class="qf-muted">Belum ada data quest pada periode ini.</p>
+          </template>
+        </div>
+
+        <div class="ad-chart">
+          <p class="ad-chart-title">Selesai vs Belum Selesai — Lari &amp; GYM</p>
+          <div v-if="questLoading" class="ad-chart-rows">
+            <div v-for="i in 4" :key="i" class="ad-chart-row">
+              <div class="mui-skel mui-skel--text" style="width: 100px;"></div>
+              <div class="mui-skel" style="height: 10px; border-radius: 6px;"></div>
+              <div class="mui-skel mui-skel--text" style="width: 24px;"></div>
+            </div>
+          </div>
+          <template v-else-if="questCategoryTotal > 0">
+            <div v-for="cat in questCategoryChart" :key="cat.key" class="ad-chart-group">
+              <p class="ad-chart-group-title">{{ cat.label }} <span class="mui-mono">({{ cat.total }})</span></p>
+              <div class="ad-chart-rows">
+                <div v-for="b in cat.bars" :key="b.key" class="ad-chart-row">
+                  <span class="ad-chart-label">
+                    <span class="ad-chart-dot" :style="{ background: b.color }"></span>
+                    {{ b.label }}
+                  </span>
+                  <div class="ad-chart-track">
+                    <div class="ad-chart-fill" :style="{ width: b.pct + '%', background: b.color }"></div>
+                  </div>
+                  <span class="ad-chart-value mui-mono">{{ b.count }}</span>
+                </div>
+              </div>
+            </div>
+          </template>
+          <p v-else class="qf-muted">Belum ada quest lari/gym yang berlaku pada periode ini.</p>
+        </div>
+      </div>
+
+      <div class="ad-chart ad-chart--line">
+        <p class="ad-chart-title">Persebaran Penyelesaian Quest Mingguan</p>
+        <div v-if="questLoading" class="ad-linechart-skel">
+          <div class="mui-skel" style="height: 140px; border-radius: 12px;"></div>
+        </div>
+        <template v-else-if="questCompletionTrend.labels.length">
+          <svg class="ad-linechart" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <!-- Axis dasar (garis polos, tanpa panah/grid/angka) — gaya line chart basic -->
+            <line class="ad-linechart-axis" x1="6" y1="92" x2="6" y2="4" />
+            <line class="ad-linechart-axis" x1="6" y1="92" x2="97" y2="92" />
+
+            <polyline
+              :points="lariLinePoints"
+              fill="none"
+              stroke="#fc4c02"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              vector-effect="non-scaling-stroke"
+            />
+            <polyline
+              :points="gymLinePoints"
+              fill="none"
+              stroke="#7c3aed"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              vector-effect="non-scaling-stroke"
+            />
+          </svg>
+          <!-- Label tanggal Senin tiap minggu (jeda 7 hari) — sejajar dgn titik data, karena
+               titik sama-sama berjarak rata sepanjang sumbu-X (lihat trendX). -->
+          <div class="ad-linechart-axis-labels">
+            <span v-for="(label, i) in questCompletionTrend.labels" :key="i" class="ad-linechart-axis-label">{{ label }}</span>
+          </div>
+          <div class="ad-linechart-legend">
+            <span class="ad-linechart-legend-item"><span class="ad-linechart-dot" style="background: #fc4c02;"></span>Lari</span>
+            <span class="ad-linechart-legend-item"><span class="ad-linechart-dot" style="background: #7c3aed;"></span>GYM</span>
+          </div>
         </template>
+        <p v-else class="qf-muted">Belum ada data quest pada periode ini.</p>
       </div>
     </section>
 
@@ -273,6 +347,91 @@ const questStatusChart = computed(() => {
 const questStatusTotal = computed(() => questStatusChart.value.reduce((s, b) => s + b.count, 0))
 const totalQuestSelesai = computed(() => questStatusChart.value.find((b) => b.key === 'full')?.count ?? 0)
 
+// Perbandingan selesai vs belum selesai per kategori aktivitas (Lari/GYM) — kategori
+// ditentukan dari `metric` quest asli (run_* → Lari, gym_* → GYM); kolom bonus
+// dikecualikan sama seperti questStatusChart di atas. Dipakai grafik bar kedua.
+const questCategoryChart = computed(() => {
+  const s = questSummaryData.value
+  if (!s) return []
+  const catByQuestId = new Map(s.quests.map((q) => [q.id, q.metric?.startsWith('gym_') ? 'gym' : 'lari']))
+  const counts = { lari: { done: 0, notDone: 0 }, gym: { done: 0, notDone: 0 } }
+  for (const row of questProgressRows.value) {
+    for (const qc of row.questCols) {
+      if (qc.scope === 'bonus' || !qc.total) continue
+      const cat = catByQuestId.get(qc.questId)
+      if (!cat) continue
+      if (badgeClassQuest(qc) === 'is-full') counts[cat].done++
+      else counts[cat].notDone++
+    }
+  }
+  return [
+    { key: 'lari', label: 'Lari' },
+    { key: 'gym', label: 'GYM' },
+  ].map(({ key, label }) => {
+    const { done, notDone } = counts[key]
+    const total = done + notDone
+    const pct = (n) => (total ? Math.round((n / total) * 100) : 0)
+    return {
+      key, label, total,
+      bars: [
+        { key: 'done', label: 'Selesai', color: '#059669', count: done, pct: pct(done) },
+        { key: 'notDone', label: 'Belum Selesai', color: '#dc2626', count: notDone, pct: pct(notDone) },
+      ],
+    }
+  })
+})
+const questCategoryTotal = computed(() => questCategoryChart.value.reduce((s, c) => s + c.total, 0))
+
+// Tren mingguan penyelesaian quest per kategori (Lari/GYM) — dua seri terpisah,
+// dipakai grafik garis "Persebaran Penyelesaian Quest" bergaya basic (axis panah,
+// tanpa fill/dot). Kategori & penghitungan sama seperti questCategoryChart di atas,
+// bedanya di sini dipecah per minggu (bukan diagregat jadi satu angka) supaya
+// trennya kelihatan.
+const questCompletionTrend = computed(() => {
+  const s = questSummaryData.value
+  if (!s || !s.weeks.length) return { labels: [], lari: [], gym: [] }
+  const catByQuestId = new Map(s.quests.map((q) => [q.id, q.metric?.startsWith('gym_') ? 'gym' : 'lari']))
+  const labels = []
+  const lari = []
+  const gym = []
+  s.weeks.forEach((w, wi) => {
+    let lariCount = 0
+    let gymCount = 0
+    for (const row of questProgressRows.value) {
+      for (const qc of row.questCols) {
+        if (qc.scope === 'bonus') continue
+        const cat = catByQuestId.get(qc.questId)
+        if (!cat) continue
+        const v = qc.scope === 'mingguan' ? (qc.perWeek[wi] ? 1 : 0) : (qc.perWeek[wi] ?? 0)
+        if (cat === 'gym') gymCount += v
+        else lariCount += v
+      }
+    }
+    labels.push(w.label.split(' – ')[0])
+    lari.push(lariCount)
+    gym.push(gymCount)
+  })
+  return { labels, lari, gym }
+})
+const trendMax = computed(() => Math.max(1, ...questCompletionTrend.value.lari, ...questCompletionTrend.value.gym))
+
+// Koordinat dlm viewBox 0-100 — svg di-stretch penuh via preserveAspectRatio "none"
+// jadi tak perlu ukur lebar container di JS. Margin kiri/bawah (AXIS_L/AXIS_B) disisakan
+// utk garis axis; margin atas (AXIS_T) jaga jarak biar titik puncak tak kepotong.
+const AXIS_L = 6, AXIS_R = 97, AXIS_T = 4, AXIS_B = 92
+function trendX(i) {
+  const n = questCompletionTrend.value.labels.length
+  return n <= 1 ? (AXIS_L + AXIS_R) / 2 : AXIS_L + (i / (n - 1)) * (AXIS_R - AXIS_L)
+}
+function trendY(v) {
+  return AXIS_B - (v / trendMax.value) * (AXIS_B - AXIS_T)
+}
+function trendLinePoints(values) {
+  return values.map((v, i) => `${trendX(i)},${trendY(v)}`).join(' ')
+}
+const lariLinePoints = computed(() => trendLinePoints(questCompletionTrend.value.lari))
+const gymLinePoints = computed(() => trendLinePoints(questCompletionTrend.value.gym))
+
 const ICONS = {
   members: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
   clock: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
@@ -398,6 +557,18 @@ async function downloadQuestPdf() {
 .ad-stat-value { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; color: #F8FAFC; }
 .ad-stat-label { margin: 4px 0 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(248, 250, 252, 0.5); }
 
+/* Grid berisi kedua chart bar (Distribusi Status Quest + Selesai/Belum Selesai
+   Lari & GYM) — berdampingan di layar lebar, ditumpuk di mobile. Grafik garis
+   (tren mingguan) tetap di luar grid ini, selalu lebar penuh (butuh ruang utk sumbu-X). */
+.ad-charts-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+.ad-charts-grid .ad-chart { margin-top: 0; }
+
 /* Grafik distribusi status quest — bar horizontal per status (belum/berjalan/selesai) */
 .ad-chart {
   margin-top: 14px;
@@ -411,6 +582,12 @@ async function downloadQuestPdf() {
 }
 
 .ad-chart-title { margin: 0 0 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(248, 250, 252, 0.5); }
+
+/* Sub-grup dalam satu chart card (mis. "Lari" / "GYM" masing-masing dgn bar
+   Selesai/Belum Selesai sendiri) */
+.ad-chart-group + .ad-chart-group { margin-top: 18px; }
+.ad-chart-group-title { margin: 0 0 10px; font-size: 12.5px; font-weight: 700; color: rgba(248, 250, 252, 0.85); }
+.ad-chart-group-title .mui-mono { font-weight: 600; color: rgba(248, 250, 252, 0.5); }
 
 .ad-chart-rows { display: flex; flex-direction: column; gap: 12px; }
 
@@ -428,6 +605,31 @@ async function downloadQuestPdf() {
 .ad-chart-fill { height: 100%; border-radius: 6px; transition: width 0.3s ease; }
 
 .ad-chart-value { font-size: 12.5px; font-weight: 700; color: #F8FAFC; text-align: right; }
+
+/* Grafik garis — persebaran (tren) penyelesaian quest per minggu, gaya basic
+   (garis axis polos tanpa panah/grid/angka, plus label tanggal Senin per titik) */
+.ad-chart--line { margin-top: 14px; }
+.ad-linechart-skel { padding: 4px 0; }
+.ad-linechart { display: block; width: 100%; height: 140px; }
+.ad-linechart-axis { stroke: rgba(248, 250, 252, 0.35); stroke-width: 1; vector-effect: non-scaling-stroke; }
+
+.ad-linechart-axis-labels { display: flex; gap: 4px; margin-top: 8px; padding: 0 2px; }
+.ad-linechart-axis-label {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: rgba(248, 250, 252, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ad-linechart-legend { display: flex; gap: 16px; margin-top: 12px; }
+.ad-linechart-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: rgba(248, 250, 252, 0.65); }
+.ad-linechart-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+
 
 /* ----- Ringkasan quest ----- */
 .qs-head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }

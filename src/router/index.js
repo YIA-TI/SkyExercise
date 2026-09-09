@@ -7,6 +7,7 @@ import { authState } from '../store/auth.js'
 const WelcomeBackScreen     = () => import('../components/WelcomeBackScreen.vue')
 const GoodbyeScreen         = () => import('../components/GoodbyeScreen.vue')
 const SignInScreen          = () => import('../components/SignInScreen.vue')
+const AdminLoginScreen      = () => import('../components/AdminLoginScreen.vue')
 const HomeScreen            = () => import('../components/HomeScreen.vue')
 const StatsDetailScreen     = () => import('../components/StatsDetailScreen.vue')
 const LatihanScreen         = () => import('../components/LatihanScreen.vue')
@@ -36,7 +37,8 @@ const routes = [
     },
   },
   { path: '/signin',          name: 'SignIn',         component: SignInScreen,         meta: { requiresAuth: false } },
-  { path: '/strava/callback', name: 'StravaCallback', component: StravaCallbackScreen, meta: { requiresAuth: false } },
+  { path: '/admin/login',     name: 'AdminLogin',     component: AdminLoginScreen,     meta: { requiresAuth: false } },
+  { path: '/strava/callback', name: 'StravaCallback', component: StravaCallbackScreen, meta: { requiresAuth: false, isSplash: true } },
   { path: '/welcome-back',    name: 'WelcomeBack',    component: WelcomeBackScreen,    meta: { requiresAuth: true, hideTabBar: true, isSplash: true } },
   { path: '/goodbye',         name: 'Goodbye',        component: GoodbyeScreen,        meta: { requiresAuth: false, hideTabBar: true, isSplash: true } },
 
@@ -71,7 +73,7 @@ router.beforeEach((to) => {
   if (!to.meta.requiresAuth) return true
 
   if (!authState.isLoggedIn) {
-    return { name: 'SignIn' }
+    return to.meta.role === 'admin' ? { name: 'AdminLogin' } : { name: 'SignIn' }
   }
 
   if (to.meta.role && authState.userRole !== to.meta.role) {

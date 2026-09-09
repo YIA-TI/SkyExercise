@@ -36,7 +36,7 @@ const isMonitoring = computed(() => route.path === '/admin')
 async function handleLogout() {
   const name = authState.userName
   await logout()
-  router.push({ path: '/goodbye', query: { name } })
+  router.push({ path: '/goodbye', query: { name, next: '/admin/login' } })
 }
 </script>
 
