@@ -1,5 +1,11 @@
 <template>
-<nav class="m-tabbar">
+<nav class="m-tabbar admin-sidebar">
+  <div class="admin-brand" aria-hidden="true">
+    <span class="admin-brand-mark">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V18l-2.5 2v1.5l3.5-1 3.5 1V20l-2.5-2v-4.5z"/></svg>
+    </span>
+    <span class="admin-brand-text">AeroGuard</span>
+  </div>
   <RouterLink to="/admin" class="m-tab" :class="{ 'm-tab--active': isMonitoring }">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
     <span>Monitoring</span>
@@ -14,7 +20,7 @@
   </RouterLink>
   <RouterLink to="/admin/quests" class="m-tab" active-class="m-tab--active">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 15 8l6 .9-4.5 4.3L18 20l-6-3-6 3 1.5-6.8L3 8.9 9 8z"/></svg>
-    <span>Quest</span>
+    <span>Tantangan</span>
   </RouterLink>
   <button class="m-tab" type="button" @click="handleLogout">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>

@@ -70,42 +70,62 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* Tampilan: latar & kartu senada dengan aplikasi (perilaku tidak berubah) */
 .cb {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: #f5f1ec;
-  font-family: "Chakra Petch", system-ui, sans-serif;
+  font-family: "Barlow", system-ui, sans-serif;
+  background-image:
+    radial-gradient(520px 320px at 100% -10%, rgba(59, 130, 246, 0.14), transparent 62%),
+    radial-gradient(480px 360px at -10% 110%, rgba(96, 165, 250, 0.12), transparent 60%),
+    linear-gradient(160deg, #ffffff 0%, #eff6ff 55%, #dbeafe 100%);
+  background-color: #eff6ff;
 }
 .cb-card {
+  position: relative;
   width: 100%;
-  max-width: 360px;
+  max-width: 340px;
   text-align: center;
-  background: #fff;
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.14);
   border-radius: 24px;
-  padding: 40px 28px;
-  box-shadow: 0 30px 60px -24px rgba(28, 25, 23, 0.35);
+  padding: 36px 26px 30px;
+  box-shadow: 0 30px 60px -28px rgba(15, 23, 42, 0.22);
+  overflow: hidden;
+}
+.cb-card::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, #2563eb 35%, #60a5fa 65%, transparent);
 }
 .cb-spin {
-  width: 44px; height: 44px; margin: 0 auto 18px;
+  width: 52px; height: 52px; margin: 0 auto 20px;
   border-radius: 50%;
-  border: 4px solid #ffe3cf;
-  border-top-color: #fc4c02;
+  border: 4px solid rgba(37, 99, 235, 0.14);
+  border-top-color: #2563eb;
+  box-shadow: 0 0 22px -4px rgba(37, 99, 235, 0.3);
   animation: cb-rot 0.8s linear infinite;
 }
 @keyframes cb-rot { to { transform: rotate(360deg); } }
 .cb-ic {
-  width: 44px; height: 44px; margin: 0 auto 18px;
-  border-radius: 50%; display: grid; place-content: center;
-  font-size: 22px; font-weight: 800; color: #fff;
+  width: 52px; height: 52px; margin: 0 auto 20px;
+  border-radius: 16px; display: grid; place-content: center;
+  font-size: 24px; font-weight: 800; color: #fff;
 }
-.cb-ic--err { background: #ef4444; }
-.cb-title { margin: 0; font-size: 15px; font-weight: 700; color: #1c1917; }
+.cb-ic--err {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.08);
+}
+.cb-title { margin: 0; font-size: 16px; font-weight: 700; color: #0f172a; line-height: 1.4; }
 .cb-btn {
-  margin-top: 18px; border: none; cursor: pointer; font-family: inherit;
-  font-size: 14px; font-weight: 700; color: #fff; padding: 12px 20px; border-radius: 14px;
-  background: #fc4c02;
+  margin-top: 22px; border: none; cursor: pointer; font-family: inherit;
+  font-size: 14px; font-weight: 700; color: #fff; padding: 12px 22px; border-radius: 14px;
+  background: linear-gradient(45deg, #2563eb 0%, #3b82f6 100%);
+  box-shadow: 0 14px 24px -12px rgba(37, 99, 235, 0.5);
+  transition: transform 0.15s ease;
 }
+.cb-btn:hover { transform: scale(1.02); }
 </style>

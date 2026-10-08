@@ -25,13 +25,12 @@
     </div>
 
     <!-- Peserta masuk lewat Strava saja — tak ada akun email/password terpisah. -->
-    <div class="social-row">
-      <button class="social-button strava" type="button" aria-label="Masuk dengan Strava" @click="handleStrava">
-        <svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
-        </svg>
-      </button>
-    </div>
+    <button class="strava-cta" type="button" @click="handleStrava">
+      <svg xmlns="http://www.w3.org/2000/svg" height="19" width="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
+      </svg>
+      Masuk dengan Strava
+    </button>
 
     <p v-if="errorMsg" class="signin-error">{{ errorMsg }}</p>
   </div>

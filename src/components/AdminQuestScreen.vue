@@ -1,20 +1,20 @@
 <template>
 <div class="mui">
-  <div class="mui-col mui-col--wide">
+  <div class="mui-col mui-col--full">
     <header class="mui-header">
       <div class="h-left">
         <div class="mui-avatar">{{ initials }}</div>
         <div>
-          <p class="mui-h-title">Kelola Quest</p>
+          <p class="mui-h-title">Kelola Tantangan</p>
           <p class="mui-h-sub">Atur misi latihan peserta</p>
         </div>
       </div>
-      <span class="mui-pill">{{ quests.length }} Quest</span>
+      <span class="mui-pill">{{ quests.length }} Tantangan</span>
     </header>
 
-    <!-- Form tambah quest -->
+    <!-- Form tambah tantangan -->
     <section class="mui-block">
-      <h2 class="mui-section-title">Tambah Quest</h2>
+      <h2 class="mui-section-title">Tambah Tantangan</h2>
       <form class="qf" @submit.prevent="submit">
         <label class="qf-field">
           <span>Judul</span>
@@ -50,6 +50,7 @@
             <button
               v-for="m in METRIC_OPTIONS" :key="m.value" type="button"
               class="qf-metric-card" :class="{ 'is-active': form.metric === m.value }"
+              :style="{ '--mc': metricColor(m.value) }"
               @click="form.metric = m.value"
             >
               <component :is="m.icon" :size="18" />
@@ -74,16 +75,16 @@
           </label>
         </div>
 
-        <!-- Preview live — WYSIWYG, bentuk kartunya sama persis dgn kartu di Daftar Quest -->
+        <!-- Preview live — WYSIWYG, bentuk kartunya sama persis dgn kartu di Daftar Tantangan -->
         <div class="qf-preview">
-          <p class="qf-preview-label">Preview Quest</p>
+          <p class="qf-preview-label">Preview Tantangan</p>
           <article class="ql-item" :class="'ql-item--' + form.scope">
-            <div class="ql-icon-badge">
+            <div class="ql-icon-badge" :style="{ '--mc': metricColor(form.metric) }">
               <component :is="metricIcon(form.metric)" :size="18" />
             </div>
             <div class="ql-body">
               <div class="ql-top">
-                <span class="ql-title">{{ form.title || 'Judul quest…' }}</span>
+                <span class="ql-title">{{ form.title || 'Judul tantangan…' }}</span>
                 <span class="mui-tag" :class="form.scope === 'harian' ? 'mui-tag--blue' : 'mui-tag--orange'">{{ form.scope }}</span>
               </div>
               <p class="ql-meta">
@@ -99,14 +100,14 @@
         <button class="qf-submit" type="submit" :disabled="saving">
           <svg v-if="saving" class="spin-icon is-spinning" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
           <Rocket v-else :size="16" />
-          {{ saving ? 'Menyimpan…' : 'Tambah Quest' }}
+          {{ saving ? 'Menyimpan…' : 'Tambah Tantangan' }}
         </button>
       </form>
     </section>
 
-    <!-- Daftar quest -->
+    <!-- Daftar tantangan -->
     <section class="mui-block">
-      <h2 class="mui-section-title">Daftar Quest</h2>
+      <h2 class="mui-section-title">Daftar Tantangan</h2>
       <div v-if="loading" class="ql-list">
         <div v-for="i in 3" :key="i" class="ql-item">
           <div class="mui-skel mui-skel--circle" style="width: 38px; height: 38px; flex-shrink: 0;"></div>
@@ -119,7 +120,7 @@
       </div>
       <div v-else class="ql-list">
         <article v-for="q in quests" :key="q.id" class="ql-item" :class="['ql-item--' + q.scope, { 'is-off': !q.active }]">
-          <div class="ql-icon-badge">
+          <div class="ql-icon-badge" :style="{ '--mc': metricColor(q.metric) }">
             <component :is="metricIcon(q.metric)" :size="18" />
           </div>
           <div class="ql-body">
@@ -162,7 +163,7 @@
             </div>
           </div>
         </article>
-        <p v-if="quests.length === 0" class="qf-muted">Belum ada quest.</p>
+        <p v-if="quests.length === 0" class="qf-muted">Belum ada tantangan.</p>
       </div>
     </section>
   </div>
@@ -214,6 +215,19 @@ const METRIC_ICONS = {
   gym_duration: Timer,
 }
 function metricIcon(m) { return METRIC_ICONS[m] || Footprints }
+
+// Warna identitas per metrik — dulu semua kartu picker & badge ikon quest sama
+// rata biru/abu, jadi 4 metrik terasa seragam sampai dipilih. Sekarang tiap
+// metrik punya warna sendiri (dipakai di picker form, preview, & tiap kartu
+// quest di daftar), independen dari aksen biru/oranye per periode (harian/
+// mingguan) yg tetap di garis tepi kiri kartu — dua sinyal warna beda makna.
+const METRIC_COLORS = {
+  run_distance: '#2563eb',
+  run_sessions: '#0d9488',
+  gym_sessions: '#7c3aed',
+  gym_duration: '#d97706',
+}
+function metricColor(m) { return METRIC_COLORS[m] || '#2563eb' }
 
 // Opsi picker metrik (kartu 2x2 di form) — urutan sejajar dgn METRIC_ICONS/METRIC_META.
 const METRIC_OPTIONS = [
@@ -273,11 +287,11 @@ async function submit() {
     form.title = ''
     form.description = ''
     form.quest_date = ''
-    showToast('Quest berhasil ditambahkan')
+    showToast('Tantangan berhasil ditambahkan')
     if (questDate) await runBackfill(newId)
   } catch (e) {
     formError.value = 'Gagal menyimpan: ' + (e?.message || e)
-    showToast('Gagal menambahkan quest', 'error')
+    showToast('Gagal menambahkan tantangan', 'error')
   } finally {
     saving.value = false
   }
@@ -288,9 +302,9 @@ async function toggleActive(q) {
   togglingIds.value = new Set(togglingIds.value).add(q.id)
   try {
     await update(q.id, { active: !q.active })
-    showToast(q.active ? 'Quest dinonaktifkan' : 'Quest diaktifkan')
+    showToast(q.active ? 'Tantangan dinonaktifkan' : 'Tantangan diaktifkan')
   } catch (e) {
-    showToast(e?.message || 'Gagal mengubah status quest', 'error')
+    showToast(e?.message || 'Gagal mengubah status tantangan', 'error')
   } finally {
     const next = new Set(togglingIds.value)
     next.delete(q.id)
@@ -319,7 +333,7 @@ async function saveDate(q) {
     await update(q.id, { quest_date: newDate || null })
     if (newDate) await runBackfill(q.id)
     cancelEditDate()
-    showToast('Tanggal quest berhasil diperbarui')
+    showToast('Tanggal tantangan berhasil diperbarui')
   } catch (e) {
     showToast(e?.message || 'Gagal memperbarui tanggal', 'error')
   } finally {
@@ -328,13 +342,13 @@ async function saveDate(q) {
 }
 
 async function hapus(q) {
-  if (deletingIds.value.has(q.id) || !window.confirm(`Hapus quest "${q.title}"?`)) return
+  if (deletingIds.value.has(q.id) || !window.confirm(`Hapus tantangan "${q.title}"?`)) return
   deletingIds.value = new Set(deletingIds.value).add(q.id)
   try {
     await remove(q.id)
-    showToast('Quest berhasil dihapus')
+    showToast('Tantangan berhasil dihapus')
   } catch (e) {
-    showToast(e?.message || 'Gagal menghapus quest', 'error')
+    showToast(e?.message || 'Gagal menghapus tantangan', 'error')
   } finally {
     const next = new Set(deletingIds.value)
     next.delete(q.id)
@@ -350,14 +364,13 @@ async function hapus(q) {
 .qf-row { display: flex; gap: 12px; flex-wrap: wrap; }
 .qf-field { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 140px; }
 .qf-field.qf-narrow { flex: 0 1 130px; }
-.qf-field span { font-size: 12px; font-weight: 600; color: rgba(248, 250, 252, 0.75); }
+.qf-field span { font-size: 12px; font-weight: 600; color: rgba(15, 23, 42, 0.65); }
 .qf-field input {
-  border: 1.5px solid rgba(255, 255, 255, 0.14); border-radius: 12px; padding: 11px 12px;
-  font-family: inherit; font-size: 14px; color: #F8FAFC; background: rgba(255, 255, 255, 0.08); outline: none;
-  color-scheme: dark;
+  border: 1.5px solid rgba(37, 99, 235, 0.14); border-radius: 12px; padding: 11px 12px;
+  font-family: inherit; font-size: 14px; color: #0f172a; background: rgba(37, 99, 235, 0.04); outline: none;
 }
-.qf-field input:focus { border-color: #fc4c02; }
-.qf-hint { margin: -4px 0 0; font-size: 12px; font-weight: 600; color: #ea580c; }
+.qf-field input:focus { border-color: #2563eb; }
+.qf-hint { margin: -4px 0 0; font-size: 12px; font-weight: 600; color: #c2410c; }
 
 /* Toggle Periode — pakai .mui-toggle bawaan design-system, cukup tambah gap ikon+label */
 .qf-scope-toggle button { gap: 7px; }
@@ -369,46 +382,52 @@ async function hapus(q) {
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 8px;
 }
+/* Tiap kartu metrik ditinta warna identitasnya sendiri (var(--mc), lihat
+   METRIC_COLORS di script) — bahkan sblm dipilih sudah kelihatan bedanya,
+   bukan 4 kartu abu-abu seragam sampai ada yg aktif. */
 .qf-metric-card {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
-  border: 1.5px solid rgba(255, 255, 255, 0.14); border-radius: 14px; padding: 12px 8px;
-  background: rgba(255, 255, 255, 0.08); cursor: pointer; font-family: inherit; color: rgba(248, 250, 252, 0.75);
-  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  border: 1.5px solid color-mix(in srgb, var(--mc, #2563eb) 22%, transparent);
+  border-radius: 14px; padding: 12px 8px;
+  background: color-mix(in srgb, var(--mc, #2563eb) 7%, white);
+  cursor: pointer; font-family: inherit; color: var(--mc, #2563eb);
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
-.qf-metric-card:hover { border-color: rgba(251, 146, 60, 0.4); }
+.qf-metric-card:hover { border-color: color-mix(in srgb, var(--mc, #2563eb) 50%, transparent); transform: translateY(-1px); }
 .qf-metric-card.is-active {
   border-color: transparent; color: #fff;
-  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+  background: linear-gradient(135deg, var(--mc, #2563eb) 0%, color-mix(in srgb, var(--mc, #2563eb) 55%, white) 100%);
+  box-shadow: 0 10px 20px -12px var(--mc, #2563eb);
 }
 .qf-metric-label { font-size: 11.5px; font-weight: 700; text-align: center; }
-.qf-metric-unit { font-size: 9.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.75; }
+.qf-metric-unit { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.75; }
 
 /* Reward (XP) — dibungkus spt "chip" koin, bukan angka input polos */
 .qf-reward-input {
   display: flex; align-items: center; gap: 6px;
-  border: 1.5px solid rgba(255, 255, 255, 0.14); border-radius: 12px; padding: 0 12px;
-  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(37, 99, 235, 0.14); border-radius: 12px; padding: 0 12px;
+  background: rgba(37, 99, 235, 0.04);
 }
-.qf-reward-input:focus-within { border-color: #fc4c02; }
-.qf-reward-icon { color: #f59e0b; flex: 0 0 auto; }
+.qf-reward-input:focus-within { border-color: #2563eb; }
+.qf-reward-icon { color: #d97706; flex: 0 0 auto; }
 .qf-reward-input input {
   flex: 1; min-width: 0; border: none; padding: 11px 0; font-family: inherit;
-  font-size: 14px; font-weight: 700; color: #F8FAFC; background: transparent; outline: none;
+  font-size: 14px; font-weight: 700; color: #0f172a; background: transparent; outline: none;
 }
-.qf-reward-suffix { font-size: 11px; font-weight: 800; color: rgba(248, 250, 252, 0.5); letter-spacing: 0.3px; }
+.qf-reward-suffix { font-size: 11px; font-weight: 800; color: rgba(15, 23, 42, 0.5); letter-spacing: 0.3px; }
 
 .qf-preview { display: flex; flex-direction: column; gap: 6px; }
-.qf-preview-label { margin: 0; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(248, 250, 252, 0.5); }
+.qf-preview-label { margin: 0; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(15, 23, 42, 0.5); }
 
 .qf-submit {
   display: inline-flex; align-items: center; gap: 8px;
   align-self: flex-start; border: none; cursor: pointer; font-family: inherit;
   font-size: 14px; font-weight: 700; color: #fff; padding: 12px 20px; border-radius: 12px;
-  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+  background: linear-gradient(45deg, #2563eb 0%, #3b82f6 100%);
 }
 .qf-submit:disabled { opacity: 0.6; cursor: default; }
 .qf-error { margin: 0; color: #dc2626; font-size: 12.5px; font-weight: 600; }
-.qf-muted { color: rgba(248, 250, 252, 0.5); font-size: 13px; }
+.qf-muted { color: rgba(15, 23, 42, 0.5); font-size: 13px; }
 
 .ql-list { display: flex; flex-direction: column; gap: 10px; }
 
@@ -417,29 +436,33 @@ async function hapus(q) {
 .ql-item {
   position: relative;
   display: flex; align-items: flex-start; gap: 12px;
-  background: rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.14);
   border-radius: 16px; padding: 14px 16px 14px 18px;
-  box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
+  box-shadow: 0 16px 32px -28px rgba(15, 23, 42, 0.18);
   border-left: 4px solid transparent;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
-.ql-item--harian   { border-left-color: #0d9488; }
-.ql-item--mingguan { border-left-color: #ea580c; }
+.ql-item:hover { transform: translateY(-2px); box-shadow: 0 18px 34px -22px rgba(15, 23, 42, 0.22); }
+.ql-item--harian   { border-left-color: #2563eb; }
+.ql-item--mingguan { border-left-color: #d97706; }
 .ql-item.is-off { opacity: 0.55; }
 
+/* Warna badge ikon ikut metrik-nya (var(--mc)) — independen dari aksen
+   biru/oranye periode di garis tepi kartu (lihat .ql-item--harian/mingguan),
+   dua sinyal warna beda makna: tepi kiri = kapan, badge ikon = jenis aktivitas. */
 .ql-icon-badge {
   flex: 0 0 auto; width: 38px; height: 38px; display: grid; place-content: center;
-  border-radius: 12px; background: rgba(255, 255, 255, 0.08); color: rgba(248, 250, 252, 0.75);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--mc, #2563eb) 14%, white);
+  color: var(--mc, #2563eb);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mc, #2563eb) 10%, transparent);
 }
-.ql-item--harian .ql-icon-badge   { background: rgba(45, 212, 191, 0.18); color: #5EEAD4; }
-.ql-item--mingguan .ql-icon-badge { background: rgba(251, 146, 60, 0.18); color: #FDBA74; }
 
 .ql-body { flex: 1; min-width: 0; }
 .ql-top { display: flex; align-items: center; gap: 8px; }
-.ql-title { font-size: 14px; font-weight: 700; color: #F8FAFC; }
-.ql-meta { margin: 4px 0 0; font-size: 12px; color: rgba(248, 250, 252, 0.75); }
+.ql-title { font-size: 14px; font-weight: 700; color: #0f172a; }
+.ql-meta { margin: 4px 0 0; font-size: 12px; color: rgba(15, 23, 42, 0.6); }
 
 .ql-side { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 
@@ -448,29 +471,30 @@ async function hapus(q) {
   display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
   font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 999px;
   color: #78350f; background: linear-gradient(135deg, #fde68a, #f59e0b);
+  box-shadow: 0 4px 10px -4px rgba(245, 158, 11, 0.6);
 }
 
 .ql-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .ql-icon-btn {
   display: grid; place-content: center; width: 30px; height: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.08); cursor: pointer;
-  color: rgba(248, 250, 252, 0.75); border-radius: 9px;
+  border: 1px solid rgba(37, 99, 235, 0.14); background: rgba(37, 99, 235, 0.04); cursor: pointer;
+  color: rgba(15, 23, 42, 0.65); border-radius: 9px;
 }
-.ql-icon-btn--del { background: rgba(220, 38, 38, 0.15); border-color: rgba(220, 38, 38, 0.3); color: #fca5a5; }
+.ql-icon-btn--del { background: rgba(220, 38, 38, 0.1); border-color: rgba(220, 38, 38, 0.25); color: #b91c1c; }
 .ql-icon-btn:disabled { opacity: 0.6; cursor: default; }
 
 /* Switch aktif/nonaktif — gaya "power toggle" ala menu game, ganti tombol teks */
 .ql-switch { position: relative; display: inline-flex; cursor: pointer; }
 .ql-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
 .ql-switch-track {
-  width: 38px; height: 22px; border-radius: 999px; background: rgba(255, 255, 255, 0.16);
+  width: 38px; height: 22px; border-radius: 999px; background: rgba(15, 23, 42, 0.14);
   display: flex; align-items: center; padding: 2px; transition: background 0.15s ease;
 }
 .ql-switch-thumb {
   width: 18px; height: 18px; border-radius: 50%; background: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25); transition: transform 0.15s ease;
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.25); transition: transform 0.15s ease;
 }
-.ql-switch input:checked + .ql-switch-track { background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%); }
+.ql-switch input:checked + .ql-switch-track { background: linear-gradient(45deg, #2563eb 0%, #3b82f6 100%); }
 .ql-switch input:checked + .ql-switch-track .ql-switch-thumb { transform: translateX(16px); }
 .ql-toggle-spinner { opacity: 0; }
 .ql-toggle-spinner.is-spinning { opacity: 1; }
@@ -478,21 +502,20 @@ async function hapus(q) {
 
 .ql-btn {
   display: inline-flex; align-items: center; gap: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.08); cursor: pointer; font-family: inherit;
-  font-size: 12px; font-weight: 700; color: rgba(248, 250, 252, 0.75); padding: 8px 12px; border-radius: 10px;
+  border: 1px solid rgba(37, 99, 235, 0.14); background: rgba(37, 99, 235, 0.04); cursor: pointer; font-family: inherit;
+  font-size: 12px; font-weight: 700; color: rgba(15, 23, 42, 0.65); padding: 8px 12px; border-radius: 10px;
 }
 .ql-btn--sm { padding: 6px 10px; font-size: 11.5px; }
 .ql-btn:disabled { opacity: 0.6; cursor: default; }
 
 .ql-edit-date {
   display: flex; flex-direction: column; gap: 6px; margin-top: 8px; padding-top: 8px;
-  border-top: 1px dashed rgba(255, 255, 255, 0.14);
+  border-top: 1px dashed rgba(15, 23, 42, 0.14);
 }
 .ql-edit-date input[type="date"] {
-  align-self: flex-start; border: 1.5px solid rgba(255, 255, 255, 0.14); border-radius: 10px; padding: 8px 10px;
-  font-family: inherit; font-size: 13px; color: #F8FAFC; background: rgba(255, 255, 255, 0.08); outline: none;
-  color-scheme: dark;
+  align-self: flex-start; border: 1.5px solid rgba(37, 99, 235, 0.14); border-radius: 10px; padding: 8px 10px;
+  font-family: inherit; font-size: 13px; color: #0f172a; background: rgba(37, 99, 235, 0.04); outline: none;
 }
-.ql-edit-date input[type="date"]:focus { border-color: #fc4c02; }
+.ql-edit-date input[type="date"]:focus { border-color: #2563eb; }
 .ql-edit-date-actions { display: flex; gap: 8px; }
 </style>

@@ -1,6 +1,6 @@
 <template>
 <div class="mui">
-  <div class="mui-col">
+  <div class="mui-col mui-col--full">
     <header class="mui-header">
       <div class="h-left">
         <div class="mui-avatar">{{ initials }}</div>
@@ -61,9 +61,11 @@
     <div v-else-if="podium.length" class="lb-podium">
       <div v-for="p in podium" :key="p.id" class="lb-podium-item" :class="'lb-podium-item--rank' + p.rank">
         <div class="lb-podium-avatar">
-          <Crown v-if="p.rank === 1" :size="16" class="lb-podium-crown" />
-          <img v-if="p.avatar && !brokenAvatars.has(p.id)" :src="p.avatar" alt="" @error="brokenAvatars.add(p.id)" />
-          <template v-else>{{ initialsOf(p.name) }}</template>
+          <Crown v-if="p.rank === 1" :size="18" class="lb-podium-crown" />
+          <span class="lb-podium-avatar-inner">
+            <img v-if="p.avatar && !brokenAvatars.has(p.id)" :src="p.avatar" alt="" @error="brokenAvatars.add(p.id)" />
+            <template v-else>{{ initialsOf(p.name) }}</template>
+          </span>
         </div>
         <p class="lb-podium-name">{{ p.name }}</p>
         <span v-if="p.tier" class="lb-tier-chip" :style="{ color: p.tier.color }">{{ p.tier.label }}</span>
@@ -81,7 +83,7 @@
     <div v-else class="mui-rank-list">
       <div v-for="item in restRankData" :key="item.id" class="mui-rank">
         <div class="mui-rank-num mui-rank-num--normal">{{ item.rank }}</div>
-        <div class="lb-row-avatar">
+        <div class="lb-row-avatar" :style="{ '--tier': item.tier?.color }">
           <img v-if="item.avatar && !brokenAvatars.has(item.id)" :src="item.avatar" alt="" @error="brokenAvatars.add(item.id)" />
           <template v-else>{{ initialsOf(item.name) }}</template>
         </div>
@@ -89,8 +91,10 @@
           {{ item.name }}
           <span v-if="item.tier" class="lb-tier-chip" :style="{ color: item.tier.color }">{{ item.tier.label }}</span>
         </div>
-        <span class="mui-rank-unit">{{ item.unit }}</span>
-        <span class="mui-rank-value">{{ item.value }}</span>
+        <div class="mui-rank-trail">
+          <span class="mui-rank-unit">{{ item.unit }}</span>
+          <span class="mui-rank-value" :class="{ 'is-zero': isZeroValue(item.value) }">{{ item.value }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -150,27 +154,43 @@ const restRankData = computed(() => rankedData.value.slice(3))
 function initialsOf(name) {
   return (name || '—').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
 }
+
+// Tampilan: angka 0 diredupkan di baris peringkat supaya capaian nyata (>0) menonjol
+function isZeroValue(v) {
+  return v === 0 || v === '0' || v === '0.0'
+}
 </script>
 
 <style scoped>
 @import '../assets/mobile-ui.css';
 
-/* Podium top-3 — dibungkus kartu putih (ala container di referensi), juara 1 di
-   tengah & pedestal paling tinggi */
+/* Podium top-3 — kartu putih, juara 1 di tengah & pedestal paling tinggi.
+   Dikasih sapuan cahaya ambient ala "panggung" di belakangnya (dekoratif,
+   tak ganggu keterbacaan) supaya momen juara terasa lebih meriah — disamakan
+   dgn tampilan versi peserta (PeringkatScreen.vue), struktur tetap sama. */
 .lb-podium {
+  position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   gap: 10px;
-  background: rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.14);
   border-radius: 20px;
-  box-shadow: 0 16px 32px -26px rgba(17, 18, 20, 0.4);
+  box-shadow: 0 16px 32px -26px rgba(15, 23, 42, 0.22);
   padding: 22px 14px 16px;
 }
+.lb-podium::before {
+  content: '';
+  position: absolute;
+  top: -10%; left: 50%;
+  width: 240px; height: 180px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse, rgba(245, 158, 11, 0.14) 0%, transparent 72%);
+  pointer-events: none;
+}
 .lb-podium-item {
+  position: relative;
   flex: 0 1 140px;
   display: flex;
   flex-direction: column;
@@ -182,31 +202,60 @@ function initialsOf(name) {
   position: relative;
   width: 50px; height: 50px;
   border-radius: 50%;
-  overflow: hidden;
   display: grid; place-content: center;
   font-size: 14px; font-weight: 800;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 10px 20px -10px rgba(17, 18, 20, 0.5);
+  border: 3px solid rgba(37, 99, 235, 0.14);
+  box-shadow: 0 10px 20px -10px rgba(15, 23, 42, 0.3);
 }
-.lb-podium-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.lb-podium-item--rank1 .lb-podium-avatar { width: 64px; height: 64px; font-size: 18px; background: linear-gradient(135deg, #fde68a, #f59e0b); color: #78350f; }
+/* Wrapper dalam yang benar-benar clip ke lingkaran — mahkota juara 1 taruh
+   di elemen luar (tanpa overflow:hidden) supaya tak ikut terpotong. */
+.lb-podium-avatar-inner {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid; place-content: center;
+}
+.lb-podium-avatar-inner img { width: 100%; height: 100%; object-fit: cover; }
+.lb-podium-item--rank1 .lb-podium-avatar {
+  width: 64px; height: 64px; font-size: 18px;
+  background: linear-gradient(135deg, #fde68a, #f59e0b); color: #78350f;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.18), 0 8px 20px -6px rgba(245, 158, 11, 0.5);
+}
 .lb-podium-item--rank2 .lb-podium-avatar { background: linear-gradient(135deg, #e5e7eb, #94a3b8); color: #1e293b; }
 .lb-podium-item--rank3 .lb-podium-avatar { background: linear-gradient(135deg, #fdba74, #c2703d); color: #431407; }
 
+/* Cincin pulsa lembut di belakang avatar juara 1 — penanda "sang juara" */
+.lb-podium-item--rank1 .lb-podium-avatar::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+  border: 2px solid rgba(245, 158, 11, 0.4);
+  animation: lb-winner-pulse 2.4s ease-out infinite;
+}
+@keyframes lb-winner-pulse {
+  0%   { transform: scale(0.88); opacity: 0.85; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lb-podium-item--rank1 .lb-podium-avatar::after { animation: none; display: none; }
+}
+
 .lb-podium-crown {
   position: absolute;
-  top: -20px;
+  top: -22px;
   left: 50%;
   transform: translateX(-50%);
   color: #f59e0b;
+  filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.45));
 }
 
 .lb-podium-name {
   margin: 0; max-width: 100%;
-  font-size: 12px; font-weight: 700; color: #F8FAFC;
+  font-size: 12px; font-weight: 700; color: #0f172a;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.lb-podium-value { margin: 0; font-size: 12px; font-weight: 700; color: rgba(248, 250, 252, 0.75); }
+.lb-podium-value { margin: 0; font-size: 12px; font-weight: 700; color: rgba(15, 23, 42, 0.6); }
 
 .lb-podium-bar {
   width: 100%;
@@ -224,13 +273,11 @@ function initialsOf(name) {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.14);
   border-radius: 20px;
   padding: 16px 18px;
-  box-shadow: 0 16px 32px -26px rgba(17, 18, 20, 0.4);
+  box-shadow: 0 16px 32px -26px rgba(15, 23, 42, 0.2);
 }
 
 .lb-league-badges {
@@ -247,9 +294,9 @@ function initialsOf(name) {
   gap: 4px;
   padding: 8px 4px;
   border-radius: 14px;
-  opacity: 0.4;
+  opacity: 0.68;
 }
-.lb-league-badge span { font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; }
+.lb-league-badge span { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; color: rgba(15, 23, 42, 0.8); }
 
 .lb-league-card-bottom {
   display: flex;
@@ -258,26 +305,46 @@ function initialsOf(name) {
   gap: 10px;
   flex-wrap: wrap;
 }
-.lb-league-sub { margin: 0; font-size: 12px; color: rgba(248, 250, 252, 0.65); flex: 1; min-width: 160px; }
+.lb-league-sub { margin: 0; font-size: 12px; color: rgba(15, 23, 42, 0.6); flex: 1; min-width: 160px; }
 
 .lb-period-toggle {
   flex: 0 0 auto;
   padding: 3px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(37, 99, 235, 0.06);
   box-shadow: none;
 }
 .lb-period-toggle button { padding: 7px 12px; font-size: 12px; }
 
-/* Avatar foto di baris rank list (rank 4+) — fallback inisial kalau tak ada foto */
+/* Avatar foto di baris rank list (rank 4+) — fallback inisial kalau tak ada
+   foto; cincinnya ikut warna tier liga orang itu (bukan amber statis), sama
+   seperti versi peserta. */
 .lb-row-avatar {
   flex: 0 0 auto;
   width: 32px; height: 32px;
   border-radius: 50%;
   overflow: hidden;
   display: grid; place-content: center;
-  font-weight: 700; font-size: 11px; color: rgba(248, 250, 252, 0.85);
-  background: rgba(255, 255, 255, 0.08);
+  font-weight: 700; font-size: 11px; color: rgba(15, 23, 42, 0.75);
+  background: rgba(37, 99, 235, 0.08);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--tier, #f59e0b) 55%, transparent);
 }
+
+/* ── Tampilan: baris peringkat punya sapuan warna dari tepi,
+   angka ringkas dgn depth, dan trailing value/unit ditumpuk spy lebih jelas. ── */
+.mui-rank {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, #ffffff 45%);
+}
+.mui-rank-num {
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06), 0 6px 14px -8px rgba(15, 23, 42, 0.15);
+}
+.mui-rank-trail {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.mui-rank-trail .mui-rank-unit { font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; }
+.mui-rank-value.is-zero { color: rgba(15, 23, 42, 0.35); font-weight: 600; }
 .lb-row-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
 /* Chip tier liga (Bronze/Silver/Gold/Diamond) — dipakai di podium & baris list */
@@ -286,8 +353,8 @@ function initialsOf(name) {
   font-weight: 800;
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.10);
-  color: rgba(248, 250, 252, 0.75);
+  background: rgba(15, 23, 42, 0.06);
+  color: rgba(15, 23, 42, 0.7);
   white-space: nowrap;
 }
 </style>

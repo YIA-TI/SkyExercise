@@ -3,7 +3,7 @@
 // tak perlu konfigurasi ambang batas XP oleh admin. Dipakai di leaderboard mode
 // "Liga" (user & admin), dan reset otomatis tiap bulan mengikuti data XP bulanan.
 export const LEAGUE_TIERS = {
-  diamond: { key: 'diamond', label: 'Diamond', color: '#0d9488' },
+  diamond: { key: 'diamond', label: 'Diamond', color: '#fde047' },
   gold: { key: 'gold', label: 'Gold', color: '#b8862f' },
   silver: { key: 'silver', label: 'Silver', color: '#78716c' },
   bronze: { key: 'bronze', label: 'Bronze', color: '#c2703d' },

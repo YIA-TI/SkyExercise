@@ -56,6 +56,8 @@ export async function fetchHomeStats(athleteId) {
       elevation: lastRun?.total_elevation != null ? Math.round(lastRun.total_elevation) : '—',
       // bar relatif terhadap lari terpanjang minggu ini (Senin–Minggu)
       bars: weekRuns.slice(0, 7).reverse().map((a) => Math.round(((a.distance || 0) / 1000 / maxRunKm) * 100)),
+      // jarak (km) per hari, Senin–Minggu — grafik harian (bukan per lari)
+      daily: dailyDistanceKm(runs, weekStart),
       recent: runs.slice(0, 4).map((a) => ({
         name: a.name || 'Lari',
         km: kmFromMeters(a.distance) ?? '—',
@@ -93,6 +95,17 @@ export async function fetchHomeStats(athleteId) {
       bars: dailyEffortBars(acts, weekStart),
     },
   }
+}
+
+function dailyDistanceKm(runs, weekStart) {
+  return [...Array(7)].map((_, i) => {
+    const d = new Date(weekStart); d.setDate(d.getDate() + i)
+    const day = d.toISOString().slice(0, 10)
+    const meters = runs
+      .filter((a) => (a.start_date || '').slice(0, 10) === day)
+      .reduce((s, a) => s + (a.distance || 0), 0)
+    return +(meters / 1000).toFixed(1)
+  })
 }
 
 function dailyEffortBars(acts, weekStart) {

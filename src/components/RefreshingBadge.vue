@@ -16,7 +16,7 @@
   gap: 6px;
   font-size: 11px;
   font-weight: 600;
-  color: rgba(248, 250, 252, 0.65);
+  color: rgba(15, 23, 42, 0.6);
   flex-shrink: 0;
 }
 .refreshing-dot {

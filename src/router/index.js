@@ -14,6 +14,7 @@ const LatihanScreen         = () => import('../components/LatihanScreen.vue')
 const RincianLatihanScreen  = () => import('../components/RincianLatihanScreen.vue')
 const PeringkatScreen       = () => import('../components/PeringkatScreen.vue')
 const ProfilScreen          = () => import('../components/ProfilScreen.vue')
+const NotifikasiScreen      = () => import('../components/NotifikasiScreen.vue')
 const GantiPasswordScreen   = () => import('../components/GantiPasswordScreen.vue')
 const StravaAuthorizeScreen = () => import('../components/StravaAuthorizeScreen.vue')
 const StravaCallbackScreen  = () => import('../components/StravaCallbackScreen.vue')
@@ -49,6 +50,7 @@ const routes = [
   { path: '/latihan/rincian/:id', name: 'RincianLatihan', component: RincianLatihanScreen, meta: { requiresAuth: true, role: 'anggota' } },
   { path: '/peringkat',        name: 'Peringkat',       component: PeringkatScreen,      meta: { requiresAuth: true, role: 'anggota' } },
   { path: '/profil',           name: 'Profil',          component: ProfilScreen,         meta: { requiresAuth: true, role: 'anggota' } },
+  { path: '/notifikasi',       name: 'Notifikasi',      component: NotifikasiScreen,     meta: { requiresAuth: true, role: 'anggota' } },
   { path: '/profil/ganti-password', name: 'GantiPassword', component: GantiPasswordScreen, meta: { requiresAuth: true, role: 'anggota' } },
   { path: '/strava/authorize', name: 'StravaAuthorize', component: StravaAuthorizeScreen, meta: { requiresAuth: true, role: 'anggota', hideTabBar: true } },
 

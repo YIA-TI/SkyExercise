@@ -154,9 +154,9 @@ async function handleSubmit() {
   cursor: pointer;
   display: grid;
   place-content: center;
-  color: #F8FAFC;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.14);
 }
 
 .gp-form { display: flex; flex-direction: column; }
@@ -167,7 +167,7 @@ async function handleSubmit() {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: -0.2px;
-  color: #F8FAFC;
+  color: #0f172a;
 }
 
 .gp-label:not(:first-child) { margin-top: 18px; }
@@ -178,15 +178,15 @@ async function handleSubmit() {
   gap: 10px;
   padding: 0 14px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1.5px solid transparent;
+  background: rgba(37, 99, 235, 0.05);
+  border: 1.5px solid rgba(37, 99, 235, 0.14);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .gp-input-wrap:focus-within {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: #fc4c02;
-  box-shadow: 0 0 0 4px rgba(252, 76, 2, 0.15);
+  background: rgba(37, 99, 235, 0.08);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
 }
 
 .gp-input-wrap.has-error {
@@ -194,7 +194,7 @@ async function handleSubmit() {
   box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12);
 }
 
-.gp-input-icon { flex: 0 0 auto; color: rgba(248, 250, 252, 0.75); }
+.gp-input-icon { flex: 0 0 auto; color: rgba(15, 23, 42, 0.55); }
 
 .gp-input {
   flex: 1;
@@ -205,11 +205,10 @@ async function handleSubmit() {
   padding: 14px 0;
   font-family: inherit;
   font-size: 15px;
-  color: #F8FAFC;
-  color-scheme: dark;
+  color: #0f172a;
 }
 
-.gp-input::placeholder { color: rgba(248, 250, 252, 0.5); }
+.gp-input::placeholder { color: rgba(15, 23, 42, 0.35); }
 
 .gp-eye {
   flex: 0 0 auto;
@@ -219,15 +218,15 @@ async function handleSubmit() {
   border: none;
   padding: 0;
   cursor: pointer;
-  color: rgba(248, 250, 252, 0.75);
+  color: rgba(15, 23, 42, 0.55);
 }
 
-.gp-eye:hover { color: #F8FAFC; }
+.gp-eye:hover { color: #0f172a; }
 
 /* Indikator kekuatan */
 .gp-strength { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
 .gp-strength-track { flex: 1; display: flex; gap: 5px; }
-.gp-strength-bar { flex: 1; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); }
+.gp-strength-bar { flex: 1; height: 6px; border-radius: 999px; background: rgba(15, 23, 42, 0.08); }
 .gp-strength-label { font-size: 11.5px; font-weight: 700; white-space: nowrap; }
 
 .gp-error {
@@ -252,8 +251,8 @@ async function handleSubmit() {
   font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.2px;
-  background: #1c1917;
-  box-shadow: 0 16px 32px -16px rgba(17, 18, 20, 0.7);
+  background: linear-gradient(45deg, #2563eb 0%, #3b82f6 100%);
+  box-shadow: 0 16px 32px -16px rgba(37, 99, 235, 0.5);
   transition: all 0.2s ease-in-out;
 }
 

@@ -1,7 +1,10 @@
-/* ========== SHARED AUTH SHELL (Sign In / Admin Login) — Phase 3a: dark
-   orange+violet glassmorphism, diselaraskan dgn .mui di mobile-ui.css.
+/* ========== SHARED AUTH SHELL (Sign In / Admin Login) — konsep "Clean Sky"
+   (simple, putih-biru), sama dengan latar dashboard (.mui / .aeroguard-home).
    Dipakai bareng oleh SignInScreen (anggota, Strava) & AdminLoginScreen
-   (admin, email/password) via @import — bukan diduplikasi per komponen. ========== */
+   (admin, email/password) via @import. Oranye Strava (#fc4c02) dipertahankan
+   HANYA di elemen yang memang terhubung ke Strava (tombol "Masuk dengan
+   Strava", ikon Strava) — elemen umum (badge app, tombol submit admin) pakai
+   biru. ========== */
 .aeroguard-signin {
   position: relative;
   z-index: 0;
@@ -12,64 +15,48 @@
   padding: 24px;
   box-sizing: border-box;
   overflow: hidden;
-  /* Aksen latar sama dgn .mui (mobile-ui.css) — grain + glow oranye/violet +
-     drift lambat, supaya login page senada dgn layar member/admin. */
   background-image:
-    var(--grain),
-    radial-gradient(820px 420px at 100% -8%, rgba(252, 76, 2, 0.28), transparent 62%),
-    radial-gradient(760px 460px at -10% 108%, rgba(124, 58, 237, 0.30), transparent 58%),
-    linear-gradient(160deg, #3b1a0a 0%, #4c1d95 45%, #1e1b4b 75%, #0f0a2e 100%);
-  background-color: #0f0a2e;
-  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
-  background-size: 180px 180px, auto, auto, cover;
+    radial-gradient(820px 420px at 100% -8%, rgba(59, 130, 246, 0.14), transparent 62%),
+    radial-gradient(760px 460px at -10% 108%, rgba(96, 165, 250, 0.12), transparent 58%),
+    linear-gradient(160deg, #ffffff 0%, #eff6ff 55%, #dbeafe 100%);
+  background-color: #eff6ff;
+  background-repeat: no-repeat, no-repeat, no-repeat;
   background-attachment: fixed;
-  animation: bg-drift 18s ease-in-out infinite;
+  animation: none;
   font-family: "Barlow", system-ui, sans-serif;
 }
 
-/* Garis diagonal ganda + motif rute GPS — aksen sama dgn .mui::before/::after,
-   lapisan terpisah supaya masing-masing berdenyut (pulse) sendiri. */
-.aeroguard-signin::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image:
-    repeating-linear-gradient(135deg, rgba(252, 76, 2, 0.12) 0, rgba(252, 76, 2, 0.12) 3px, transparent 3px, transparent 46px),
-    repeating-linear-gradient(45deg, rgba(196, 181, 253, 0.08) 0, rgba(196, 181, 253, 0.08) 2px, transparent 2px, transparent 70px);
-  animation: stripe-pulse 3s ease-in-out infinite;
-}
-
-.aeroguard-signin::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image: var(--route-line);
-  background-repeat: no-repeat;
-  background-size: 640px 640px;
-  background-position: 110% 110%;
-  animation: route-pulse 2.5s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .aeroguard-signin { animation: none; }
-  .aeroguard-signin::before, .aeroguard-signin::after { animation: none; }
-}
-
 .aeroguard-signin .phone-frame {
+  position: relative;
+  overflow: hidden;
   width: 100%;
   max-width: 390px;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: #ffffff;
   border-radius: 40px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  box-shadow:
+    0 30px 70px -24px rgba(15, 23, 42, 0.25),
+    0 12px 36px -16px rgba(37, 99, 235, 0.14);
   padding: 40px 28px 32px;
   box-sizing: border-box;
+  animation: auth-card-in 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+/* Garis aksen biru di tepi atas + cahaya ambient di belakang badge */
+.aeroguard-signin .phone-frame::before {
+  content: '';
+  position: absolute; left: 0; right: 0; top: 0; height: 3px;
+  background: linear-gradient(90deg, transparent, #2563eb 35%, #60a5fa 65%, transparent);
+}
+.aeroguard-signin .phone-frame::after {
+  content: '';
+  position: absolute; top: -45%; left: 50%; width: 260px; height: 260px;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.14) 0%, rgba(37, 99, 235, 0) 70%);
+  pointer-events: none;
+}
+@keyframes auth-card-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .aeroguard-signin .top-visual {
@@ -80,24 +67,34 @@
 }
 
 .aeroguard-signin .badge {
+  position: relative;
   display: grid;
   place-content: center;
   width: 56px;
   height: 56px;
   border-radius: 18px;
-  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
-  box-shadow: 0 12px 24px -10px rgba(252, 100, 45, 0.7);
+  background: linear-gradient(45deg, #2563eb 0%, #60a5fa 100%);
+  box-shadow: 0 12px 24px -10px rgba(37, 99, 235, 0.55);
+  animation: auth-badge-float 3.2s ease-in-out infinite;
+}
+@keyframes auth-badge-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aeroguard-signin .phone-frame { animation: none; }
+  .aeroguard-signin .badge { animation: none; }
 }
 
 .aeroguard-signin .badge-icon {
   width: 30px;
   height: 30px;
-  filter: drop-shadow(0 2px 3px rgba(0, 20, 40, 0.35));
+  filter: drop-shadow(0 2px 3px rgba(15, 23, 42, 0.25));
 }
 
 .aeroguard-signin .title {
   margin: 18px 0 0;
-  color: #F8FAFC;
+  color: #0f172a;
   font-size: 26px;
   font-weight: 700;
   letter-spacing: -0.8px;
@@ -106,7 +103,7 @@
 
 .aeroguard-signin .subtitle {
   margin: 8px 0 0;
-  color: rgba(248, 250, 252, 0.65);
+  color: rgba(15, 23, 42, 0.6);
   font-size: 13.5px;
   line-height: 20px;
   letter-spacing: -0.2px;
@@ -122,7 +119,7 @@
   font-size: 13px;
   font-weight: 700;
   letter-spacing: -0.2px;
-  color: rgba(248, 250, 252, 0.85);
+  color: rgba(15, 23, 42, 0.85);
 }
 
 .aeroguard-signin .field-label:not(:first-child) {
@@ -135,20 +132,20 @@
   gap: 10px;
   padding: 0 14px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  background: rgba(37, 99, 235, 0.05);
+  border: 1.5px solid rgba(37, 99, 235, 0.14);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .aeroguard-signin .input-wrap:focus-within {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: #fc4c02;
-  box-shadow: 0 0 0 4px rgba(252, 76, 2, 0.25);
+  background: rgba(37, 99, 235, 0.08);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
 }
 
 .aeroguard-signin .input-icon {
   flex: 0 0 auto;
-  color: rgba(248, 250, 252, 0.55);
+  color: rgba(15, 23, 42, 0.5);
 }
 
 .aeroguard-signin .input {
@@ -160,11 +157,11 @@
   padding: 14px 0;
   font-family: inherit;
   font-size: 15px;
-  color: #F8FAFC;
+  color: #0f172a;
 }
 
 .aeroguard-signin .input::placeholder {
-  color: rgba(248, 250, 252, 0.4);
+  color: rgba(15, 23, 42, 0.35);
 }
 
 .aeroguard-signin .toggle-eye {
@@ -175,11 +172,11 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  color: rgba(248, 250, 252, 0.55);
+  color: rgba(15, 23, 42, 0.5);
 }
 
 .aeroguard-signin .toggle-eye:hover {
-  color: #F8FAFC;
+  color: #0f172a;
 }
 
 .aeroguard-signin .submit {
@@ -198,8 +195,8 @@
   font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.3px;
-  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
-  box-shadow: 0 16px 32px -16px rgba(252, 76, 2, 0.6);
+  background: linear-gradient(45deg, #2563eb 0%, #3b82f6 100%);
+  box-shadow: 0 16px 32px -16px rgba(37, 99, 235, 0.5);
   transition: all 0.2s ease-in-out;
 }
 
@@ -224,13 +221,39 @@
   margin: 16px 0 0;
   padding: 10px 12px;
   border-radius: 12px;
-  background: rgba(220, 38, 38, 0.18);
-  border: 1px solid rgba(220, 38, 38, 0.3);
-  color: #FCA5A5;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  color: #b91c1c;
   font-size: 12.5px;
   font-weight: 600;
   text-align: center;
 }
+
+/* Tombol Strava penuh (halaman masuk anggota) — tetap oranye, satu-satunya
+   elemen yang memang terhubung langsung ke Strava. */
+.aeroguard-signin .strava-cta {
+  position: relative;
+  margin-top: 28px;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+  box-shadow: 0 16px 32px -16px rgba(252, 76, 2, 0.5);
+  transition: transform 0.15s ease;
+}
+.aeroguard-signin .strava-cta:hover { transform: translateY(-1px) scale(1.01); }
+.aeroguard-signin .strava-cta:active { transform: scale(0.98); }
 
 .aeroguard-signin .social-row {
   display: flex;
@@ -245,16 +268,16 @@
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  background: rgba(37, 99, 235, 0.06);
+  border: 1.5px solid rgba(37, 99, 235, 0.14);
   cursor: pointer;
-  color: #F8FAFC;
+  color: #0f172a;
   transition: all 0.2s ease-in-out;
 }
 
 .aeroguard-signin .social-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px -12px rgba(0, 41, 74, 0.4);
+  box-shadow: 0 10px 20px -12px rgba(15, 23, 42, 0.25);
 }
 
 .aeroguard-signin .social-button.strava {
@@ -271,7 +294,7 @@
 .aeroguard-signin .links p {
   margin: 0;
   font-size: 13px;
-  color: rgba(248, 250, 252, 0.65);
+  color: rgba(15, 23, 42, 0.6);
   letter-spacing: -0.2px;
 }
 
@@ -283,7 +306,7 @@
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
-  color: #FDBA74;
+  color: #2563eb;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -291,4 +314,3 @@
 .aeroguard-signin .links .forgot {
   margin-top: 12px;
 }
-

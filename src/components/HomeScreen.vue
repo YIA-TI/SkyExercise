@@ -2,6 +2,8 @@
 <div class="aeroguard-home">
   <div class="app-column">
 
+    <!-- Kartu hero: sapaan + status Strava dalam satu panel -->
+    <div class="hero-card">
     <!-- Header sapaan -->
     <header class="greeting-card">
       <div class="greeting-left">
@@ -11,7 +13,7 @@
           <p class="role">Anggota ARFF · Siap latihan</p>
         </div>
       </div>
-      <button class="icon-btn" type="button" aria-label="Notifikasi">
+      <button class="icon-btn" type="button" aria-label="Notifikasi" @click="goNotifikasi">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
           <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
@@ -47,6 +49,7 @@
       </button>
       <button v-else class="strava-sync" type="button" @click="goConnectStrava">Hubungkan</button>
     </div>
+    </div>
 
     <!-- Reminder mingguan: update berat badan -->
     <div v-if="showWeightReminder" class="weight-reminder">
@@ -74,7 +77,7 @@
             v-for="(c, i) in cards"
             :key="c.type"
             class="stat-card"
-            :class="{ 'is-center': isCenter(i), 'no-anim': noAnim[i] }"
+            :class="[`stat-${c.type}`, { 'is-center': isCenter(i), 'no-anim': noAnim[i] }]"
             :style="cardStyle(i)"
             tabindex="0"
             @click="onCardClick(i)"
@@ -153,7 +156,7 @@
     </section>
 
     <!-- My Activity + Filter -->
-    <section class="stats-wrap">
+    <section class="stats-wrap act-section">
       <div class="stats-head">
         <h2 class="section-title">My Activity</h2>
         <RefreshingBadge v-if="activitiesLoading && rawActivities" />
@@ -239,6 +242,11 @@ const firstName = computed(() => displayName.value.split(' ')[0])
 const initials = computed(() =>
   displayName.value.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
 )
+
+// ── Notifikasi (lonceng) — halaman sendiri di /notifikasi ──
+function goNotifikasi() {
+  router.push('/notifikasi')
+}
 
 // ── Konektor Strava ──
 const { sync } = useStravaConnection()
@@ -348,7 +356,7 @@ function cardStyle(i) {
   const rot   = getCSSVar('--card-rot',   44)   // dalam deg, ambil angka
   return {
     transform: `translateX(${o * gap}px) translateZ(${-abs * depth}px) rotateY(${-o * rot}deg) scale(${Math.max(0.72, 1 - abs * 0.14)})`,
-    opacity: hidden ? 0 : 1 - abs * 0.22,
+    opacity: hidden ? 0 : 1 - abs * 0.04,
     zIndex: Math.round(100 - abs * 10),
     pointerEvents: hidden ? 'none' : 'auto',
   }
@@ -443,7 +451,7 @@ const visibleActivities = computed(() =>
 <style>
 @import '../assets/mobile-ui.css';
 
-/* ========== HOME DASHBOARD ========== */
+/* ========== HOME DASHBOARD — konsep "Clean Sky" (simple, putih-biru) ========== */
 
 /* ── CSS Custom Properties untuk coverflow yang fluid ── */
 .aeroguard-home {
@@ -461,50 +469,18 @@ const visibleActivities = computed(() =>
   width: 100%;
   display: flex;
   justify-content: center;
-  /* Latar bold ala peta rute Strava — grain + gradient besar & jenuh, plus drift
-     lambat supaya terasa hidup. Garis diagonal (::before) & motif rute (::after)
-     ada di lapisan terpisah supaya masing-masing bisa berdenyut (pulse) sendiri. */
+  /* Latar putih ke biru muda, bersih tanpa motif — senada dgn .mui di mobile-ui.css. */
   background-image:
-    var(--grain),
-    radial-gradient(880px 440px at 100% -8%, rgba(252, 76, 2, 0.22), transparent 62%),
-    radial-gradient(800px 480px at -10% 108%, rgba(124, 58, 237, 0.30), transparent 58%),
-    linear-gradient(160deg, #3b1a0a 0%, #4c1d95 45%, #1e1b4b 75%, #0f0a2e 100%);
-  background-color: #0f0a2e;
-  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
-  background-size: 180px 180px, auto, auto, cover;
+    radial-gradient(880px 440px at 100% -8%, rgba(59, 130, 246, 0.14), transparent 62%),
+    radial-gradient(800px 480px at -10% 108%, rgba(96, 165, 250, 0.12), transparent 58%),
+    linear-gradient(160deg, #ffffff 0%, #eff6ff 55%, #dbeafe 100%);
+  background-color: #eff6ff;
+  background-repeat: no-repeat, no-repeat, no-repeat;
   background-attachment: fixed;
-  animation: bg-drift 18s ease-in-out infinite;
-  font-family: "Chakra Petch", system-ui, sans-serif;
+  animation: none;
+  font-family: "Barlow", system-ui, sans-serif;
+  color: #0f172a;
   box-sizing: border-box;
-}
-
-/* Garis diagonal ganda (oranye/teal, saling silang) — lapisan terpisah supaya
-   bisa berdenyut (pulse) sendiri, kesan "detak" energi ala Strava. */
-.aeroguard-home::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image:
-    repeating-linear-gradient(135deg, rgba(252, 76, 2, 0.09) 0, rgba(252, 76, 2, 0.09) 3px, transparent 3px, transparent 46px),
-    repeating-linear-gradient(45deg, rgba(196, 181, 253, 0.08) 0, rgba(196, 181, 253, 0.08) 2px, transparent 2px, transparent 70px);
-  animation: stripe-pulse 3s ease-in-out infinite;
-}
-
-/* Motif rute GPS di sudut — lapisan terpisah dengan ritme pulse sendiri (denyut
-   live-tracking), letaknya tak ikut drift latar utama. */
-.aeroguard-home::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image: var(--route-line);
-  background-repeat: no-repeat;
-  background-size: 640px 640px;
-  background-position: 110% 110%;
-  animation: route-pulse 2.5s ease-in-out infinite;
 }
 
 /* Layar kecil: kartu & gap lebih sempit */
@@ -586,47 +562,46 @@ const visibleActivities = computed(() =>
 
 .aeroguard-home .section-title {
   margin: 0;
-  font-size: 17px;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-size: 19px;
   font-weight: 700;
-  letter-spacing: -0.4px;
-  color: #F8FAFC;
+  letter-spacing: -0.2px;
+  color: #0f172a;
 }
 
 /* ----- Greeting ----- */
 .aeroguard-home .greeting-card {
   position: relative; overflow: hidden;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 18px; border-radius: 22px; color: #F8FAFC;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 18px 36px -28px rgba(15, 23, 42, 0.4);
+  padding: 16px 18px; border-radius: 22px; color: #0f172a;
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  box-shadow: 0 18px 36px -28px rgba(15, 23, 42, 0.22);
 }
 .aeroguard-home .greeting-card::before {
   content: ''; position: absolute; top: -70%; right: -6%;
   width: 220px; height: 220px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(252, 76, 2, 0.16) 0%, rgba(252, 76, 2, 0) 70%);
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.10) 0%, rgba(37, 99, 235, 0) 70%);
   pointer-events: none;
 }
 .aeroguard-home .greeting-left { position: relative; display: flex; align-items: center; gap: 12px; }
 .aeroguard-home .avatar {
   width: 44px; height: 44px; border-radius: 14px; display: grid; place-content: center;
   color: #fff; font-weight: 700; font-size: 15px;
-  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
-  box-shadow: 0 8px 18px -8px rgba(252, 100, 45, 0.7);
+  background: linear-gradient(45deg, #2563eb 0%, #60a5fa 100%);
+  box-shadow: 0 8px 18px -8px rgba(37, 99, 235, 0.5);
   flex-shrink: 0;
 }
-.aeroguard-home .hello { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
-.aeroguard-home .role { margin: 2px 0 0; font-size: 12px; color: rgba(248, 250, 252, 0.65); }
+.aeroguard-home .hello { margin: 0; font-family: "Barlow Condensed", system-ui, sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.1px; }
+.aeroguard-home .role { margin: 2px 0 0; font-size: 12px; color: rgba(15, 23, 42, 0.6); }
 .aeroguard-home .icon-btn {
   position: relative; display: grid; place-content: center; width: 40px; height: 40px;
-  border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.14); cursor: pointer; color: rgba(248, 250, 252, 0.75);
-  background: rgba(255, 255, 255, 0.08); flex-shrink: 0;
+  border-radius: 12px; border: 1px solid rgba(37, 99, 235, 0.14); cursor: pointer; color: rgba(15, 23, 42, 0.65);
+  background: rgba(37, 99, 235, 0.06); flex-shrink: 0;
 }
 .aeroguard-home .icon-btn .dot {
   position: absolute; top: 9px; right: 10px; width: 8px; height: 8px; border-radius: 50%;
-  background: #fc4c02; border: 2px solid rgba(255, 255, 255, 0.3);
+  background: #fc4c02; border: 2px solid #ffffff;
 }
 
 /* ----- Konektor Strava ----- */
@@ -653,8 +628,8 @@ const visibleActivities = computed(() =>
   box-shadow: 0 8px 18px -8px rgba(252, 100, 45, 0.7);
 }
 .aeroguard-home .strava-card.is-disconnected .strava-icon { filter: grayscale(0.4); opacity: 0.75; }
-.aeroguard-home .strava-title { margin: 0; font-size: 13.5px; font-weight: 700; color: #F8FAFC; }
-.aeroguard-home .strava-sub { margin: 2px 0 0; font-size: 11.5px; color: rgba(248, 250, 252, 0.65); }
+.aeroguard-home .strava-title { margin: 0; font-size: 13.5px; font-weight: 700; color: #0f172a; }
+.aeroguard-home .strava-sub { margin: 2px 0 0; font-size: 11.5px; color: rgba(15, 23, 42, 0.6); }
 .aeroguard-home .strava-sync {
   flex: 0 0 auto;
   display: inline-flex;
@@ -702,13 +677,14 @@ const visibleActivities = computed(() =>
 /* ----- Section wrap ----- */
 .aeroguard-home .stats-wrap { display: flex; flex-direction: column; gap: 12px; }
 .aeroguard-home .stats-head { display: flex; align-items: center; justify-content: space-between; }
-.aeroguard-home .swipe-hint { font-size: 12px; font-weight: 600; color: rgba(248, 250, 252, 0.5); }
+.aeroguard-home .swipe-hint { font-size: 12px; font-weight: 600; color: rgba(15, 23, 42, 0.45); }
 .aeroguard-home .hchip {
   font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
-  background: rgba(255, 255, 255, 0.10); color: rgba(248, 250, 252, 0.75); white-space: nowrap;
+  background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(37, 99, 235, 0.14);
+  color: #1d4ed8; white-space: nowrap;
 }
-.aeroguard-home .hchip--orange { background: rgba(251, 146, 60, 0.18); color: #FDBA74; }
-.aeroguard-home .hchip--green { background: rgba(52, 211, 153, 0.18); color: #6EE7B7; }
+.aeroguard-home .hchip--orange { background: rgba(251, 146, 60, 0.16); color: #c2410c; }
+.aeroguard-home .hchip--green { background: rgba(16, 185, 129, 0.14); color: #047857; }
 
 /* ----- Sphere coverflow (pakai CSS custom properties) ----- */
 .aeroguard-home .sphere {
@@ -741,14 +717,24 @@ const visibleActivities = computed(() =>
   margin-left: calc(var(--card-w) / -2);
   box-sizing: border-box;
   cursor: pointer;
-  /* Kartu samping tetap solid (bukan transparan tipis) supaya tak "hilang" di
-     atas latar — lihat catatan di bawah soal kenapa blur tak dipakai di sini. */
-  background: rgba(30, 27, 75, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  /* Kartu samping diberi tinta warna aksen tipis (bukan putih polos) supaya
+     ikut "bertema" sesuai jenisnya meski belum di tengah/fokus. Lapisan
+     gradasi putih diagonal di atas = sapuan "kilap kaca" (glossy sheen). */
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 32%),
+    linear-gradient(165deg, color-mix(in srgb, var(--acc) 20%, white) 0%, color-mix(in srgb, var(--acc) 7%, white) 100%);
+  /* Pinggiran emas glossy — bukan ikut warna aksen lagi, supaya tiap kartu
+     punya "bingkai" senada (kesan premium), dibantu bevel kaca di bawah. */
+  border: 1.5px solid #f59e0b;
   border-radius: 26px;
   padding: var(--card-pad);
   overflow: hidden;
-  box-shadow: 0 20px 40px -24px rgba(17, 18, 20, 0.5);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.85),
+    inset 0 0 0 1px rgba(253, 230, 138, 0.6),
+    inset 0 -1.5px 0 rgba(120, 53, 15, 0.3),
+    0 0 0 1px rgba(245, 158, 11, 0.18),
+    0 20px 40px -24px rgba(15, 23, 42, 0.22);
   transform-style: preserve-3d;
   backface-visibility: hidden;
   transition: transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.4s ease, box-shadow 0.35s ease;
@@ -759,47 +745,103 @@ const visibleActivities = computed(() =>
 }
 /* Blur (backdrop-filter) hanya dipakai di kartu tengah (rotasi ~0deg, nyaris
    datar) — kartu samping tetap solid tanpa blur supaya aman dari bug WebKit
-   yang dikenal soal backdrop-filter di dalam elemen ber-perspective/rotateY.
-   Opacity latar & blur dinaikkan (dari 0.10/14px) supaya efek glass tak
-   terlalu tembus pandang. */
+   yang dikenal soal backdrop-filter di dalam elemen ber-perspective/rotateY. */
 .aeroguard-home .stat-card.is-center {
-  background: rgba(30, 27, 75, 0.42);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-  /* Diperkecil jangkauannya (dari 0 30px 55px -20px) — glow sebesar itu
-     "bocor" sampai dekat batas section berikutnya & masih kelihatan terpotong
-     meski overflow-y sudah visible. Sekarang muat di buffer .sphere sendiri. */
-  box-shadow: 0 14px 28px -14px rgba(252, 76, 2, 0.4);
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 35%),
+    linear-gradient(145deg, var(--acc) 0%, var(--acc2) 100%);
+  border-color: #fbbf24;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  /* Bevel emas lebih tegas di kartu tengah — highlight terang di tepi atas,
+     rim gelap keemasan di tepi bawah, kesan bingkai logam mengkilap. */
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.85),
+    inset 0 0 0 1px rgba(253, 230, 138, 0.55),
+    inset 0 -1.5px 0 rgba(120, 53, 15, 0.35),
+    0 0 0 1px rgba(245, 158, 11, 0.25),
+    0 20px 40px -16px color-mix(in srgb, var(--acc) 55%, transparent);
 }
+/* Cahaya lembut di pojok kartu — detail dekoratif supaya tiap kartu terasa
+   "hidup", bukan blok warna polos rata. */
+.aeroguard-home .stat-card::after {
+  content: '';
+  position: absolute;
+  top: -40%; right: -20%;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--acc) 16%, transparent) 0%, transparent 70%);
+  pointer-events: none;
+}
+.aeroguard-home .stat-card.is-center::after {
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, transparent 70%);
+}
+.aeroguard-home .stat-card.is-center .stat-inner {
+  position: relative;
+  z-index: 1;
+}
+/* Semua elemen di dalam kartu gradasi dibuat putih supaya tetap kontras. */
+.aeroguard-home .stat-card.is-center .stat-card-title { color: #ffffff; }
+.aeroguard-home .stat-card.is-center .stat-big {
+  background: none;
+  -webkit-text-fill-color: #ffffff;
+  color: #ffffff;
+}
+.aeroguard-home .stat-card.is-center .stat-big small {
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.78);
+  color: rgba(255, 255, 255, 0.78);
+}
+.aeroguard-home .stat-card.is-center .stat-note { color: rgba(255, 255, 255, 0.82); }
+.aeroguard-home .stat-card.is-center .stat-more { color: #ffffff; }
+.aeroguard-home .stat-card.is-center .mini-bar { background: rgba(255, 255, 255, 0.55); }
+.aeroguard-home .stat-card.is-center .hchip {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+.aeroguard-home .stat-card.is-center::before { display: none; }
 .aeroguard-home .stat-card:focus,
 .aeroguard-home .stat-card:focus-visible { outline: none; }
 .aeroguard-home .stat-card:focus-visible {
-  box-shadow: 0 0 0 3px rgba(252, 76, 2, 0.4), 0 20px 40px -24px rgba(17, 18, 20, 0.5);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 45%, transparent), 0 20px 40px -24px rgba(15, 23, 42, 0.3);
 }
 .aeroguard-home .stat-inner {
   display: flex; flex-direction: column; gap: 12px; height: 100%;
 }
 .aeroguard-home .stat-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.aeroguard-home .stat-card-title { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; color: #F8FAFC; }
-.aeroguard-home .stat-big { margin: 0; font-size: clamp(26px, 5vw, 34px); font-weight: 700; color: #F8FAFC; letter-spacing: -1px; }
-.aeroguard-home .stat-big small { font-size: 13px; font-weight: 700; color: rgba(248, 250, 252, 0.5); margin-left: 4px; }
-.aeroguard-home .stat-note { margin: 0; font-size: 11.5px; color: rgba(248, 250, 252, 0.65); }
+.aeroguard-home .stat-card-title { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; color: #0f172a; }
+.aeroguard-home .stat-big { margin: 0; font-size: clamp(26px, 5vw, 34px); font-weight: 700; color: #0f172a; letter-spacing: -1px; }
+.aeroguard-home .stat-big small { font-size: 13px; font-weight: 700; color: rgba(15, 23, 42, 0.45); margin-left: 4px; }
+.aeroguard-home .stat-note { margin: 0; font-size: 11.5px; color: rgba(15, 23, 42, 0.6); }
 .aeroguard-home .stat-more {
   margin-top: auto; display: inline-flex; align-items: center; gap: 2px;
-  font-size: 12px; font-weight: 700; color: #fc4c02;
+  font-size: 12px; font-weight: 700; color: #2563eb;
 }
 
 /* mini bars */
 .aeroguard-home .mini-bars { display: flex; align-items: flex-end; gap: 4px; height: var(--bars-h); }
-.aeroguard-home .mini-bar { flex: 1; border-radius: 3px; background: linear-gradient(180deg, #ff914d, #fc4c02); }
+.aeroguard-home .mini-bar { flex: 1; border-radius: 3px; background: linear-gradient(180deg, #60a5fa, #2563eb); }
 
 /* dot indikator */
 .aeroguard-home .sphere-dots { display: flex; justify-content: center; gap: 7px; }
 .aeroguard-home .sphere-dot {
   width: 7px; height: 7px; border-radius: 50%; border: none; cursor: pointer; padding: 0;
-  background: rgba(255, 255, 255, 0.25); transition: all 0.2s ease;
+  background: rgba(37, 99, 235, 0.2); transition: all 0.2s ease;
 }
-.aeroguard-home .sphere-dot.is-active { width: 20px; border-radius: 999px; background: #fc4c02; }
+.aeroguard-home .sphere-dot.is-active { width: 20px; border-radius: 999px; background: #2563eb; }
+
+/* ----- Aksen judul section: tiap blok punya nuansa sendiri (sama2 biru, beda intensitas) ----- */
+.aeroguard-home .stats-head .section-title { display: flex; align-items: center; gap: 9px; }
+.aeroguard-home .stats-head .section-title::before {
+  content: ''; width: 4px; height: 16px; border-radius: 4px; flex-shrink: 0;
+  background: linear-gradient(180deg, #60a5fa, #2563eb);
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+}
+.aeroguard-home .act-section .section-title::before {
+  background: linear-gradient(180deg, #38bdf8, #0284c7);
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.4);
+}
 
 /* ----- My Activity + Filter ----- */
 .aeroguard-home .filter-row {
@@ -807,14 +849,14 @@ const visibleActivities = computed(() =>
 }
 .aeroguard-home .filter-row::-webkit-scrollbar { display: none; }
 .aeroguard-home .filter-chip {
-  flex: 0 0 auto; border: 1px solid rgba(255, 255, 255, 0.16); cursor: pointer; font-family: inherit;
+  flex: 0 0 auto; border: 1px solid rgba(37, 99, 235, 0.16); cursor: pointer; font-family: inherit;
   font-size: 12.5px; font-weight: 700; padding: 8px 16px; border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  color: rgba(248, 250, 252, 0.75); transition: all 0.15s ease;
-  box-shadow: 0 10px 24px -20px rgba(17, 18, 20, 0.5);
+  background: #ffffff;
+  color: rgba(15, 23, 42, 0.7); transition: all 0.15s ease;
+  box-shadow: 0 10px 24px -20px rgba(15, 23, 42, 0.18);
 }
 .aeroguard-home .filter-chip.is-active {
-  color: #fff; background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+  color: #fff; background: linear-gradient(45deg, #2563eb 0%, #3b82f6 100%);
 }
 
 /* Activity list: 1 kolom default → 2 kolom di ≥ 560px */
@@ -835,27 +877,26 @@ const visibleActivities = computed(() =>
 }
 
 .aeroguard-home .act-item {
-  display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 16px; padding: 12px 14px; box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
+  display: flex; align-items: center; gap: 12px; background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  border-radius: 16px; padding: 12px 14px; box-shadow: 0 16px 32px -28px rgba(15, 23, 42, 0.18);
   cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease;
   min-width: 0;
 }
 .aeroguard-home .act-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 18px 34px -22px rgba(17, 18, 20, 0.45);
+  box-shadow: 0 18px 34px -22px rgba(15, 23, 42, 0.2);
 }
 .aeroguard-home .act-ic { width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0; display: grid; place-content: center; }
-.aeroguard-home .act-ic.is-orange { background: rgba(251, 146, 60, 0.18); color: #FDBA74; }
-.aeroguard-home .act-ic.is-blue { background: rgba(45, 212, 191, 0.18); color: #5EEAD4; }
-.aeroguard-home .act-ic.is-green { background: rgba(52, 211, 153, 0.18); color: #6EE7B7; }
-.aeroguard-home .act-ic.is-cyan { background: rgba(45, 212, 191, 0.18); color: #5EEAD4; }
+.aeroguard-home .act-ic.is-orange { background: rgba(37, 99, 235, 0.12); color: #1d4ed8; }
+.aeroguard-home .act-ic.is-blue { background: rgba(245, 158, 11, 0.14); color: #b45309; }
+.aeroguard-home .act-ic.is-green { background: rgba(16, 185, 129, 0.14); color: #047857; }
+.aeroguard-home .act-ic.is-cyan { background: rgba(245, 158, 11, 0.14); color: #b45309; }
 .aeroguard-home .act-body { flex: 1; min-width: 0; overflow: hidden; }
-.aeroguard-home .act-name { margin: 0; font-size: 13.5px; font-weight: 700; color: #F8FAFC; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.aeroguard-home .act-meta { margin: 3px 0 0; font-size: 11.5px; color: rgba(248, 250, 252, 0.75); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.aeroguard-home .act-time { font-size: 12px; font-weight: 700; color: rgba(248, 250, 252, 0.65); white-space: nowrap; flex-shrink: 0; }
-.aeroguard-home .act-empty { grid-column: 1 / -1; text-align: center; color: rgba(248, 250, 252, 0.5); padding: 24px; font-size: 13px; }
+.aeroguard-home .act-name { margin: 0; font-size: 13.5px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.aeroguard-home .act-meta { margin: 3px 0 0; font-size: 11.5px; color: rgba(15, 23, 42, 0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.aeroguard-home .act-time { font-size: 12px; font-weight: 700; color: rgba(15, 23, 42, 0.55); white-space: nowrap; flex-shrink: 0; }
+.aeroguard-home .act-empty { grid-column: 1 / -1; text-align: center; color: rgba(15, 23, 42, 0.5); padding: 24px; font-size: 13px; }
 
 .aeroguard-home .act-toggle {
   align-self: center;
@@ -866,16 +907,132 @@ const visibleActivities = computed(() =>
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 700;
-  color: rgba(248, 250, 252, 0.75);
-  background: rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(15, 23, 42, 0.65);
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.14);
   padding: 10px 18px;
   border-radius: 999px;
-  box-shadow: 0 10px 24px -20px rgba(17, 18, 20, 0.5);
+  box-shadow: 0 10px 24px -20px rgba(15, 23, 42, 0.18);
   transition: transform 0.15s ease, color 0.15s ease;
 }
-.aeroguard-home .act-toggle:hover { color: #fc4c02; transform: translateY(-1px); }
+.aeroguard-home .act-toggle:hover { color: #2563eb; transform: translateY(-1px); }
 .aeroguard-home .act-toggle svg { transition: transform 0.2s ease; flex-shrink: 0; }
+
+/* ----- Kartu hero: sapaan + Strava dalam satu panel ----- */
+.aeroguard-home .hero-card {
+  position: relative; z-index: 20; overflow: visible; border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  box-shadow:
+    0 24px 48px -30px rgba(15, 23, 42, 0.25),
+    0 14px 36px -20px rgba(37, 99, 235, 0.12);
+}
+/* Garis gradien biru di tepi atas (chrome umum, bukan Strava) */
+.aeroguard-home .hero-card::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 2px; border-radius: 24px 24px 0 0;
+  background: linear-gradient(90deg, transparent, #2563eb 35%, #60a5fa 65%, transparent);
+  opacity: 0.8; z-index: 1;
+}
+.aeroguard-home .hero-card .greeting-card {
+  background: transparent; border: none; box-shadow: none;
+  border-radius: 0; padding: 20px 20px 16px;
+}
+.aeroguard-home .hero-card .greeting-card::before { display: none; }
+.aeroguard-home .hero-card .strava-card {
+  background: rgba(251, 146, 60, 0.08); border: none; border-top: 1px solid rgba(37, 99, 235, 0.1);
+  border-radius: 0; padding: 14px 20px;
+}
+.aeroguard-home .hero-card .strava-card.is-disconnected { background: rgba(15, 23, 42, 0.03); }
+.aeroguard-home .hero-card .strava-title { font-size: 14px; }
+.aeroguard-home .hero-card .strava-sub { color: rgba(15, 23, 42, 0.55); }
+.aeroguard-home .hero-card .hello { font-size: 20px; }
+.aeroguard-home .hero-card .avatar {
+  width: 50px; height: 50px;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14), 0 10px 20px -8px rgba(37, 99, 235, 0.4);
+}
+.aeroguard-home .hero-card .strava-sync {
+  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+  box-shadow: 0 12px 22px -12px rgba(252, 76, 2, 0.9);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+/* Micro-interaction: sedikit mengangkat & menyala saat hover, mengecil saat ditekan */
+.aeroguard-home .hero-card .strava-sync:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px -12px rgba(252, 76, 2, 1);
+}
+.aeroguard-home .hero-card .strava-sync:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.aeroguard-home .hero-card .strava-icon { border-radius: 14px; }
+
+
+/* ========== TAMPILAN LEBIH HIDUP (hanya visual, struktur & data tetap) ========== */
+
+/* Warna per jenis statistik — tiap kartu punya identitas sendiri, dipilih dari
+   makna metriknya (bukan rainbow acak): jarak = biru (brand umum), detak
+   jantung = merah muda (denyut), kalori = oranye hangat (energi/panas),
+   effort = ungu (intensitas). Supaya carousel tak terasa monoton satu warna. */
+.aeroguard-home .stat-card { --acc: #2563eb; --acc2: #60a5fa; }
+.aeroguard-home .stat-distance   { --acc: #2563eb; --acc2: #60a5fa; }
+.aeroguard-home .stat-heart-rate { --acc: #e11d48; --acc2: #fb7185; }
+.aeroguard-home .stat-calories   { --acc: #d97706; --acc2: #fbbf24; }
+.aeroguard-home .stat-effort     { --acc: #7c3aed; --acc2: #c4b5fd; }
+
+/* Garis aksen tipis di tepi atas kartu */
+/* Garis aksen hanya di kartu tengah; kartu samping tidak miring-melayang */
+.aeroguard-home .stat-card:not(.is-center)::before { display: none; }
+.aeroguard-home .stat-card::before {
+  content: ''; position: absolute; left: 22px; right: 22px; top: 0; height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(90deg, var(--acc), var(--acc2));
+  opacity: 0.9;
+}
+/* Angka utama dengan gradasi warna kartunya */
+.aeroguard-home .stat-card .stat-big {
+  background: linear-gradient(95deg, #0f172a 35%, var(--acc));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.aeroguard-home .stat-card .stat-big small { -webkit-text-fill-color: rgba(15, 23, 42, 0.45); }
+/* Batang mini mengikuti warna kartu */
+.aeroguard-home .stat-card .mini-bar { background: linear-gradient(180deg, var(--acc2), var(--acc)); }
+.aeroguard-home .stat-card.is-center {
+  animation: none;
+}
+
+/* Baris aktivitas: garis warna di kiri sesuai jenis (lari/gym — fungsi penanda
+   jenis, bukan dekorasi acak). */
+.aeroguard-home .act-item {
+  position: relative; overflow: hidden;
+}
+.aeroguard-home .act-item::before {
+  content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, #fbbf24, #d97706);
+}
+.aeroguard-home .act-item:has(.is-orange)::before { background: linear-gradient(180deg, #60a5fa, #2563eb); }
+
+/* Daftar aktivitas kosong: kotak putus-putus yang lebih terlihat */
+.aeroguard-home .act-empty {
+  border: 1px dashed rgba(37, 99, 235, 0.25); border-radius: 18px;
+  background: rgba(37, 99, 235, 0.04);
+  color: rgba(15, 23, 42, 0.6);
+}
+
+/* Blok statistik muncul bertahap saat halaman dibuka */
+@keyframes home-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.aeroguard-home .greeting-card,
+.aeroguard-home .strava-card,
+.aeroguard-home .stats-wrap { animation: home-rise 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+.aeroguard-home .strava-card { animation-delay: 0.06s; }
+.aeroguard-home .stats-wrap:nth-of-type(1) { animation-delay: 0.12s; }
+.aeroguard-home .stats-wrap:nth-of-type(2) { animation-delay: 0.18s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .aeroguard-home .greeting-card,
+  .aeroguard-home .strava-card,
+  .aeroguard-home .stats-wrap,
+  .aeroguard-home .stat-card.is-center { animation: none; }
+}
 </style>

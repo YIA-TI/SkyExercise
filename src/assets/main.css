@@ -3,9 +3,10 @@
      SVG feTurbulence di-tile 180x180, opacity rendah agar tak ganggu keterbacaan. */
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
 
-  /* Motif rute GPS ala peta aktivitas Strava — garis lengkung + satu pin finish
-     (oranye), ditempatkan di sudut sebagai aksen dekoratif besar & berani. */
-  --route-line: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 640'%3E%3Cpath d='M20,600 C130,520 70,430 190,390 C310,350 250,250 380,220 C500,190 430,90 600,40' fill='none' stroke='%23fc4c02' stroke-width='7' stroke-linecap='round' stroke-opacity='0.18'/%3E%3Ccircle cx='600' cy='40' r='11' fill='%23fc4c02' fill-opacity='0.32'/%3E%3C/svg%3E");
+  /* Konsep "Clean Sky" (simple, putih-biru): tanpa motif sudut yang ramai —
+     --route-line dikosongkan (var tetap ada supaya .mui::after/.aeroguard-home::after
+     yang masih mereferensikannya tak error, cuma tak menggambar apa-apa). */
+  --route-line: none;
 }
 
 /* Drift lambat pada grain/glow (latar utama) supaya terasa hidup.
@@ -16,18 +17,38 @@
   100% { background-position: 0% 0%, 0% 0%, 0% 0%; }
 }
 
-/* Pulse pada garis diagonal (::before) — berdenyut lebih cepat & jelas daripada
-   drift latar utama, kesan "detak" energi ala Strava. */
-@keyframes stripe-pulse {
-  0%, 100% { opacity: 0.5; }
-  50%      { opacity: 1; }
+/* Light streak diagonal bergerak pelan (menggantikan stripe-pulse lama yang
+   cuma berdenyut opacity) — kesan speed/motion yang halus & premium. */
+@keyframes streak-drift {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: -200% -200%; }
 }
 
-/* Pulse pada motif rute GPS (::after) — ritme berbeda dari garis diagonal supaya
-   terasa seperti denyut live-tracking, bukan sekadar garis statis. */
+/* Soft pulse pada glow kartu/tombol aktif — sangat halus, bukan neon/flash,
+   warna biru (aksen umum di skema "Clean Sky"). Dipakai di kartu statistik
+   tengah (Home) & elemen aktif lain — saat ini mati (lihat catatan "simple,
+   tanpa animasi" di masing-masing pemakai), disiapkan kalau nanti diaktifkan lagi. */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 14px 28px -14px rgba(37, 99, 235, 0.3); }
+  50%      { box-shadow: 0 16px 34px -10px rgba(37, 99, 235, 0.5); }
+}
+
+/* Soft pulse pada bump nav aktif — mempertahankan cincin "cutout" (warna dasar
+   latar) sambil cahaya birunya berdenyut pelan. */
+@keyframes tab-glow-pulse {
+  0%, 100% { box-shadow: 0 10px 22px -8px rgba(37, 99, 235, 0.5), 0 0 0 5px #eff6ff; }
+  50%      { box-shadow: 0 12px 28px -6px rgba(37, 99, 235, 0.7), 0 0 0 5px #eff6ff; }
+}
+
+/* Denyut "live GPS fix" ala Strava — dua ketuk cepat lalu jeda (ritme
+   heartbeat), bukan napas sinus pelan — supaya titik lokasi di motif radar
+   terasa sedang melacak aktif, bukan sekadar garis statis berkedip. */
 @keyframes route-pulse {
-  0%, 100% { opacity: 0.45; }
-  50%      { opacity: 1; }
+  0%, 100% { opacity: 0.4; }
+  6%       { opacity: 1; }
+  14%      { opacity: 0.45; }
+  22%      { opacity: 1; }
+  45%      { opacity: 0.4; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -36,17 +57,16 @@
   .mui::after, .aeroguard-home::after { animation: none; }
 }
 
-/* Reset #app agar mengisi seluruh layar — latar gelap + grain sebagai fallback
+/* Reset #app agar mengisi seluruh layar — latar putih-biru sebagai fallback
    sebelum layar (.mui / .aeroguard-home) selesai dimuat, supaya tak ada kedip
-   warna lama (krem) sebelum tema gelap baru (Phase 3a) termuat. */
+   warna lama sebelum tema "Clean Sky" termuat. */
 #app {
   width: 100%;
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  background-image: var(--grain), radial-gradient(760px 340px at 100% -6%, rgba(252, 76, 2, 0.18), transparent 60%);
-  background-color: #0f0a2e;
-  background-repeat: repeat, no-repeat;
-  background-size: 180px 180px, auto;
+  background-image: radial-gradient(760px 340px at 100% -6%, rgba(59, 130, 246, 0.12), transparent 60%);
+  background-color: #eff6ff;
+  background-repeat: no-repeat;
   background-attachment: fixed;
 }

@@ -6,8 +6,8 @@ export const XP_TIERS = [
   { key: 'bronze',   label: 'Bronze',   minXp: 0,     color: '#c2703d', badgeFile: 'tier-bronze.png',   tagline: 'Awal perjalananmu menuju puncak!' },
   { key: 'silver',   label: 'Silver',   minXp: 1000,  color: '#78716c', badgeFile: 'tier-silver.png',   tagline: 'Terus tingkatkan kemampuanmu!' },
   { key: 'gold',     label: 'Gold',     minXp: 3000,  color: '#b8862f', badgeFile: 'tier-gold.png',     tagline: 'Konsistensi adalah kunci kemenangan!' },
-  { key: 'platinum', label: 'Platinum', minXp: 6000,  color: '#8b7cf6', badgeFile: 'tier-platinum.png', tagline: 'Kamu semakin dekat ke level terbaik!' },
-  { key: 'diamond',  label: 'Diamond',  minXp: 10000, color: '#38bdf8', badgeFile: 'tier-diamond.png',  tagline: 'Hanya yang terbaik berada di sini!' },
+  { key: 'platinum', label: 'Platinum', minXp: 6000,  color: '#fb7185', badgeFile: 'tier-platinum.png', tagline: 'Kamu semakin dekat ke level terbaik!' },
+  { key: 'diamond',  label: 'Diamond',  minXp: 10000, color: '#fde047', badgeFile: 'tier-diamond.png',  tagline: 'Hanya yang terbaik berada di sini!' },
 ]
 
 // Tier saat ini + batas tier berikutnya (null kalau sudah di tier puncak) berdasar total XP.

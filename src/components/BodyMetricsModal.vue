@@ -7,6 +7,28 @@
       {{ dismissible ? 'Perbarui berat & tinggi badan untuk BMI yang akurat.' : 'Isi berat & tinggi badan dulu sebelum lanjut menggunakan aplikasi.' }}
     </p>
 
+    <!-- Kartu ringkasan BMI: skala berwarna sesuai kategori (dihitung dari input di bawah) -->
+    <div class="bm-bmi-card" :class="bmiTone">
+      <div class="bm-bmi-top">
+        <div>
+          <p class="bm-bmi-label">BMI kamu</p>
+          <p class="bm-bmi-value mui-mono">{{ bmiPreview ?? '—' }}</p>
+        </div>
+        <span v-if="bmiCategoryPreview" class="bm-bmi-chip">{{ bmiCategoryPreview }}</span>
+        <span v-else class="bm-bmi-hint">Isi berat &amp; tinggi</span>
+      </div>
+      <div class="bm-scale">
+        <span class="bm-seg is-kurus"></span>
+        <span class="bm-seg is-normal"></span>
+        <span class="bm-seg is-gemuk"></span>
+        <span class="bm-seg is-obes"></span>
+        <span v-if="bmiPreview" class="bm-marker" :style="{ left: markerPct + '%' }"></span>
+      </div>
+      <div class="bm-scale-labels">
+        <span>Kurus</span><span>Normal</span><span>Gemuk</span><span>Obesitas</span>
+      </div>
+    </div>
+
     <form class="gp-form" @submit.prevent="handleSubmit">
       <label class="gp-label" for="bmm-weight">Berat Badan (kg)</label>
       <div class="gp-input-wrap">
@@ -79,6 +101,18 @@ const stopPrefill = watch(profile, (p) => {
 const bmiPreview = computed(() => calcBmi(weight.value, height.value))
 const bmiCategoryPreview = computed(() => bmiCategory(bmiPreview.value))
 
+// Tampilan: warna kartu & posisi penanda pada skala BMI 15–35 (di luar rentang → ujung skala)
+const bmiTone = computed(() => ({
+  'is-kurus': bmiCategoryPreview.value === 'Kurus',
+  'is-normal': bmiCategoryPreview.value === 'Normal',
+  'is-gemuk': bmiCategoryPreview.value === 'Gemuk',
+  'is-obes': bmiCategoryPreview.value === 'Obesitas',
+}))
+const markerPct = computed(() => {
+  const v = Number(bmiPreview.value)
+  return Math.min(100, Math.max(0, ((v - 15) / 20) * 100))
+})
+
 const saving = ref(false)
 const errorMsg = ref('')
 
@@ -113,7 +147,7 @@ async function handleSubmit() {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(15, 10, 46, 0.72);
+  background: rgba(15, 23, 42, 0.45);
   backdrop-filter: blur(4px);
 }
 
@@ -136,25 +170,67 @@ async function handleSubmit() {
   cursor: pointer;
   display: grid;
   place-content: center;
-  color: rgba(248, 250, 252, 0.75);
-  background: rgba(255, 255, 255, 0.08);
+  color: rgba(15, 23, 42, 0.65);
+  background: rgba(15, 23, 42, 0.06);
   font-size: 14px;
 }
-.bm-modal-close:hover { background: rgba(255, 255, 255, 0.14); }
+.bm-modal-close:hover { background: rgba(15, 23, 42, 0.1); }
 
 .bm-modal-title {
   margin: 0 0 6px;
-  font-family: "Chakra Petch", system-ui, sans-serif;
+  font-family: "Barlow", system-ui, sans-serif;
   font-size: 19px;
   font-weight: 700;
-  color: #F8FAFC;
+  color: #0f172a;
 }
 
 .bm-modal-sub {
   margin: 0 0 18px;
   font-size: 12.5px;
-  color: rgba(248, 250, 252, 0.65);
+  color: rgba(15, 23, 42, 0.6);
 }
+
+/* ── Kartu BMI ── */
+.bm-bmi-card {
+  --tone: #2563eb;
+  margin-bottom: 18px; padding: 14px 16px; border-radius: 18px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--tone) 12%, transparent), rgba(15, 23, 42, 0.03));
+  border: 1px solid color-mix(in srgb, var(--tone) 30%, transparent);
+}
+.bm-bmi-card.is-kurus { --tone: #38bdf8; }
+.bm-bmi-card.is-normal { --tone: #34d399; }
+.bm-bmi-card.is-gemuk { --tone: #fbbf24; }
+.bm-bmi-card.is-obes { --tone: #f87171; }
+.bm-bmi-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.bm-bmi-label { margin: 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(15, 23, 42, 0.55); }
+.bm-bmi-value { margin: 2px 0 0; font-size: 28px; font-weight: 700; color: #0f172a; letter-spacing: -0.5px; }
+.bm-bmi-chip {
+  font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px; color: #fff;
+  background: var(--tone);
+}
+.bm-bmi-hint { font-size: 12px; color: rgba(15, 23, 42, 0.5); }
+.bm-scale { position: relative; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px; margin-top: 14px; }
+.bm-seg { height: 8px; border-radius: 999px; opacity: 0.35; }
+.bm-seg.is-kurus { background: #38bdf8; }
+.bm-seg.is-normal { background: #34d399; }
+.bm-seg.is-gemuk { background: #fbbf24; }
+.bm-seg.is-obes { background: #f87171; }
+.bm-bmi-card.is-kurus .bm-seg.is-kurus,
+.bm-bmi-card.is-normal .bm-seg.is-normal,
+.bm-bmi-card.is-gemuk .bm-seg.is-gemuk,
+.bm-bmi-card.is-obes .bm-seg.is-obes { opacity: 1; box-shadow: 0 0 10px var(--tone); }
+.bm-marker {
+  position: absolute; top: -4px; width: 4px; height: 16px; margin-left: -2px; border-radius: 3px;
+  background: #0f172a; box-shadow: 0 0 6px rgba(15, 23, 42, 0.4);
+  transition: left 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.bm-scale-labels {
+  display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; margin-top: 6px;
+  font-size: 10px; font-weight: 700; color: rgba(15, 23, 42, 0.5);
+}
+.bm-scale-labels span:nth-child(2) { text-align: center; }
+.bm-scale-labels span:nth-child(3) { text-align: center; }
+.bm-scale-labels span:nth-child(4) { text-align: right; }
 
 .gp-form { display: flex; flex-direction: column; }
 
@@ -164,7 +240,7 @@ async function handleSubmit() {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: -0.2px;
-  color: #F8FAFC;
+  color: #0f172a;
 }
 
 .gp-label:not(:first-child) { margin-top: 18px; }
@@ -175,15 +251,15 @@ async function handleSubmit() {
   gap: 10px;
   padding: 0 14px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1.5px solid transparent;
+  background: rgba(37, 99, 235, 0.05);
+  border: 1.5px solid rgba(37, 99, 235, 0.14);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .gp-input-wrap:focus-within {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: #fc4c02;
-  box-shadow: 0 0 0 4px rgba(252, 76, 2, 0.15);
+  background: rgba(37, 99, 235, 0.08);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
 }
 
 .gp-input {
@@ -195,16 +271,15 @@ async function handleSubmit() {
   padding: 14px 0;
   font-family: inherit;
   font-size: 15px;
-  color: #F8FAFC;
-  color-scheme: dark;
+  color: #0f172a;
 }
 
-.gp-input::placeholder { color: rgba(248, 250, 252, 0.5); }
+.gp-input::placeholder { color: rgba(15, 23, 42, 0.35); }
 
 .bm-preview {
   margin: 16px 2px 0;
   font-size: 13px;
-  color: rgba(248, 250, 252, 0.75);
+  color: rgba(15, 23, 42, 0.65);
 }
 
 .gp-error {
@@ -229,8 +304,8 @@ async function handleSubmit() {
   font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.2px;
-  background: #1c1917;
-  box-shadow: 0 16px 32px -16px rgba(17, 18, 20, 0.7);
+  background: linear-gradient(45deg, #2563eb 0%, #3b82f6 100%);
+  box-shadow: 0 16px 32px -16px rgba(37, 99, 235, 0.5);
   transition: all 0.2s ease-in-out;
 }
 

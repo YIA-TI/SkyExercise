@@ -1,6 +1,6 @@
 <template>
 <div class="mui">
-  <div class="mui-col">
+  <div class="mui-col mui-col--full">
     <header class="mui-header">
       <div class="h-left">
         <button class="ins-back" type="button" aria-label="Kembali" @click="kembali">
@@ -48,7 +48,7 @@
         <p class="ins-card-role">{{ member.peran }} {{ member.spesialisasi }} · {{ member.city }}</p>
 
         <div class="ins-card-stats">
-          <div v-for="q in quickStats" :key="q.label" class="ins-card-stat">
+          <div v-for="q in quickStats" :key="q.label" class="ins-card-stat" :class="q.cls">
             <p class="ins-card-stat-value mui-mono">{{ q.value }}</p>
             <p class="ins-card-stat-label">{{ q.label }}</p>
           </div>
@@ -295,13 +295,13 @@ const filteredActivities = computed(() => {
   cursor: pointer;
   display: grid;
   place-content: center;
-  color: #F8FAFC;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #0f172a;
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.14);
 }
 
-/* Kartu spotlight — identitas + statistik + info, panel gelap ala reactbits
-   "Profile 5" (samakan dgn ProfilScreen.vue anggota, prefiks .ins- di sini). */
+/* Kartu spotlight — identitas + statistik + info (samakan dgn ProfilScreen.vue
+   anggota, prefiks .ins- di sini; sama2 putih skrg, bukan panel gelap lagi). */
 .ins-card {
   position: relative;
   overflow: hidden;
@@ -311,9 +311,11 @@ const filteredActivities = computed(() => {
   text-align: center;
   border-radius: 26px;
   padding: 28px 20px 22px;
-  background: linear-gradient(160deg, #292524 0%, #1c1917 65%, #17140f 100%);
-  color: #ffffff;
-  box-shadow: 0 24px 60px -30px rgba(28, 25, 23, 0.7);
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow:
+    inset 0 0 0 1px rgba(37, 99, 235, 0.14),
+    0 24px 60px -30px rgba(15, 23, 42, 0.25);
 }
 .ins-card::before {
   content: '';
@@ -323,7 +325,18 @@ const filteredActivities = computed(() => {
   width: 260px;
   height: 260px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(252, 76, 2, 0.25) 0%, rgba(252, 76, 2, 0) 70%);
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, rgba(37, 99, 235, 0) 70%);
+  pointer-events: none;
+}
+.ins-card::after {
+  content: '';
+  position: absolute;
+  bottom: -22%;
+  left: -14%;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.09) 0%, rgba(124, 58, 237, 0) 70%);
   pointer-events: none;
 }
 
@@ -334,16 +347,16 @@ const filteredActivities = computed(() => {
   gap: 7px;
   padding: 6px 14px;
   border-radius: 999px;
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #059669;
   font-size: 11.5px;
   font-weight: 700;
   margin-bottom: 18px;
 }
-.ins-card-status.is-off { background: rgba(168, 162, 158, 0.15); border-color: rgba(168, 162, 158, 0.35); color: #d6cfc8; }
-.ins-card-status-dot { width: 6px; height: 6px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.25); }
-.ins-card-status.is-off .ins-card-status-dot { background: #a8a29e; box-shadow: 0 0 0 3px rgba(168, 162, 158, 0.25); }
+.ins-card-status.is-off { background: rgba(120, 113, 108, 0.12); border-color: rgba(120, 113, 108, 0.3); color: #57534e; }
+.ins-card-status-dot { width: 6px; height: 6px; border-radius: 50%; background: #059669; box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.22); }
+.ins-card-status.is-off .ins-card-status-dot { background: #78716c; box-shadow: 0 0 0 3px rgba(120, 113, 108, 0.22); }
 
 .ins-card-avatar-wrap {
   position: relative;
@@ -353,7 +366,7 @@ const filteredActivities = computed(() => {
   overflow: hidden;
   display: grid;
   place-content: center;
-  border: 3px solid rgba(255, 255, 255, 0.12);
+  border: 3px solid rgba(37, 99, 235, 0.18);
   margin-bottom: 16px;
 }
 .ins-card-avatar-img { width: 100%; height: 100%; object-fit: cover; }
@@ -374,27 +387,53 @@ const filteredActivities = computed(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: "Chakra Petch", system-ui, sans-serif;
+  font-family: "Barlow", system-ui, sans-serif;
   font-size: 21px;
   font-weight: 600;
   letter-spacing: -0.2px;
 }
 .ins-verified { flex-shrink: 0; }
 
-.ins-card-role { position: relative; margin: 5px 0 0; font-size: 13px; color: rgba(255, 255, 255, 0.6); }
+.ins-card-role { position: relative; margin: 5px 0 0; font-size: 13px; color: rgba(15, 23, 42, 0.55); }
 
+/* Pill berwarna per metrik (data sudah punya "cls" sejak awal tapi tak
+   pernah dipakai di template — sekarang disambungkan), senada dengan
+   statistik ringkas di Profil peserta supaya tak terasa flat/monoton. */
 .ins-card-stats {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
   width: 100%;
   margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
-.ins-card-stat { flex: 1; min-width: 0; padding: 0 4px; border-right: 1px solid rgba(255, 255, 255, 0.08); }
-.ins-card-stat:last-child { border-right: none; }
-.ins-card-stat-value { margin: 0; font-size: 12.5px; font-weight: 700; color: #ffffff; letter-spacing: -0.1px; line-height: 1.25; overflow-wrap: break-word; }
-.ins-card-stat-label { margin: 4px 0 0; font-size: 9px; color: rgba(255, 255, 255, 0.45); line-height: 1.3; }
+.ins-card-stat {
+  position: relative;
+  min-width: 0;
+  padding: 11px 5px 9px;
+  border-radius: 14px;
+  background: rgba(37, 99, 235, 0.07);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  overflow: hidden;
+}
+.ins-card-stat::before {
+  content: '';
+  position: absolute; left: 10px; right: 10px; top: 0; height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: #2563eb;
+  opacity: 0.85;
+}
+.ins-card-stat.is-orange { background: rgba(217, 119, 6, 0.08); border-color: rgba(217, 119, 6, 0.24); }
+.ins-card-stat.is-orange::before { background: #d97706; }
+.ins-card-stat.is-orange .ins-card-stat-value { color: #b45309; }
+.ins-card-stat.is-green { background: rgba(5, 150, 105, 0.08); border-color: rgba(5, 150, 105, 0.24); }
+.ins-card-stat.is-green::before { background: #059669; }
+.ins-card-stat.is-green .ins-card-stat-value { color: #047857; }
+.ins-card-stat.is-purple { background: rgba(124, 58, 237, 0.08); border-color: rgba(124, 58, 237, 0.24); }
+.ins-card-stat.is-purple::before { background: #7c3aed; }
+.ins-card-stat.is-purple .ins-card-stat-value { color: #6d28d9; }
+.ins-card-stat-value { margin: 0; font-size: 12.5px; font-weight: 700; color: #1d4ed8; letter-spacing: -0.1px; line-height: 1.25; overflow-wrap: break-word; }
+.ins-card-stat-label { margin: 4px 0 0; font-size: 10.5px; color: rgba(15, 23, 42, 0.55); line-height: 1.3; }
 
 .ins-card-tabs {
   position: relative;
@@ -404,7 +443,7 @@ const filteredActivities = computed(() => {
   margin-top: 22px;
   padding: 4px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(37, 99, 235, 0.06);
 }
 .ins-card-tab {
   flex: 1;
@@ -416,10 +455,10 @@ const filteredActivities = computed(() => {
   font-size: 12.5px;
   font-weight: 700;
   background: none;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(15, 23, 42, 0.55);
   transition: background 0.15s ease, color 0.15s ease;
 }
-.ins-card-tab.is-active { background: rgba(255, 255, 255, 0.16); color: #FDBA74; border: 1px solid rgba(255, 255, 255, 0.25); }
+.ins-card-tab.is-active { background: #ffffff; color: #1d4ed8; border: 1px solid rgba(37, 99, 235, 0.18); box-shadow: 0 4px 10px -6px rgba(15, 23, 42, 0.2); }
 
 .ins-card-tab-content { position: relative; width: 100%; margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
 
@@ -431,11 +470,11 @@ const filteredActivities = computed(() => {
   box-sizing: border-box;
   padding: 12px 14px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(37, 99, 235, 0.04);
   text-align: left;
 }
-.ins-card-linkrow-label { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, 0.6); }
-.ins-card-linkrow-value { font-size: 13.5px; font-weight: 700; color: #ffffff; white-space: nowrap; }
+.ins-card-linkrow-label { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: rgba(15, 23, 42, 0.6); }
+.ins-card-linkrow-value { font-size: 13.5px; font-weight: 700; color: #0f172a; white-space: nowrap; }
 
 .ins-card-cta {
   position: relative;
@@ -463,8 +502,8 @@ const filteredActivities = computed(() => {
 /* Grafik jarak */
 .ins-chart { display: flex; align-items: flex-end; gap: 8px; height: 96px; }
 .ins-chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; justify-content: flex-end; }
-.ins-chart-bar { width: 100%; max-width: 24px; border-radius: 6px; background: linear-gradient(180deg, #ff914d, #fc4c02); }
-.ins-chart-label { font-size: 10.5px; color: #a8a29e; }
+.ins-chart-bar { width: 100%; max-width: 24px; border-radius: 6px; background: linear-gradient(180deg, #60a5fa, #2563eb); }
+.ins-chart-label { font-size: 10.5px; color: rgba(15, 23, 42, 0.5); }
 
 /* Aktivitas + filter */
 .ins-act-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
@@ -489,17 +528,15 @@ const filteredActivities = computed(() => {
   font-weight: 700;
   padding: 8px 16px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  color: rgba(248, 250, 252, 0.75);
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  color: rgba(15, 23, 42, 0.65);
   transition: all 0.15s ease;
 }
 
 .ins-filter-chip.is-active {
   color: #ffffff;
-  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+  background: linear-gradient(45deg, #2563eb 0%, #3b82f6 100%);
 }
 
 .ins-act-list {
@@ -521,34 +558,33 @@ const filteredActivities = computed(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.14);
   border-radius: 16px;
   padding: 12px 14px;
+  box-shadow: 0 16px 32px -28px rgba(15, 23, 42, 0.18);
 }
 
 .ins-act-ic { width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0; display: grid; place-content: center; }
-.ins-act-ic.is-orange { background: rgba(251, 146, 60, 0.18); color: #FDBA74; }
-.ins-act-ic.is-blue   { background: rgba(45, 212, 191, 0.18); color: #5EEAD4; }
+.ins-act-ic.is-orange { background: rgba(37, 99, 235, 0.12); color: #1d4ed8; }
+.ins-act-ic.is-blue   { background: rgba(245, 158, 11, 0.14); color: #b45309; }
 
 .ins-act-body { flex: 1; min-width: 0; }
-.ins-act-name { margin: 0; font-size: 13.5px; font-weight: 700; color: #F8FAFC; }
-.ins-act-meta { margin: 3px 0 0; font-size: 11.5px; color: rgba(248, 250, 252, 0.75); }
-.ins-act-date { font-size: 11.5px; font-weight: 700; color: rgba(248, 250, 252, 0.5); white-space: nowrap; }
+.ins-act-name { margin: 0; font-size: 13.5px; font-weight: 700; color: #0f172a; }
+.ins-act-meta { margin: 3px 0 0; font-size: 11.5px; color: rgba(15, 23, 42, 0.6); }
+.ins-act-date { font-size: 11.5px; font-weight: 700; color: rgba(15, 23, 42, 0.5); white-space: nowrap; }
 
 .ins-act-empty {
   grid-column: 1 / -1;
   text-align: center;
-  color: rgba(248, 250, 252, 0.5);
+  color: rgba(15, 23, 42, 0.5);
   padding: 24px;
   font-size: 13px;
 }
 
 .ins-notfound {
   text-align: center;
-  color: rgba(248, 250, 252, 0.5);
+  color: rgba(15, 23, 42, 0.5);
   padding: 40px;
   font-size: 14px;
 }

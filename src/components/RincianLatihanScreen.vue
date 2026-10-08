@@ -30,9 +30,9 @@
 
       <!-- Ringkasan -->
       <div class="rl-summary">
-        <div v-for="s in ringkasan" :key="s.label" class="rl-sum-card">
+        <div v-for="s in ringkasan" :key="s.label" class="rl-sum-card" :style="{ '--acc': s.acc }">
           <p class="rl-sum-label">{{ s.label }}</p>
-          <p class="rl-sum-value mui-mono" :style="s.color ? { color: s.color } : null">
+          <p class="rl-sum-value mui-mono">
             {{ s.value }}<span class="rl-sum-unit">{{ s.unit }}</span>
           </p>
         </div>
@@ -71,27 +71,30 @@ function formatTanggal(iso) {
 const activityId = computed(() => route.params.id)
 const { activity, loading } = useActivityDetail(activityId)
 
+// Dulu cuma "Detak Rata-rata" yang dikasih warna (merah, ditulis manual) —
+// sisanya putih/hitam polos semua. Disamakan: tiap metrik dapat warna
+// identitas sendiri (acc), senada pola kartu statistik lain di app.
 const ringkasan = computed(() => {
   const a = activity.value
   if (!a) return []
   const rows = []
   if (a.type === 'run') {
-    rows.push({ label: 'Jarak Total', value: a.distanceKm ?? '—', unit: 'km' })
-    rows.push({ label: 'Pace', value: a.pacePerKm ?? '—', unit: '/km' })
+    rows.push({ label: 'Jarak Total', value: a.distanceKm ?? '—', unit: 'km', acc: '#2563eb' })
+    rows.push({ label: 'Pace', value: a.pacePerKm ?? '—', unit: '/km', acc: '#0891b2' })
   }
-  rows.push({ label: 'Kalori', value: a.calories ?? '—', unit: 'kkal' })
+  rows.push({ label: 'Kalori', value: a.calories ?? '—', unit: 'kkal', acc: '#d97706' })
   rows.push({
     label: 'Detak Rata-rata',
     value: a.avgHeartrate ? Math.round(a.avgHeartrate) : '—',
     unit: 'bpm',
-    color: '#ef4444',
+    acc: '#e11d48',
   })
-  rows.push({ label: 'Durasi Sesi', value: a.durationLabel ?? '—', unit: '' })
+  rows.push({ label: 'Durasi Sesi', value: a.durationLabel ?? '—', unit: '', acc: '#7c3aed' })
   if (a.type === 'run' && a.elevationGain != null) {
-    rows.push({ label: 'Elevasi', value: Math.round(a.elevationGain), unit: 'm' })
+    rows.push({ label: 'Elevasi', value: Math.round(a.elevationGain), unit: 'm', acc: '#059669' })
   }
   if (a.maxHeartrate) {
-    rows.push({ label: 'Detak Maksimum', value: Math.round(a.maxHeartrate), unit: 'bpm' })
+    rows.push({ label: 'Detak Maksimum', value: Math.round(a.maxHeartrate), unit: 'bpm', acc: '#fb7185' })
   }
   return rows
 })
@@ -104,12 +107,12 @@ const ringkasan = computed(() => {
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(37, 99, 235, 0.14);
   cursor: pointer;
   display: grid;
   place-content: center;
-  color: #F8FAFC;
-  background: rgba(255, 255, 255, 0.08);
+  color: #0f172a;
+  background: #ffffff;
 }
 
 .rl-strava {
@@ -126,8 +129,8 @@ const ringkasan = computed(() => {
 
 .rl-dot { width: 7px; height: 7px; border-radius: 50%; background: #fff; }
 
-.rl-session-title { margin: 0 0 4px; font-size: 15px; font-weight: 700; color: #F8FAFC; }
-.rl-session-type { margin: 0; font-size: 12.5px; color: rgba(248, 250, 252, 0.75); }
+.rl-session-title { margin: 0 0 4px; font-size: 15px; font-weight: 700; color: #0f172a; }
+.rl-session-type { margin: 0; font-size: 12.5px; color: rgba(15, 23, 42, 0.6); }
 
 .rl-summary {
   display: grid;
@@ -136,24 +139,30 @@ const ringkasan = computed(() => {
 }
 
 .rl-sum-card {
-  background: rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid color-mix(in srgb, var(--acc, #2563eb) 20%, transparent);
   border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
+  box-shadow: 0 16px 32px -28px rgba(15, 23, 42, 0.18);
+}
+.rl-sum-card::before {
+  content: '';
+  position: absolute; left: 0; right: 0; top: 0; height: 3px;
+  background: var(--acc, #2563eb);
+  opacity: 0.9;
 }
 
-.rl-sum-label { margin: 0 0 8px; font-size: 12px; color: rgba(248, 250, 252, 0.75); }
-.rl-sum-value { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; color: #F8FAFC; }
-.rl-sum-unit { font-size: 12px; font-weight: 700; color: rgba(248, 250, 252, 0.5); margin-left: 3px; }
+.rl-sum-label { margin: 0 0 8px; font-size: 12px; color: rgba(15, 23, 42, 0.6); }
+.rl-sum-value { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; color: color-mix(in srgb, var(--acc, #2563eb) 65%, #0f172a); }
+.rl-sum-unit { font-size: 12px; font-weight: 700; color: rgba(15, 23, 42, 0.45); margin-left: 3px; }
 
-.rl-note { margin: 4px 2px 0; font-size: 11.5px; color: rgba(248, 250, 252, 0.5); line-height: 16px; }
+.rl-note { margin: 4px 2px 0; font-size: 11.5px; color: rgba(15, 23, 42, 0.5); line-height: 16px; }
 
 .rl-empty {
   text-align: center;
-  color: rgba(248, 250, 252, 0.5);
+  color: rgba(15, 23, 42, 0.5);
   padding: 40px;
   font-size: 14px;
 }

@@ -1,7 +1,11 @@
 /* ─────────────────────────────────────────────────────────
-   mobile-ui.css — Design system (Phase 3a: dark orange+violet
-   glassmorphism, atletik/sporty). Dipakai bersama semua layar
-   member & admin yang sudah di-@import file ini.
+   mobile-ui.css — Design system (konsep "Clean Sky": simple,
+   putih + biru, terang). Dipakai bersama semua layar member &
+   admin yang sudah di-@import file ini. Aksen oranye Strava
+   (#fc4c02) sengaja DIPERTAHANKAN hanya di elemen yang memang
+   terhubung ke Strava (ikon, tombol koneksi) — bukan dipakai
+   lagi sebagai warna chrome umum, supaya tak campur aduk dgn
+   identitas Strava yang sebenarnya.
    ───────────────────────────────────────────────────────── */
 
 .mui {
@@ -11,51 +15,28 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  /* Latar gelap oranye→violet (identitas baru) — grain + radial glow oranye/violet
-     di dua sudut, plus drift lambat supaya terasa hidup. Garis diagonal (::before)
-     & motif rute (::after) ada di lapisan terpisah supaya masing-masing bisa
-     berdenyut (pulse) sendiri. */
+  /* Latar putih ke biru muda — lembut & bersih, tanpa motif ramai. */
   background-image:
-    var(--grain),
-    radial-gradient(820px 420px at 100% -8%, rgba(252, 76, 2, 0.28), transparent 62%),
-    radial-gradient(760px 460px at -10% 108%, rgba(124, 58, 237, 0.30), transparent 58%),
-    linear-gradient(160deg, #3b1a0a 0%, #4c1d95 45%, #1e1b4b 75%, #0f0a2e 100%);
-  background-color: #0f0a2e;
-  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
-  background-size: 180px 180px, auto, auto, cover;
+    radial-gradient(820px 420px at 100% -8%, rgba(59, 130, 246, 0.14), transparent 62%),
+    radial-gradient(760px 460px at -10% 108%, rgba(96, 165, 250, 0.12), transparent 58%),
+    linear-gradient(160deg, #ffffff 0%, #eff6ff 55%, #dbeafe 100%);
+  background-color: #eff6ff;
+  background-repeat: no-repeat, no-repeat, no-repeat;
   background-attachment: fixed;
-  animation: bg-drift 18s ease-in-out infinite;
+  animation: none;
   font-family: "Barlow", system-ui, sans-serif;
+  color: #0f172a;
   box-sizing: border-box;
 }
 
-/* Garis diagonal ganda (oranye/violet, saling silang) — lapisan terpisah supaya
-   bisa berdenyut (pulse) sendiri, kesan "detak" energi ala sporty/motion-line. */
-.mui::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image:
-    repeating-linear-gradient(135deg, rgba(252, 76, 2, 0.12) 0, rgba(252, 76, 2, 0.12) 3px, transparent 3px, transparent 46px),
-    repeating-linear-gradient(45deg, rgba(196, 181, 253, 0.08) 0, rgba(196, 181, 253, 0.08) 2px, transparent 2px, transparent 70px);
-  animation: stripe-pulse 3s ease-in-out infinite;
-}
-
-/* Motif rute GPS di sudut — sudah oranye, cocok dgn palet baru tanpa perlu diubah.
-   Lapisan terpisah dengan ritme pulse sendiri (denyut live-tracking). */
-.mui::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image: var(--route-line);
-  background-repeat: no-repeat;
-  background-size: 640px 640px;
-  background-position: 110% 110%;
-  animation: route-pulse 2.5s ease-in-out infinite;
+/* Latar khusus halaman Admin (dideteksi lewat :has — berisi .mui-col--full,
+   cuma dipakai di layar admin) — biru lembut tapi lebih "terasa" drpd versi
+   member yg nyaris putih. Sengaja TANPA glow radial/blob apa pun — di grid
+   kartu rapat, blob warna di balik kartu putih bikin tiap celah/sudut kartu
+   kelihatan kaya ada "lingkaran nyempil" ganjil, jadi cukup gradasi polos. */
+.mui:has(.mui-col--full) {
+  background-image: linear-gradient(165deg, #eff6ff 0%, #e0ecfe 45%, #d7e4fb 100%);
+  background-color: #e0ecfe;
 }
 
 .mui-col {
@@ -75,7 +56,41 @@
   max-width: 1080px;
 }
 
-/* ── Header (kaca buram di atas latar gelap) ── */
+/* Khusus layar Admin (dashboard): isi lebar penuh viewport di desktop,
+   bukan kolom sempit bergaya mobile yang dicentang dengan banyak ruang
+   kosong di kanan-kiri — layar member tetap pakai .mui-col/.mui-col--wide
+   seperti biasa karena memang didesain ala app HP. Padding kiri ekstra di
+   ≥768px menyisakan ruang utk sidebar admin (lihat .m-tabbar.admin-sidebar
+   di bawah, sekarang sidebar penuh menempel kiri, bukan pill melayang lagi).
+   max-width TETAP dibatasi (bukan "none"/tanpa batas) — di monitor ultra-
+   lebar, elemen berketinggian tetap (mis. line chart 140px) jadi kelihatan
+   "gepeng" kalau lebarnya dibiarkan meregang sampai 2000px+ lebih. 1600px
+   masih jauh lebih lega dari sebelumnya (1080px) tapi proporsinya terjaga. */
+.mui-col--full {
+  max-width: 1600px;
+  /* .mui-col dasarnya "margin: 0 auto" (nge-tengahkan diri di dlm .mui yg
+     justify-content:center) — itu benar utk kolom member yg sengaja sempit
+     & ditengahkan, tapi di sini sidebar admin nempel FISIK di tepi kiri
+     layar (x=0), jadi "penengahan mandiri" si kolom malah numpuk dgn
+     padding-left di bawah → jadi jarak kosong raksasa (bug yg dilaporkan).
+     margin-right:auto (bukan margin:auto) bikin kolom ini nempel rata kiri
+     thd .mui, sisa ruang lebih (kalau viewport > 1600px) jatuh ke kanan
+     saja — selaras dgn sidebar yg juga rata kiri. */
+  margin-right: auto;
+  margin-left: 0;
+  /* Dashboard admin terasa terlalu renggang dgn jarak antar section 18px
+     bawaan .mui-col (cocok utk layar HP yg scroll satu kolom) — dirapatkan
+     sedikit biar kartu-kartunya lebih padat ala dashboard web. */
+  gap: 12px;
+}
+@media (min-width: 768px) {
+  .mui-col--full { padding-left: 296px; }
+}
+@media (min-width: 1024px) {
+  .mui-col--full { padding-left: 328px; }
+}
+
+/* ── Header (kartu putih, bayangan lembut) ── */
 .mui-header {
   position: relative;
   overflow: hidden;
@@ -85,12 +100,15 @@
   gap: 12px;
   padding: 16px 18px;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  color: #F8FAFC;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 18px 36px -28px rgba(0, 0, 0, 0.6);
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid rgba(59, 130, 246, 0.16);
+  /* Highlight kaca tipis di tepi atas — bevel halus senada dgn kartu "glossy"
+     lain di app, bikin panel putih terasa lebih premium drpd kotak flat. */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 20px 40px -28px rgba(15, 23, 42, 0.18),
+    0 2px 10px -4px rgba(15, 23, 42, 0.08);
 }
 .mui-header::before {
   content: '';
@@ -100,7 +118,7 @@
   width: 220px;
   height: 220px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(252, 76, 2, 0.22) 0%, rgba(252, 76, 2, 0) 70%);
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.10) 0%, rgba(37, 99, 235, 0) 70%);
   pointer-events: none;
 }
 
@@ -122,36 +140,69 @@
   font-size: 15px;
   color: #ffffff;
   flex-shrink: 0;
-  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+  background: linear-gradient(45deg, #2563eb 0%, #60a5fa 100%);
+  /* Cincin + glow tipis — penanda identitas yang sama di tiap header,
+     biar tak terasa kotak gradasi polos saja. */
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12), 0 8px 16px -8px rgba(37, 99, 235, 0.5);
 }
 
 .mui-h-title {
   margin: 0;
-  font-size: 16px;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-size: 18px;
   font-weight: 700;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.1px;
 }
 
 .mui-h-sub {
   margin: 2px 0 0;
   font-size: 12px;
-  color: rgba(248, 250, 252, 0.65);
+  color: rgba(15, 23, 42, 0.6);
 }
 
+/* Pill default biru netral (status umum/"posisi"); lewatkan custom property
+   --pill utk kasus yang punya makna warna sendiri (mis. tier liga), atau
+   pakai modifier --success utk status aktif/online (ikut konvensi hijau
+   yang sudah dipakai di badge "Aktif Bertugas"). */
 .mui-pill {
   position: relative;
   flex-shrink: 0;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.4px;
-  color: #FDBA74;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  color: var(--pill, #1d4ed8);
+  background: color-mix(in srgb, var(--pill, #2563eb) 10%, white);
+  border: 1px solid color-mix(in srgb, var(--pill, #2563eb) 24%, transparent);
   padding: 6px 12px;
   border-radius: 999px;
   white-space: nowrap;
+}
+.mui-pill--success {
+  color: #059669;
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+/* ── Judul bagian: garis aksen biru di samping ── */
+.mui-section-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: #0f172a;
+}
+.mui-section-title::before {
+  content: '';
+  width: 4px;
+  height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #60a5fa, #2563eb);
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
 }
 
 /* ── Section ── */
@@ -161,22 +212,15 @@
   gap: 12px;
 }
 
-.mui-section-title {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.4px;
-  color: #F8FAFC;
-}
-
 .mui-card {
-  background: rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid rgba(59, 130, 246, 0.14);
   border-radius: 20px;
   padding: 18px;
-  box-shadow: 0 16px 32px -26px rgba(0, 0, 0, 0.6);
+  box-shadow:
+    0 20px 40px -30px rgba(15, 23, 42, 0.2),
+    0 2px 10px -4px rgba(15, 23, 42, 0.07);
 }
 
 /* ── Tag / badge ── */
@@ -189,11 +233,11 @@
   letter-spacing: -0.1px;
 }
 
-.mui-tag--orange { background: rgba(251, 146, 60, 0.18); color: #FDBA74; }
-.mui-tag--blue   { background: rgba(45, 212, 191, 0.18); color: #5EEAD4; }
-.mui-tag--green  { background: rgba(52, 211, 153, 0.18); color: #6EE7B7; }
-.mui-tag--gray   { background: rgba(255, 255, 255, 0.10); color: rgba(248, 250, 252, 0.75); }
-.mui-tag--accent { background: #fc4c02; color: #ffffff; }
+.mui-tag--orange { background: rgba(251, 146, 60, 0.16); color: #c2410c; }
+.mui-tag--blue   { background: rgba(37, 99, 235, 0.12); color: #1d4ed8; }
+.mui-tag--green  { background: rgba(16, 185, 129, 0.14); color: #047857; }
+.mui-tag--gray   { background: rgba(15, 23, 42, 0.06); color: rgba(15, 23, 42, 0.65); }
+.mui-tag--accent { background: #2563eb; color: #ffffff; }
 
 .mui-mono {
   font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -205,12 +249,10 @@
   display: flex;
   gap: 5px;
   padding: 5px;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(37, 99, 235, 0.06);
+  border: 1px solid rgba(37, 99, 235, 0.14);
   border-radius: 14px;
-  box-shadow: 0 16px 32px -26px rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .mui-toggle button {
@@ -227,13 +269,14 @@
   font-family: inherit;
   font-size: 13px;
   font-weight: 700;
-  color: rgba(248, 250, 252, 0.65);
+  color: rgba(15, 23, 42, 0.55);
   transition: all 0.15s ease;
 }
 
 .mui-toggle button.is-active {
   color: #ffffff;
-  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+  background: linear-gradient(45deg, #2563eb 0%, #3b82f6 100%);
+  box-shadow: 0 8px 18px -10px rgba(37, 99, 235, 0.6);
 }
 
 /* ── Rank list (peringkat) ── */
@@ -247,23 +290,22 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: #ffffff;
   border-radius: 16px;
   padding: 13px 16px;
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(37, 99, 235, 0.12);
+  box-shadow: 0 2px 10px -6px rgba(15, 23, 42, 0.08);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .mui-rank:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 28px -20px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 14px 28px -20px rgba(15, 23, 42, 0.25);
 }
 
 .mui-rank--me {
-  border-color: #fc4c02;
-  box-shadow: 0 0 0 3px rgba(252, 76, 2, 0.25);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
 }
 
 .mui-rank-num {
@@ -278,9 +320,9 @@
 }
 
 .mui-rank-num--gold   { background: linear-gradient(135deg, #fde68a, #f59e0b); color: #78350f; }
-.mui-rank-num--silver { background: linear-gradient(135deg, #f5f1ec, #d6cfc8); color: #44403c; }
+.mui-rank-num--silver { background: linear-gradient(135deg, #f1f5f9, #cbd5e1); color: #334155; }
 .mui-rank-num--bronze { background: linear-gradient(135deg, #fdba74, #c2703d); color: #431407; }
-.mui-rank-num--normal { background: rgba(255, 255, 255, 0.12); color: rgba(248, 250, 252, 0.8); }
+.mui-rank-num--normal { background: rgba(37, 99, 235, 0.10); color: #1d4ed8; }
 
 .mui-rank-name {
   flex: 1;
@@ -290,12 +332,12 @@
   gap: 8px;
   font-size: 14px;
   font-weight: 700;
-  color: #F8FAFC;
+  color: #0f172a;
 }
 
 .mui-rank-unit {
   font-size: 11.5px;
-  color: rgba(248, 250, 252, 0.65);
+  color: rgba(15, 23, 42, 0.55);
   white-space: nowrap;
 }
 
@@ -304,7 +346,7 @@
   font-variant-numeric: tabular-nums;
   font-size: 16px;
   font-weight: 700;
-  color: #F8FAFC;
+  color: #0f172a;
   white-space: nowrap;
 }
 
@@ -312,20 +354,18 @@
   .mui-rank-unit { display: none; }
 }
 
-/* ── Skeleton (loading placeholder) — bar dgn shimmer, ukuran diatur per-pemakai
-   lewat width/height inline atau modifier class. Base & shimmer diredupkan
-   dibanding versi lama supaya pas di atas kartu kaca gelap, bukan kartu putih. ── */
+/* ── Skeleton (loading placeholder) ── */
 .mui-skel {
   position: relative;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.10);
+  background: rgba(15, 23, 42, 0.07);
   border-radius: 8px;
 }
 .mui-skel::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
   animation: mui-skel-shimmer 1.4s ease-in-out infinite;
 }
 .mui-skel--text   { height: 12px; border-radius: 6px; }
@@ -337,9 +377,7 @@
 }
 
 /* ── Tab bar (bottom nav mobile / sidebar desktop) — dipakai bersama
-   MemberTabBar & AdminTabBar, keduanya cukup @import file ini. Sudah gelap+blur
-   sebelumnya, di Phase 3a cuma dihangatkan sedikit ke arah violet (bukan hitam
-   polos) supaya senada dengan latar baru. ── */
+   MemberTabBar & AdminTabBar, keduanya cukup @import file ini. ── */
 .m-tabbar {
   position: fixed;
   bottom: 16px;
@@ -352,16 +390,13 @@
   gap: 4px;
   padding: 8px;
   border-radius: 22px;
-  background: rgba(24, 21, 60, 0.92);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  /* Shadow berlapis (jauh+lembut & dekat+lebih pekat) supaya nav terlihat
-     "mengambang" di atas konten, bukan menyatu dgn latar. */
+  border: 1px solid rgba(37, 99, 235, 0.12);
   box-shadow:
-    0 24px 48px -16px rgba(0, 0, 0, 0.7),
-    0 8px 18px -6px rgba(0, 0, 0, 0.55),
-    0 1px 0 rgba(255, 255, 255, 0.06) inset;
+    0 24px 48px -20px rgba(15, 23, 42, 0.22),
+    0 8px 18px -8px rgba(15, 23, 42, 0.12);
   z-index: 20;
 }
 
@@ -377,7 +412,7 @@
   cursor: pointer;
   border-radius: 15px;
   text-decoration: none;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(15, 23, 42, 0.5);
   font-family: inherit;
   font-size: 10.5px;
   font-weight: 600;
@@ -386,18 +421,55 @@
 }
 
 .m-tab:hover {
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(15, 23, 42, 0.8);
 }
 
 .m-tab--active {
   color: #ffffff;
-  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+  background: linear-gradient(45deg, #2563eb 0%, #3b82f6 100%);
 }
 
-/* ── Desktop ≥ 768px: sidebar kiri ── */
+/* ── Tampilan: tab aktif "mencuat" di atas bottom nav (mobile saja) ── */
+@media (max-width: 767px) {
+  .m-tab { position: relative; }
+  .m-tab--active { background: none; }
+  .m-tab--active::before {
+    content: '';
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: linear-gradient(45deg, #2563eb 0%, #3b82f6 100%);
+    box-shadow: 0 10px 22px -8px rgba(37, 99, 235, 0.6), 0 0 0 5px #eff6ff;
+    animation: none;
+    z-index: 0;
+  }
+  .m-tab svg {
+    position: relative;
+    z-index: 1;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease;
+  }
+  .m-tab--active svg { transform: translateY(-16px); color: #fff; }
+  .m-tab span {
+    position: relative;
+    z-index: 1;
+    transition: margin-top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease;
+  }
+  .m-tab--active span { margin-top: 10px; color: #fff; }
+  @media (prefers-reduced-motion: reduce) {
+    .m-tab--active::before { animation: none; }
+  }
+}
+
+/* ── Desktop ≥ 768px: sidebar kiri ──
+   Dirapikan jadi lebih "elegan": highlight kaca tipis di tepi panel, tab aktif
+   punya bevel glossy + glow lembut (bukan kotak isi rata polos), ikon sedikit
+   membesar & naik saat hover/aktif supaya terasa lebih halus/premium. */
 @media (min-width: 768px) {
   .m-tabbar {
-    /* Reset bottom pill */
     bottom: auto;
     left: 16px;
     top: 50%;
@@ -407,12 +479,17 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 4px;
-    padding: 10px 8px;
+    gap: 6px;
+    padding: 12px 8px;
     border-radius: 22px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 24px 48px -20px rgba(15, 23, 42, 0.22),
+      0 8px 18px -8px rgba(15, 23, 42, 0.12);
   }
 
   .m-tab {
+    position: relative;
     width: 100%;
     flex-direction: column;
     align-items: center;
@@ -420,11 +497,29 @@
     padding: 10px 4px;
     border-radius: 14px;
     gap: 4px;
-    font-size: 9.5px;
+    font-size: 10.5px;
+    transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+  }
+  .m-tab:hover { background: rgba(37, 99, 235, 0.07); }
+  .m-tab svg { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .m-tab:hover svg { transform: translateY(-1px); }
+
+  .m-tab--active {
+    background: linear-gradient(150deg, #2563eb 0%, #3b82f6 100%);
+    box-shadow:
+      inset 0 1.5px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -1px 0 rgba(15, 23, 42, 0.14),
+      0 10px 22px -10px rgba(37, 99, 235, 0.6);
+  }
+  .m-tab--active:hover { background: linear-gradient(150deg, #2563eb 0%, #3b82f6 100%); }
+  .m-tab--active svg { transform: scale(1.08); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .m-tab, .m-tab svg { transition: none; }
   }
 }
 
-/* ── Desktop lebar ≥ 1024px: sidebar sedikit lebih lebar ── */
+/* ── Desktop lebar ≥ 1024px ── */
 @media (min-width: 1024px) {
   .m-tabbar {
     left: 24px;
@@ -439,7 +534,103 @@
   }
 }
 
-/* ── Spin icon (loading spinner inside buttons) — shared across all screens
-   that @import this file, so the animation isn't redefined per-component. ── */
+/* Brand "AeroGuard" di puncak sidebar admin — placeholder ruang utk logo,
+   cuma muncul di sidebar desktop (disembunyikan di bottom-tab-bar mobile,
+   ruangnya tak cukup & tak perlu di sana). */
+.admin-brand { display: none; }
+
+/* ── Sidebar Admin ≥ 768px: dulu pill melayang ala app HP (sama kaya member)
+   — sekarang jadi sidebar penuh menempel tepi kiri layar, gaya dashboard web
+   beneran: baris ikon+label sejajar (bukan ikon di atas label), logout
+   ditempel ke bawah, konten halaman (.mui-col--full) disesuaikan jaraknya. ── */
+@media (min-width: 768px) {
+  .m-tabbar.admin-sidebar .admin-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px 20px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  }
+  .admin-brand-mark {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: grid;
+    place-content: center;
+    color: #ffffff;
+    background: linear-gradient(45deg, #2563eb 0%, #60a5fa 100%);
+    box-shadow: 0 6px 14px -8px rgba(37, 99, 235, 0.5);
+  }
+  .admin-brand-text {
+    font-family: "Barlow Condensed", system-ui, sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.2px;
+    color: #0f172a;
+  }
+
+  .m-tabbar.admin-sidebar {
+    top: 0;
+    left: 0;
+    bottom: 0;
+    transform: none;
+    width: 272px;
+    max-width: 272px;
+    height: 100vh;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 4px;
+    padding: 28px 14px;
+    border-radius: 0 26px 26px 0;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      10px 0 40px -24px rgba(15, 23, 42, 0.25),
+      2px 0 10px -4px rgba(15, 23, 42, 0.08);
+  }
+  .m-tabbar.admin-sidebar .m-tab {
+    /* .m-tab dasarnya "flex: 1" (dirancang utk baris horizontal di mobile) —
+       di sidebar vertikal ini bikin tiap menu meregang rata mengisi seluruh
+       tinggi sidebar (jadi kotak raksasa). flex:none biar tingginya natural
+       sesuai isi, bukan ikut meregang. */
+    flex: none;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 13px;
+    font-size: 13.5px;
+  }
+  /* Tombol Keluar selalu elemen terakhir di markup — ditempel ke dasar
+     sidebar (pola umum dashboard: nav di atas, aksi keluar di bawah),
+     dipisah garis tipis supaya terasa beda kelompok dari menu navigasi. */
+  .m-tabbar.admin-sidebar .m-tab:last-child {
+    flex: none;
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 0;
+  }
+  .m-tabbar.admin-sidebar .m-tab--active svg { transform: none; }
+  .m-tabbar.admin-sidebar .m-tab:hover svg { transform: none; }
+}
+@media (min-width: 1024px) {
+  .m-tabbar.admin-sidebar {
+    left: 0;
+    width: 296px;
+    max-width: 296px;
+    padding: 32px 18px;
+  }
+  .m-tabbar.admin-sidebar .m-tab {
+    font-size: 14px;
+    padding: 13px 16px;
+  }
+}
+
+/* ── Spin icon (loading spinner inside buttons) ── */
 .spin-icon.is-spinning { animation: mui-spin 0.9s linear infinite; }
 @keyframes mui-spin { to { transform: rotate(360deg); } }

@@ -10,7 +10,7 @@
         </div>
       </div>
       <RefreshingBadge v-if="profileLoading && profile" />
-      <span v-else class="mui-pill">Aktif</span>
+      <span v-else class="mui-pill mui-pill--success">Aktif</span>
     </header>
 
     <!-- Kartu spotlight: identitas + statistik + pengaturan, satu panel gelap -->
@@ -50,7 +50,7 @@
         </div>
       </div>
       <div v-else class="pf-stats">
-        <div v-for="s in quickStats" :key="s.label" class="pf-stat">
+        <div v-for="s in quickStats" :key="s.label" class="pf-stat" :style="{ '--acc': s.acc }">
           <p class="pf-stat-value mui-mono">{{ s.value }}</p>
           <p class="pf-stat-label">{{ s.label }}</p>
         </div>
@@ -92,20 +92,35 @@
         </template>
       </div>
 
+      <template v-if="activeTab === 'info'">
+        <div class="pf-divider"></div>
+        <p class="pf-group-label">Pengaturan Akun</p>
+
+        <div class="pf-quick-icons">
+          <button class="pf-quick-row" type="button" @click="goDataTubuh">
+            <span class="pf-quick-row-ic" v-html="icons.scale"></span>
+            <span class="pf-quick-row-label">Edit Data Tubuh</span>
+            <svg class="pf-quick-row-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="pf-quick-row" type="button" @click="goGantiPassword">
+            <span class="pf-quick-row-ic" v-html="icons.lock"></span>
+            <span class="pf-quick-row-label">Ganti Password</span>
+            <svg class="pf-quick-row-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </template>
+
+      <div class="pf-divider"></div>
+
       <button
         class="pf-cta" type="button" :class="stravaState.connected ? 'is-logout' : 'is-connect'"
         @click="stravaState.connected ? handleLogout() : goConnectStrava()"
       >{{ stravaState.connected ? 'Keluar dari Akun' : 'Hubungkan ke Strava' }}</button>
-
-      <div class="pf-quick-icons">
-        <button class="pf-quick-icon" type="button" aria-label="Edit Data Tubuh" @click="goDataTubuh" v-html="icons.scale"></button>
-        <button class="pf-quick-icon" type="button" aria-label="Ganti Password" @click="goGantiPassword" v-html="icons.lock"></button>
-      </div>
     </div>
 
-    <!-- Grafik jarak 7 hari (Strava — recent run totals) -->
+    <!-- Grafik jarak per hari, Senin–Minggu minggu ini (Strava — total lari per hari) -->
     <section class="mui-block">
-      <h2 class="mui-section-title">Jarak 7 Hari Terakhir</h2>
+      <h2 class="mui-section-title">Jarak Minggu Ini</h2>
       <div v-if="statsLoading && !stats" class="mui-card">
         <div class="pf-chart">
           <div v-for="i in 7" :key="i" class="pf-chart-col">
@@ -115,17 +130,17 @@
       </div>
       <div v-else class="mui-card">
         <div class="pf-chart">
-          <div v-for="(h, i) in distance.bars" :key="i" class="pf-chart-col">
-            <span class="pf-chart-bar" :style="{ height: h + '%' }"></span>
-            <span class="pf-chart-label">{{ dayLabels[i] }}</span>
+          <div v-for="(km, i) in dailyKm" :key="i" class="pf-chart-col">
+            <span class="pf-chart-val mui-mono">{{ km > 0 ? km : '' }}</span>
+            <span class="pf-chart-bar" :style="{ height: barPct(km) + '%' }"></span>
+            <span class="pf-chart-label" :class="{ 'is-today': i === todayIdx }">{{ dayLabels[i] }}</span>
           </div>
         </div>
+        <p v-if="weekTotalKm === 0" class="pf-chart-empty">Belum ada lari minggu ini. Batang akan terisi setelah sinkron Strava.</p>
       </div>
     </section>
 
-    <!-- Zona berbahaya -->
     <section class="mui-block">
-      <h2 class="mui-section-title">Zona Berbahaya</h2>
       <button class="pf-danger" type="button" @click="handleDelete">
         <span v-html="icons.trash"></span>
         Hapus Akun
@@ -165,6 +180,13 @@ const initials = computed(() =>
 )
 
 const dayLabels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
+const todayIdx = (new Date().getDay() + 6) % 7 // Senin = 0
+const dailyKm = computed(() => distance.value.daily ?? [0, 0, 0, 0, 0, 0, 0])
+const weekTotalKm = computed(() => dailyKm.value.reduce((s, km) => s + km, 0))
+const dailyMaxKm = computed(() => Math.max(1, ...dailyKm.value))
+function barPct(km) {
+  return Math.round((km / dailyMaxKm.value) * 100)
+}
 
 const tabs = [
   { key: 'info', label: 'Info' },
@@ -216,10 +238,10 @@ const infoDiri = computed(() => [
 ])
 
 const quickStats = computed(() => [
-  { label: 'Sesi Minggu Ini', value: String(stats.value?.effort?.weekSessions ?? '—') },
-  { label: 'Pace Tercepat', value: distance.value.bestPace },
-  { label: 'Peringkat Effort', value: effortRank.value },
-  { label: 'BMI', value: bmiLabel.value },
+  { label: 'Sesi Minggu Ini', value: String(stats.value?.effort?.weekSessions ?? '—'), acc: '#2563eb' },
+  { label: 'Pace Tercepat', value: distance.value.bestPace, acc: '#0891b2' },
+  { label: 'Peringkat Effort', value: effortRank.value, acc: '#d97706' },
+  { label: 'BMI', value: bmiLabel.value, acc: '#059669' },
 ])
 
 const icons = {
@@ -234,8 +256,9 @@ const icons = {
 <style scoped>
 @import '../assets/mobile-ui.css';
 
-/* Kartu spotlight — tema "black hole" galaxy: hitam pekat + glow putih/silver
-   lembut ala event horizon, taburan bintang, TANPA aksen warna brand (oranye). */
+/* Kartu spotlight — konsep "Clean Sky": putih bersih dgn aksen biru lembut
+   (dulu tema "black hole" gelap; diganti supaya menyatu dgn halaman lain yang
+   sekarang serba putih-biru, bukan satu-satunya kartu gelap di tengah app). */
 .pf-card {
   position: relative;
   overflow: hidden;
@@ -245,26 +268,28 @@ const icons = {
   text-align: center;
   border-radius: 26px;
   padding: 28px 20px 22px;
-  background: radial-gradient(120% 90% at 50% -15%, #262626 0%, #0a0a0a 45%, #000000 100%);
-  color: #ffffff;
-  box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.85);
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow:
+    inset 0 0 0 1px rgba(37, 99, 235, 0.14),
+    0 24px 60px -30px rgba(15, 23, 42, 0.25),
+    0 0 50px -30px rgba(37, 99, 235, 0.3);
 }
-
-/* Starfield + glow "singularity" — satu pseudo-elemen, murni putih/abu-abu. */
+/* Dua cahaya dekoratif di sudut berlawanan (biru + ungu) — supaya kartu putih
+   ini tak terasa kotak polos, ada kedalaman tanpa mengorbankan keterbacaan. */
 .pf-card::before {
   content: '';
-  position: absolute;
-  inset: 0;
+  position: absolute; top: -25%; right: -15%; width: 220px; height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 70%);
   pointer-events: none;
-  background:
-    radial-gradient(1.5px 1.5px at 15% 25%, rgba(255, 255, 255, 0.9), transparent 60%),
-    radial-gradient(1.5px 1.5px at 75% 15%, rgba(255, 255, 255, 0.7), transparent 60%),
-    radial-gradient(1px 1px at 45% 62%, rgba(255, 255, 255, 0.6), transparent 60%),
-    radial-gradient(1px 1px at 85% 72%, rgba(255, 255, 255, 0.8), transparent 60%),
-    radial-gradient(1.5px 1.5px at 30% 85%, rgba(255, 255, 255, 0.5), transparent 60%),
-    radial-gradient(1px 1px at 60% 42%, rgba(255, 255, 255, 0.6), transparent 60%),
-    radial-gradient(1px 1px at 10% 55%, rgba(255, 255, 255, 0.5), transparent 60%),
-    radial-gradient(220px 220px at 50% 0%, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 70%);
+}
+.pf-card::after {
+  content: '';
+  position: absolute; bottom: -20%; left: -15%; width: 200px; height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.08) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .pf-status {
@@ -274,9 +299,9 @@ const icons = {
   gap: 7px;
   padding: 6px 14px;
   border-radius: 999px;
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #059669;
   font-size: 11.5px;
   font-weight: 700;
   margin-bottom: 18px;
@@ -285,8 +310,8 @@ const icons = {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #34d399;
-  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.25);
+  background: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.22);
 }
 
 .pf-avatar-wrap {
@@ -297,7 +322,8 @@ const icons = {
   overflow: hidden;
   display: grid;
   place-content: center;
-  border: 3px solid rgba(255, 255, 255, 0.12);
+  border: 3px solid rgba(37, 99, 235, 0.4);
+  box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.1), 0 0 24px rgba(37, 99, 235, 0.25);
   margin-bottom: 16px;
 }
 .pf-avatar-img { width: 100%; height: 100%; object-fit: cover; }
@@ -308,8 +334,8 @@ const icons = {
   place-content: center;
   font-size: 28px;
   font-weight: 700;
-  color: #09090b;
-  background: linear-gradient(135deg, #e4e4e7 0%, #52525b 100%);
+  color: #ffffff;
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
 }
 
 .pf-name {
@@ -318,28 +344,44 @@ const icons = {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: "Chakra Petch", system-ui, sans-serif;
-  font-size: 21px;
+  font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-size: 22px;
   font-weight: 600;
   letter-spacing: -0.2px;
 }
 .pf-verified { flex-shrink: 0; }
 
-.pf-role { position: relative; margin: 5px 0 0; font-size: 13px; color: rgba(255, 255, 255, 0.6); }
+.pf-role { position: relative; margin: 5px 0 0; font-size: 13px; color: rgba(15, 23, 42, 0.55); }
 
-/* Statistik ringkas — di dalam kartu, dipisah garis vertikal tipis */
+/* Statistik ringkas — tiap metrik jadi "pill" sendiri dengan warna aksen
+   berbeda (bukan kolom teks rata dipisah garis tipis), senada dengan gaya
+   kartu statistik di Beranda supaya terasa lebih "dashboard" & hidup. */
 .pf-stats {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
   width: 100%;
   margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
-.pf-stat { flex: 1; min-width: 0; padding: 0 4px; border-right: 1px solid rgba(255, 255, 255, 0.08); }
-.pf-stat:last-child { border-right: none; }
-.pf-stat-value { margin: 0; font-size: 12.5px; font-weight: 700; color: #ffffff; letter-spacing: -0.1px; line-height: 1.25; overflow-wrap: break-word; }
-.pf-stat-label { margin: 4px 0 0; font-size: 9px; color: rgba(255, 255, 255, 0.45); line-height: 1.3; }
+.pf-stat {
+  position: relative;
+  min-width: 0;
+  padding: 11px 5px 9px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--acc, #2563eb) 10%, white);
+  border: 1px solid color-mix(in srgb, var(--acc, #2563eb) 24%, transparent);
+  overflow: hidden;
+}
+.pf-stat::before {
+  content: '';
+  position: absolute; left: 10px; right: 10px; top: 0; height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--acc, #2563eb);
+  opacity: 0.85;
+}
+.pf-stat-value { margin: 0; font-size: 12.5px; font-weight: 700; color: color-mix(in srgb, var(--acc, #2563eb) 65%, #0f172a); letter-spacing: -0.1px; line-height: 1.25; overflow-wrap: break-word; }
+.pf-stat-label { margin: 4px 0 0; font-size: 10.5px; color: rgba(15, 23, 42, 0.55); line-height: 1.3; }
 
 /* Tab tersegmentasi (Info / Strava) */
 .pf-tabs {
@@ -350,7 +392,7 @@ const icons = {
   margin-top: 22px;
   padding: 4px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(37, 99, 235, 0.06);
 }
 .pf-tab {
   flex: 1;
@@ -362,10 +404,10 @@ const icons = {
   font-size: 12.5px;
   font-weight: 700;
   background: none;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(15, 23, 42, 0.55);
   transition: background 0.15s ease, color 0.15s ease;
 }
-.pf-tab.is-active { background: rgba(255, 255, 255, 0.16); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.25); }
+.pf-tab.is-active { background: #ffffff; color: #1d4ed8; border: 1px solid rgba(37, 99, 235, 0.18); box-shadow: 0 4px 10px -6px rgba(15, 23, 42, 0.2); }
 
 .pf-tab-content { position: relative; width: 100%; margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
 
@@ -377,7 +419,7 @@ const icons = {
   box-sizing: border-box;
   padding: 12px 14px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(37, 99, 235, 0.04);
   text-align: left;
 }
 .pf-linkrow-ic {
@@ -387,12 +429,12 @@ const icons = {
   border-radius: 10px;
   display: grid;
   place-content: center;
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
 }
-.pf-linkrow-ic--strava { color: #d4d4d8; }
-.pf-linkrow-label { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, 0.6); }
-.pf-linkrow-value { font-size: 13.5px; font-weight: 700; color: #ffffff; white-space: nowrap; }
+.pf-linkrow-ic--strava { color: #c2410c; }
+.pf-linkrow-label { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: rgba(15, 23, 42, 0.6); }
+.pf-linkrow-value { font-size: 13.5px; font-weight: 700; color: #0f172a; white-space: nowrap; }
 .pf-linkrow-action {
   flex: 0 0 auto;
   border: none;
@@ -400,13 +442,13 @@ const icons = {
   font-family: inherit;
   font-size: 11.5px;
   font-weight: 700;
-  color: #fca5a5;
-  background: rgba(220, 38, 38, 0.15);
+  color: #b91c1c;
+  background: rgba(220, 38, 38, 0.1);
   padding: 7px 13px;
   border-radius: 999px;
 }
 
-/* CTA utama — oranye (ajak connect) atau putih (keluar), kontras tinggi di panel gelap */
+/* CTA utama — oranye (brand Strava, ajak connect) atau putih bertepi (keluar) */
 .pf-cta {
   position: relative;
   width: 100%;
@@ -422,35 +464,82 @@ const icons = {
 }
 .pf-cta:hover { transform: translateY(-1px); }
 .pf-cta.is-connect {
-  color: #09090b;
-  background: linear-gradient(135deg, #f4f4f5 0%, #a1a1aa 100%);
-  box-shadow: 0 16px 32px -16px rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  background: linear-gradient(135deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+  box-shadow: 0 16px 32px -16px rgba(252, 76, 2, 0.5);
 }
-.pf-cta.is-logout { color: #f4f4f5; background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.25); }
+.pf-cta.is-logout { color: #2563eb; background: rgba(37, 99, 235, 0.12); border: 1px solid rgba(37, 99, 235, 0.3); }
+.pf-cta.is-logout:hover { background: rgba(37, 99, 235, 0.22); }
 
-/* Ikon aksi cepat — setara "social row" di referensi, dipakai utk pengaturan ringan */
-.pf-quick-icons { position: relative; display: flex; gap: 10px; margin-top: 14px; }
-.pf-quick-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  display: grid;
-  place-content: center;
+/* Aksi cepat pengaturan — dulu cuma lingkaran ikon polos tanpa label, jadi
+   fungsinya tak kelihatan. Sekarang jadi baris penuh dgn ikon + teks + panah,
+   senada gaya "pf-linkrow" supaya jelas keduanya bisa diketuk & apa isinya. */
+.pf-quick-icons { position: relative; display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 14px; }
+
+/* Pemisah tipis antara aksi "edit" (data tubuh, password) & aksi sesi
+   (hubungkan Strava / keluar) — dua kelompok fungsi beda sifat, jadi urutan
+   & jaraknya dibuat terasa seperti dua grup, bukan ditumpuk begitu saja. */
+.pf-divider { width: 100%; height: 1px; background: rgba(15, 23, 42, 0.08); margin-top: 18px; }
+.pf-divider + .pf-cta { margin-top: 14px; }
+.pf-divider + .pf-group-label { margin-top: 14px; }
+/* Label kecil penanda grup "Pengaturan Akun" — supaya dua baris aksi di
+   bawahnya jelas beda kategori dari daftar info di atasnya, bukan sambungan
+   list yang sama. */
+.pf-group-label {
+  width: 100%;
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.4);
+  text-align: left;
+}
+.pf-quick-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 14px;
+  border-radius: 14px;
   border: none;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.75);
-  transition: background 0.15s ease, color 0.15s ease;
+  background: rgba(37, 99, 235, 0.05);
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.15s ease;
 }
-.pf-quick-icon:hover { background: rgba(255, 255, 255, 0.16); color: #ffffff; }
+.pf-quick-row:hover { background: rgba(37, 99, 235, 0.1); }
+.pf-quick-row-ic {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-content: center;
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+}
+.pf-quick-row-label { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 600; color: #0f172a; }
+.pf-quick-row-chevron { flex: 0 0 auto; color: rgba(15, 23, 42, 0.35); }
 
 /* Grafik jarak mingguan */
 .pf-chart { display: flex; align-items: flex-end; gap: 8px; height: 96px; }
 .pf-chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; justify-content: flex-end; }
-.pf-chart-bar { width: 100%; max-width: 24px; border-radius: 6px; background: linear-gradient(180deg, #ff914d, #fc4c02); }
-.pf-chart-label { font-size: 10.5px; color: #a8a29e; }
+.pf-chart-bar {
+  width: 100%; max-width: 24px; border-radius: 6px; background: linear-gradient(180deg, #60a5fa, #2563eb);
+  box-shadow: 0 0 12px -2px rgba(37, 99, 235, 0.4);
+  transition: height 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation: pf-bar-grow 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+@keyframes pf-bar-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.pf-chart-bar { transform-origin: bottom; }
+.pf-chart-val { font-size: 10.5px; font-weight: 700; color: rgba(15, 23, 42, 0.7); height: 14px; white-space: nowrap; }
+.pf-chart-label { font-size: 11px; font-weight: 700; color: rgba(15, 23, 42, 0.5); }
+.pf-chart-label.is-today { color: #1d4ed8; }
+.pf-chart-empty { margin: 12px 0 0; font-size: 12px; color: rgba(15, 23, 42, 0.55); text-align: center; }
 
-/* Zona berbahaya */
 .pf-danger {
   display: flex;
   align-items: center;
@@ -459,14 +548,14 @@ const icons = {
   width: 100%;
   padding: 14px;
   border-radius: 16px;
-  border: 1px solid rgba(220, 38, 38, 0.3);
+  border: 1px solid rgba(37, 99, 235, 0.3);
   cursor: pointer;
-  background: rgba(220, 38, 38, 0.15);
-  color: #fca5a5;
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
   font-family: inherit;
   font-size: 14px;
   font-weight: 700;
   transition: background 0.15s ease;
 }
-.pf-danger:hover { background: rgba(220, 38, 38, 0.28); }
+.pf-danger:hover { background: rgba(37, 99, 235, 0.22); }
 </style>

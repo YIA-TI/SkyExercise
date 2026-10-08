@@ -15,6 +15,7 @@ export const distance = {
   elevation: '—',
   bars: [0, 0, 0, 0, 0, 0, 0],
   recent: [],
+  daily: [0, 0, 0, 0, 0, 0, 0],
 }
 
 export const heartRate = {

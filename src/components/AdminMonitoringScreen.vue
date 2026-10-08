@@ -1,6 +1,6 @@
 <template>
 <div class="mui">
-  <div class="mui-col mui-col--wide">
+  <div class="mui-col mui-col--full">
     <header class="mui-header">
       <div class="h-left">
         <div class="mui-avatar">{{ initials }}</div>
@@ -37,24 +37,27 @@
       </div>
 
       <div class="ad-charts-grid">
+        <!-- Tetap bar horizontal, tapi tiap baris jadi "widget" berwarna sendiri:
+             track-nya ikut ditinta warna barnya (bukan abu rata semua), isian
+             bar gradasi + kilau, angkanya jadi pil berwarna — biar tak monoton. -->
         <div class="ad-chart">
-          <p class="ad-chart-title">Distribusi Status Quest Personil</p>
+          <p class="ad-chart-title">Distribusi Status Tantangan Personil</p>
           <div v-if="questLoading" class="ad-chart-rows">
             <div v-for="i in 3" :key="i" class="ad-chart-row">
               <div class="mui-skel mui-skel--text" style="width: 100px;"></div>
-              <div class="mui-skel" style="height: 10px; border-radius: 6px;"></div>
-              <div class="mui-skel mui-skel--text" style="width: 24px;"></div>
+              <div class="mui-skel" style="height: 14px; border-radius: 8px;"></div>
+              <div class="mui-skel mui-skel--text" style="width: 36px;"></div>
             </div>
           </div>
           <template v-else>
             <div class="ad-chart-rows">
-              <div v-for="b in questStatusChart" :key="b.key" class="ad-chart-row">
+              <div v-for="b in questStatusChart" :key="b.key" class="ad-chart-row" :style="{ '--acc': b.color }">
                 <span class="ad-chart-label">
-                  <span class="ad-chart-dot" :style="{ background: b.color }"></span>
+                  <span class="ad-chart-dot"></span>
                   {{ b.label }}
                 </span>
                 <div class="ad-chart-track">
-                  <div class="ad-chart-fill" :style="{ width: b.pct + '%', background: b.color }"></div>
+                  <div class="ad-chart-fill" :style="{ width: b.pct + '%' }"></div>
                 </div>
                 <span class="ad-chart-value mui-mono">{{ b.count }}</span>
               </div>
@@ -68,61 +71,101 @@
           <div v-if="questLoading" class="ad-chart-rows">
             <div v-for="i in 4" :key="i" class="ad-chart-row">
               <div class="mui-skel mui-skel--text" style="width: 100px;"></div>
-              <div class="mui-skel" style="height: 10px; border-radius: 6px;"></div>
-              <div class="mui-skel mui-skel--text" style="width: 24px;"></div>
+              <div class="mui-skel" style="height: 14px; border-radius: 8px;"></div>
+              <div class="mui-skel mui-skel--text" style="width: 36px;"></div>
             </div>
           </div>
           <template v-else-if="questCategoryTotal > 0">
             <div v-for="cat in questCategoryChart" :key="cat.key" class="ad-chart-group">
-              <p class="ad-chart-group-title">{{ cat.label }} <span class="mui-mono">({{ cat.total }})</span></p>
+              <p class="ad-chart-group-title">
+                <span class="ad-chart-group-icon" :class="'is-' + cat.key">
+                  <Footprints v-if="cat.key === 'lari'" :size="13" :stroke-width="2.5" />
+                  <Dumbbell v-else :size="13" :stroke-width="2.5" />
+                </span>
+                {{ cat.label }} <span class="mui-mono">({{ cat.total }})</span>
+              </p>
               <div class="ad-chart-rows">
-                <div v-for="b in cat.bars" :key="b.key" class="ad-chart-row">
+                <div v-for="b in cat.bars" :key="b.key" class="ad-chart-row" :style="{ '--acc': b.color }">
                   <span class="ad-chart-label">
-                    <span class="ad-chart-dot" :style="{ background: b.color }"></span>
+                    <span class="ad-chart-dot"></span>
                     {{ b.label }}
                   </span>
                   <div class="ad-chart-track">
-                    <div class="ad-chart-fill" :style="{ width: b.pct + '%', background: b.color }"></div>
+                    <div class="ad-chart-fill" :style="{ width: b.pct + '%' }"></div>
                   </div>
                   <span class="ad-chart-value mui-mono">{{ b.count }}</span>
                 </div>
               </div>
             </div>
           </template>
-          <p v-else class="qf-muted">Belum ada quest lari/gym yang berlaku pada periode ini.</p>
+          <p v-else class="qf-muted">Belum ada tantangan lari/gym yang berlaku pada periode ini.</p>
         </div>
       </div>
 
       <div class="ad-chart ad-chart--line">
-        <p class="ad-chart-title">Persebaran Penyelesaian Quest Mingguan</p>
+        <p class="ad-chart-title">Persebaran Penyelesaian Tantangan Mingguan</p>
         <div v-if="questLoading" class="ad-linechart-skel">
           <div class="mui-skel" style="height: 140px; border-radius: 12px;"></div>
         </div>
         <template v-else-if="questCompletionTrend.labels.length">
-          <svg class="ad-linechart" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <!-- Axis dasar (garis polos, tanpa panah/grid/angka) — gaya line chart basic -->
-            <line class="ad-linechart-axis" x1="6" y1="92" x2="6" y2="4" />
-            <line class="ad-linechart-axis" x1="6" y1="92" x2="97" y2="92" />
+          <!-- Garis polos dulu kelihatan kosong/flat — sekarang dikasih isian area
+               gradasi di bawah garis, garis bantu horizontal halus, titik penanda
+               tiap minggu, dan label nilai di titik terakhir (capaian terkini). -->
+          <div class="ad-linechart-wrap">
+            <svg class="ad-linechart" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="lariAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#fc4c02" stop-opacity="0.28" />
+                  <stop offset="100%" stop-color="#fc4c02" stop-opacity="0" />
+                </linearGradient>
+                <linearGradient id="gymAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.24" />
+                  <stop offset="100%" stop-color="#7c3aed" stop-opacity="0" />
+                </linearGradient>
+              </defs>
 
-            <polyline
-              :points="lariLinePoints"
-              fill="none"
-              stroke="#fc4c02"
-              stroke-width="2.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              vector-effect="non-scaling-stroke"
-            />
-            <polyline
-              :points="gymLinePoints"
-              fill="none"
-              stroke="#7c3aed"
-              stroke-width="2.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              vector-effect="non-scaling-stroke"
-            />
-          </svg>
+              <line v-for="g in trendGridLines" :key="g" class="ad-linechart-grid" x1="6" :y1="g" x2="97" :y2="g" />
+              <!-- Axis dasar (garis polos, tanpa panah/angka) — gaya line chart basic -->
+              <line class="ad-linechart-axis" x1="6" y1="92" x2="6" y2="4" />
+              <line class="ad-linechart-axis" x1="6" y1="92" x2="97" y2="92" />
+
+              <path :d="gymAreaPath" fill="url(#gymAreaGrad)" />
+              <path :d="lariAreaPath" fill="url(#lariAreaGrad)" />
+
+              <path
+                :d="gymLinePath"
+                class="ad-linechart-line is-gym"
+                fill="none"
+                stroke="#7c3aed"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                vector-effect="non-scaling-stroke"
+              />
+              <path
+                :d="lariLinePath"
+                class="ad-linechart-line is-lari"
+                fill="none"
+                stroke="#fc4c02"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                vector-effect="non-scaling-stroke"
+              />
+            </svg>
+
+            <!-- Titik penanda dirender sbg HTML (bukan <circle> SVG) supaya tetap
+                 bundar — SVG-nya pakai preserveAspectRatio="none" (diregangkan
+                 non-proporsional), jadi lingkaran SVG di dalamnya bakal gepeng. -->
+            <span
+              v-for="(p, i) in gymPoints" :key="'gym' + i" class="ad-linechart-dot-marker is-gym"
+              :style="{ left: p.x + '%', top: p.y + '%' }"
+            ></span>
+            <span
+              v-for="(p, i) in lariPoints" :key="'lari' + i" class="ad-linechart-dot-marker is-lari"
+              :style="{ left: p.x + '%', top: p.y + '%' }"
+            ></span>
+          </div>
           <!-- Label tanggal Senin tiap minggu (jeda 7 hari) — sejajar dgn titik data, karena
                titik sama-sama berjarak rata sepanjang sumbu-X (lihat trendX). -->
           <div class="ad-linechart-axis-labels">
@@ -133,14 +176,14 @@
             <span class="ad-linechart-legend-item"><span class="ad-linechart-dot" style="background: #7c3aed;"></span>GYM</span>
           </div>
         </template>
-        <p v-else class="qf-muted">Belum ada data quest pada periode ini.</p>
+        <p v-else class="qf-muted">Belum ada data tantangan pada periode ini.</p>
       </div>
     </section>
 
-    <!-- Ringkasan quest (harian + mingguan) — monitoring progress user -->
+    <!-- Ringkasan tantangan (harian + mingguan) — monitoring progress user -->
     <section class="mui-block">
       <div class="qs-head-row">
-        <h2 class="mui-section-title">Ringkasan Quest</h2>
+        <h2 class="mui-section-title">Ringkasan Tantangan</h2>
         <button class="qs-pdf-btn" type="button" :disabled="!canExportQuest || exportingQuest" @click="downloadQuestPdf">
           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           {{ exportingQuest ? 'Menyiapkan…' : 'Download PDF' }}
@@ -163,6 +206,7 @@
               class="qs-athlete-row"
               role="button"
               tabindex="0"
+              :style="{ '--seed': athleteAvatarColor(pr.name) }"
               @click="toggleQuestExpand(pr.athleteId)"
               @keyup.enter="toggleQuestExpand(pr.athleteId)"
             >
@@ -171,13 +215,17 @@
                 :class="{ 'is-open': expandedIds.has(pr.athleteId) }"
                 xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
               ><polyline points="9 18 15 12 9 6"/></svg>
+              <span class="qs-athlete-avatar">{{ initialsOf(pr.name) }}</span>
               <span class="qs-athlete-name">{{ pr.name }}</span>
-              <span class="mui-tag mui-tag--gray">{{ athleteSummary(pr).done }}/{{ athleteSummary(pr).total }} selesai</span>
+              <span class="mui-tag" :class="athleteSummaryTone(pr)">{{ athleteSummary(pr).done }}/{{ athleteSummary(pr).total }} selesai</span>
             </div>
 
             <template v-if="expandedIds.has(pr.athleteId)">
               <div class="qs-quest-list">
-                <div v-for="qc in pr.questCols.filter((c) => c.scope !== 'bonus')" :key="qc.questId" class="qs-quest-item">
+                <div
+                  v-for="qc in pr.questCols.filter((c) => c.scope !== 'bonus')" :key="qc.questId" class="qs-quest-item"
+                  :class="qc.scope === 'mingguan' ? 'is-mingguan' : 'is-harian'"
+                >
                   <div class="qs-quest-item-info">
                     <span class="qs-quest-item-name">{{ qc.title }}</span>
                     <span class="qs-quest-item-scope">
@@ -313,6 +361,27 @@ function athleteSummary(pr) {
   const done = applicable.filter((qc) => badgeClassQuest(qc) === 'is-full').length
   return { done, total: applicable.length }
 }
+// Dulu tag ini selalu abu-abu sama rata entah 0/2 atau 2/2 selesai — sekarang
+// ikut warna capaiannya (hijau penuh, amber sebagian, abu kalau nol) supaya
+// bisa discan sekilas tanpa baca angkanya satu-satu.
+function athleteSummaryTone(pr) {
+  const { done, total } = athleteSummary(pr)
+  if (total > 0 && done === total) return 'mui-tag--green'
+  if (done > 0) return 'mui-tag--orange'
+  return 'mui-tag--gray'
+}
+
+// Avatar inisial per atlet — warnanya deterministik dari nama (sama teknik
+// spt direktori Kelola User) supaya daftar yg panjang tak terasa seragam.
+const ATHLETE_AVATAR_PALETTE = ['#2563eb', '#7c3aed', '#0d9488', '#d97706', '#e11d48', '#0891b2']
+function initialsOf(name) {
+  return (name || '—').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
+}
+function athleteAvatarColor(name) {
+  let hash = 0
+  for (const ch of name || '') hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
+  return ATHLETE_AVATAR_PALETTE[hash % ATHLETE_AVATAR_PALETTE.length]
+}
 
 // Distribusi status quest (semua personil x quest aktif, kolom bonus dikecualikan karena
 // bukan target penyelesaian) — dipakai untuk grafik & kartu "Total Quest Selesai" di
@@ -418,11 +487,34 @@ function trendX(i) {
 function trendY(v) {
   return AXIS_B - (v / trendMax.value) * (AXIS_B - AXIS_T)
 }
-function trendLinePoints(values) {
-  return values.map((v, i) => `${trendX(i)},${trendY(v)}`).join(' ')
+// Titik tiap minggu (dipakai utk dot penanda + garis/area di bawah).
+function trendPointsArr(values) {
+  return values.map((v, i) => ({ x: trendX(i), y: trendY(v), v }))
 }
-const lariLinePoints = computed(() => trendLinePoints(questCompletionTrend.value.lari))
-const gymLinePoints = computed(() => trendLinePoints(questCompletionTrend.value.gym))
+const lariPoints = computed(() => trendPointsArr(questCompletionTrend.value.lari))
+const gymPoints = computed(() => trendPointsArr(questCompletionTrend.value.gym))
+
+// Sempat dicoba dihaluskan pakai spline Catmull-Rom, tapi di data yg datar
+// lalu naik/turun tajam splinenya "overshoot" — melengkung ke bawah garis nol
+// seolah ada nilai negatif, padahal tidak. Baliklah ke garis lurus antar
+// titik (lebih sederhana tapi jujur sesuai data, tak ada artefak aneh).
+function smoothPath(pts) {
+  if (!pts.length) return ''
+  return `M ${pts.map((p) => `${p.x},${p.y}`).join(' L ')}`
+}
+const lariLinePath = computed(() => smoothPath(lariPoints.value))
+const gymLinePath = computed(() => smoothPath(gymPoints.value))
+
+function trendAreaPath(pts) {
+  if (!pts.length) return ''
+  return `${smoothPath(pts)} L ${pts[pts.length - 1].x},${AXIS_B} L ${pts[0].x},${AXIS_B} Z`
+}
+const lariAreaPath = computed(() => trendAreaPath(lariPoints.value))
+const gymAreaPath = computed(() => trendAreaPath(gymPoints.value))
+
+// Garis bantu horizontal (25/50/75% tinggi area plot) — referensi skala halus,
+// tanpa angka sumbu-Y supaya tetap gaya "basic" seperti semula.
+const trendGridLines = [0.25, 0.5, 0.75].map((f) => AXIS_T + (AXIS_B - AXIS_T) * f)
 
 const ICONS = {
   members: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
@@ -434,7 +526,7 @@ const ICONS = {
 const stats = computed(() => [
   { label: 'Total Anggota', value: String(summary.value?.totalMembers ?? '—'), cls: 'is-blue', icon: ICONS.members },
   { label: 'Total Sesi', value: String(summary.value?.totalSessions ?? '—'), cls: 'is-orange', icon: ICONS.clock },
-  { label: 'Total Quest Selesai', value: String(totalQuestSelesai.value ?? '—'), cls: 'is-green', icon: ICONS.check },
+  { label: 'Total Tantangan Selesai', value: String(totalQuestSelesai.value ?? '—'), cls: 'is-green', icon: ICONS.check },
   { label: 'Total Peserta Aktif', value: String(summary.value?.totalMembers ?? '—'), cls: 'is-purple', icon: ICONS.bars },
 ]);
 
@@ -465,7 +557,7 @@ async function downloadQuestPdf() {
 
     const doc = new jsPDF({ orientation: 'landscape' })
     doc.setFontSize(14)
-    doc.text('Ringkasan Quest', 14, 16)
+    doc.text('Ringkasan Tantangan', 14, 16)
     doc.setFontSize(10)
     doc.text(`Periode: ${questFilterStart.value} s.d. ${questFilterEnd.value}`, 14, 22)
 
@@ -500,7 +592,7 @@ async function downloadQuestPdf() {
       headStyles: { fillColor: [252, 76, 2] },
     })
 
-    doc.save(`ringkasan-quest_${questFilterStart.value}_${questFilterEnd.value}.pdf`)
+    doc.save(`ringkasan-tantangan_${questFilterStart.value}_${questFilterEnd.value}.pdf`)
     showToast('PDF berhasil diunduh')
   } catch (e) {
     showToast(e?.message || 'Gagal membuat PDF', 'error')
@@ -519,41 +611,54 @@ async function downloadQuestPdf() {
   gap: 14px;
 }
 
+/* Kartu ringkasan — warna solid penuh sesuai jenisnya (bukan semburat/wash
+   tipis yg kelihatan kotor), teks & ikon jadi putih biar tetap kontras. */
 .ad-stat {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   gap: 14px;
-  background: rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(145deg, var(--acc, #2563eb) 0%, var(--acc2, #60a5fa) 100%);
+  border: none;
   border-radius: 18px;
   padding: 18px;
-  box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.4),
+    0 16px 32px -20px color-mix(in srgb, var(--acc, #2563eb) 55%, transparent);
 }
-
 .ad-stat-icon {
+  position: relative;
   flex: 0 0 auto;
   width: 46px;
   height: 46px;
   border-radius: 14px;
   display: grid;
   place-content: center;
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
 }
 
-.ad-stat.is-blue .ad-stat-icon   { background: rgba(45, 212, 191, 0.18); color: #5EEAD4; }
-.ad-stat.is-orange .ad-stat-icon { background: rgba(251, 146, 60, 0.18); color: #FDBA74; }
-.ad-stat.is-green .ad-stat-icon  { background: rgba(52, 211, 153, 0.18); color: #6EE7B7; }
-.ad-stat.is-purple .ad-stat-icon { background: rgba(167, 139, 250, 0.18); color: #C4B5FD; }
+.ad-stat.is-blue   { --acc: #2563eb; --acc2: #60a5fa; }
+.ad-stat.is-orange { --acc: #d97706; --acc2: #fbbf24; }
+.ad-stat.is-green  { --acc: #059669; --acc2: #34d399; }
+.ad-stat.is-purple { --acc: #7c3aed; --acc2: #c4b5fd; }
 
-.ad-stat-value { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px; color: #F8FAFC; }
-.ad-stat-label { margin: 4px 0 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(248, 250, 252, 0.5); }
+.ad-stat-value {
+  position: relative;
+  margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;
+  color: #ffffff;
+}
+.ad-stat-label {
+  position: relative;
+  margin: 4px 0 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.82);
+}
 
 /* Grid berisi kedua chart bar (Distribusi Status Quest + Selesai/Belum Selesai
    Lari & GYM) — berdampingan di layar lebar, ditumpuk di mobile. Grafik garis
    (tren mingguan) tetap di luar grid ini, selalu lebar penuh (butuh ruang utk sumbu-X). */
 .ad-charts-grid {
-  margin-top: 14px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 14px;
@@ -564,46 +669,112 @@ async function downloadQuestPdf() {
 /* Grafik distribusi status quest — bar horizontal per status (belum/berjalan/selesai) */
 .ad-chart {
   margin-top: 14px;
-  background: rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.14);
   border-radius: 18px;
   padding: 18px;
-  box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
+  box-shadow: 0 16px 32px -28px rgba(15, 23, 42, 0.18);
 }
 
-.ad-chart-title { margin: 0 0 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(248, 250, 252, 0.5); }
+.ad-chart-title { margin: 0 0 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(15, 23, 42, 0.5); }
 
 /* Sub-grup dalam satu chart card (mis. "Lari" / "GYM" masing-masing dgn bar
-   Selesai/Belum Selesai sendiri) */
-.ad-chart-group + .ad-chart-group { margin-top: 18px; }
-.ad-chart-group-title { margin: 0 0 10px; font-size: 12.5px; font-weight: 700; color: rgba(248, 250, 252, 0.85); }
-.ad-chart-group-title .mui-mono { font-weight: 600; color: rgba(248, 250, 252, 0.5); }
+   Selesai/Belum Selesai sendiri) — judul grup dikasih ikon chip berwarna. */
+.ad-chart-group + .ad-chart-group { margin-top: 20px; }
+.ad-chart-group-title { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 12.5px; font-weight: 700; color: rgba(15, 23, 42, 0.8); }
+.ad-chart-group-title .mui-mono { font-weight: 600; color: rgba(15, 23, 42, 0.5); }
+.ad-chart-group-icon {
+  display: grid; place-content: center;
+  width: 22px; height: 22px; border-radius: 7px;
+  flex-shrink: 0;
+}
+.ad-chart-group-icon.is-lari { background: rgba(252, 76, 2, 0.12); color: #c2410c; }
+.ad-chart-group-icon.is-gym  { background: rgba(124, 58, 237, 0.12); color: #6d28d9; }
 
-.ad-chart-rows { display: flex; flex-direction: column; gap: 12px; }
+/* Tiap baris bar jadi "widget" berwarna sendiri lewat satu custom property
+   --acc: titik lebih besar bercincin, TRACK ikut ditinta warnanya sendiri
+   (bukan abu generik sama rata di semua baris), isian bar gradasi muda→pekat
+   + kilau diagonal + tumbuh saat halaman dibuka, dan angkanya jadi pil
+   berwarna — jadi tiap baris terasa beda, bukan garis abu-abu seragam. */
+.ad-chart-rows { display: flex; flex-direction: column; gap: 14px; }
 
 .ad-chart-row {
   display: grid;
-  grid-template-columns: 132px 1fr 32px;
+  grid-template-columns: 132px 1fr auto;
   align-items: center;
   gap: 10px;
 }
 
-.ad-chart-label { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: rgba(248, 250, 252, 0.75); }
-.ad-chart-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+.ad-chart-label { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: rgba(15, 23, 42, 0.68); }
+.ad-chart-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto;
+  background: var(--acc, #2563eb);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc, #2563eb) 20%, transparent);
+}
 
-.ad-chart-track { height: 10px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
-.ad-chart-fill { height: 100%; border-radius: 6px; transition: width 0.3s ease; }
+.ad-chart-track {
+  position: relative;
+  height: 14px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--acc, #2563eb) 10%, white);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.07);
+  overflow: hidden;
+}
+.ad-chart-fill {
+  position: relative;
+  height: 100%;
+  border-radius: 8px;
+  background: var(--acc, #2563eb);
+  box-shadow: 0 0 10px -3px var(--acc, #2563eb);
+  transform-origin: left center;
+  transition: width 0.3s ease;
+  animation: ad-bar-grow 0.8s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+@keyframes ad-bar-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ad-chart-fill { animation: none; }
+}
 
-.ad-chart-value { font-size: 12.5px; font-weight: 700; color: #F8FAFC; text-align: right; }
+.ad-chart-value {
+  flex-shrink: 0;
+  min-width: 30px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px; font-weight: 800; text-align: center;
+  color: var(--acc, #2563eb);
+  background: color-mix(in srgb, var(--acc, #2563eb) 14%, white);
+  border: 1px solid color-mix(in srgb, var(--acc, #2563eb) 28%, transparent);
+}
 
 /* Grafik garis — persebaran (tren) penyelesaian quest per minggu, gaya basic
    (garis axis polos tanpa panah/grid/angka, plus label tanggal Senin per titik) */
-.ad-chart--line { margin-top: 14px; }
 .ad-linechart-skel { padding: 4px 0; }
-.ad-linechart { display: block; width: 100%; height: 140px; }
-.ad-linechart-axis { stroke: rgba(248, 250, 252, 0.35); stroke-width: 1; vector-effect: non-scaling-stroke; }
+/* Tinggi sedikit responsif thd lebar kontainer (bukan angka tetap 140px) —
+   di layar admin yang sekarang full-width, grafik garis setinggi 140px lebar
+   >1000px bikin rasionya kelihatan "gepeng". */
+.ad-linechart-wrap { position: relative; width: 100%; height: clamp(140px, 16vw, 220px); }
+.ad-linechart { display: block; width: 100%; height: 100%; }
+.ad-linechart-axis { stroke: rgba(15, 23, 42, 0.25); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.ad-linechart-grid { stroke: rgba(15, 23, 42, 0.06); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.ad-linechart-line.is-lari { filter: drop-shadow(0 2px 4px rgba(252, 76, 2, 0.35)); }
+.ad-linechart-line.is-gym  { filter: drop-shadow(0 2px 4px rgba(124, 58, 237, 0.35)); }
+
+/* Titik penanda tiap minggu — HTML absolut posisi via %, bukan <circle> SVG
+   (lihat komentar di template kenapa). */
+.ad-linechart-dot-marker {
+  position: absolute;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.3);
+  pointer-events: none;
+}
+.ad-linechart-dot-marker.is-lari { background: #fc4c02; }
+.ad-linechart-dot-marker.is-gym  { background: #7c3aed; }
 
 .ad-linechart-axis-labels { display: flex; gap: 4px; margin-top: 8px; padding: 0 2px; }
 .ad-linechart-axis-label {
@@ -612,14 +783,14 @@ async function downloadQuestPdf() {
   text-align: center;
   font-size: 10.5px;
   font-weight: 600;
-  color: rgba(248, 250, 252, 0.5);
+  color: rgba(15, 23, 42, 0.5);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .ad-linechart-legend { display: flex; gap: 16px; margin-top: 12px; }
-.ad-linechart-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: rgba(248, 250, 252, 0.65); }
+.ad-linechart-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: rgba(15, 23, 42, 0.6); }
 .ad-linechart-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
 
 
@@ -630,69 +801,88 @@ async function downloadQuestPdf() {
   display: inline-flex; align-items: center; gap: 6px;
   border: none; cursor: pointer; font-family: inherit;
   font-size: 12.5px; font-weight: 700; color: #fff; padding: 10px 16px; border-radius: 12px;
-  background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
+  background: linear-gradient(45deg, #2563eb 0%, #3b82f6 100%);
 }
 .qs-pdf-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.qf-muted { color: rgba(248, 250, 252, 0.5); font-size: 13px; }
+.qf-muted { color: rgba(15, 23, 42, 0.5); font-size: 13px; }
 .qf-error { margin: 0; color: #dc2626; font-size: 12.5px; font-weight: 600; }
 
 /* Daftar personil x quest — tiap quest didaftar KE BAWAH per atlet (bukan kolom
    ke samping), diperluas per atlet supaya tetap ringkas utk banyak personil. */
 .qs-list {
-  background: rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #ffffff;
+  border: 1px solid rgba(37, 99, 235, 0.14);
   border-radius: 18px;
-  box-shadow: 0 16px 32px -28px rgba(17, 18, 20, 0.5);
+  box-shadow: 0 16px 32px -28px rgba(15, 23, 42, 0.18);
 }
 
 .qs-list--skel { padding: 4px 0; }
 .qs-skel-row {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
 }
 .qs-skel-row:last-child { border-bottom: none; }
 
 .qs-athlete-row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
   cursor: pointer;
-  font-size: 13.5px; font-weight: 700; color: #F8FAFC;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 13.5px; font-weight: 700; color: #0f172a;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  border-left: 3px solid var(--seed, transparent);
   transition: background 0.15s ease;
 }
-.qs-athlete-row:hover { background: rgba(255, 255, 255, 0.16); }
+.qs-athlete-row:hover { background: color-mix(in srgb, var(--seed, #2563eb) 6%, white); }
 .qs-athlete-name { flex: 1; min-width: 0; }
+
+/* Avatar inisial berwarna per atlet (lihat athleteAvatarColor di script) —
+   daftar panjang jadi lebih mudah discan, bukan baris teks seragam semua. */
+.qs-athlete-avatar {
+  flex: 0 0 auto;
+  width: 26px; height: 26px;
+  display: grid; place-content: center;
+  border-radius: 50%;
+  font-size: 10.5px; font-weight: 800;
+  color: var(--seed, #1d4ed8);
+  background: color-mix(in srgb, var(--seed, #2563eb) 16%, white);
+}
 
 .qs-quest-list {
   padding: 6px 16px 12px 38px;
-  background: rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(37, 99, 235, 0.03);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-/* 3 kolom: Nama Quest | Status (merah/kuning/hijau) | Progress (achieved/target unit) */
+/* 3 kolom: Nama Quest | Status (merah/kuning/hijau) | Progress (achieved/target unit).
+   Aksen tepi kiri biru (mingguan) / amber (harian) — senada dgn pola yg sama
+   di AdminQuestScreen, jadi dua halaman quest ini terasa satu bahasa visual. */
 .qs-quest-item {
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 10px;
+  padding: 6px 0 6px 10px;
+  border-left: 3px solid transparent;
+  border-radius: 0 8px 8px 0;
   font-size: 12.5px;
-  color: rgba(248, 250, 252, 0.75);
+  color: rgba(15, 23, 42, 0.65);
 }
+.qs-quest-item.is-mingguan { border-left-color: #2563eb; background: rgba(37, 99, 235, 0.035); }
+.qs-quest-item.is-harian   { border-left-color: #d97706; background: rgba(217, 119, 6, 0.035); }
 .qs-quest-item-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.qs-quest-item-name { font-weight: 700; color: #F8FAFC; }
+.qs-quest-item-name { font-weight: 700; color: #0f172a; }
 .qs-quest-item-scope {
-  font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: rgba(248, 250, 252, 0.5);
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: rgba(15, 23, 42, 0.55);
 }
 
-.qs-chevron { flex: 0 0 auto; color: rgba(248, 250, 252, 0.5); transition: transform 0.2s ease; }
+.qs-chevron { flex: 0 0 auto; color: rgba(15, 23, 42, 0.45); transition: transform 0.2s ease; }
 .qs-chevron.is-open { transform: rotate(90deg); }
 
 /* Kolom Status — pill warna merah/kuning/hijau (is-none/is-partial/is-full), terpisah
@@ -701,16 +891,16 @@ async function downloadQuestPdf() {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap;
 }
-.qs-badge.is-full    { background: rgba(52, 211, 153, 0.18); color: #6EE7B7; }
-.qs-badge.is-partial { background: rgba(251, 191, 36, 0.18); color: #FDE68A; }
-.qs-badge.is-none    { background: rgba(220, 38, 38, 0.15); color: #fca5a5; }
-.qs-badge.is-na      { background: rgba(255, 255, 255, 0.10); color: rgba(248, 250, 252, 0.75); }
+.qs-badge.is-full    { background: rgba(16, 185, 129, 0.14); color: #047857; }
+.qs-badge.is-partial { background: rgba(251, 191, 36, 0.16); color: #b45309; }
+.qs-badge.is-none    { background: rgba(220, 38, 38, 0.1); color: #b91c1c; }
+.qs-badge.is-na      { background: rgba(15, 23, 42, 0.06); color: rgba(15, 23, 42, 0.6); }
 
 /* Indikator visual penyelesaian quest — merah/kuning/hijau, selalu berdampingan dgn teks */
 .qs-badge-dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; background: currentColor; }
 
 /* Kolom Progress — angka capaian vs target quest, rata kanan spy sejajar antar baris */
-.qs-progress { font-size: 12.5px; font-weight: 700; color: #F8FAFC; text-align: right; white-space: nowrap; }
+.qs-progress { font-size: 12.5px; font-weight: 700; color: #0f172a; text-align: right; white-space: nowrap; }
 
 /* Total Lari/Total GYM — kartu stat bergaya "achievement", dibedakan tegas dari baris
    quest biasa spy langsung kelihatan (bukan cuma baris teks kecil di ujung daftar). */
@@ -736,19 +926,29 @@ async function downloadQuestPdf() {
   width: 38px; height: 38px;
   display: grid; place-content: center;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 6px 14px -8px rgba(17, 18, 20, 0.4);
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 6px 14px -8px rgba(15, 23, 42, 0.2);
 }
 
 .qs-total-body { min-width: 0; }
-.qs-total-title { margin: 0 0 3px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(248, 250, 252, 0.65); }
+.qs-total-title { margin: 0 0 3px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(15, 23, 42, 0.6); }
 .qs-total-stats { display: flex; flex-wrap: wrap; gap: 10px; }
-.qs-total-stat { font-size: 12.5px; color: rgba(248, 250, 252, 0.65); }
-.qs-total-stat strong { font-size: 15px; font-weight: 800; color: #F8FAFC; margin-right: 2px; }
-.qs-total-empty { margin: 0; font-size: 12px; font-weight: 600; color: rgba(248, 250, 252, 0.5); font-style: italic; }
+.qs-total-stat { font-size: 12.5px; color: rgba(15, 23, 42, 0.6); }
+.qs-total-stat strong { font-size: 15px; font-weight: 800; color: #0f172a; margin-right: 2px; }
+.qs-total-empty { margin: 0; font-size: 12px; font-weight: 600; color: rgba(15, 23, 42, 0.5); font-style: italic; }
 
 /* State kosong — tetap kelihatan (bukan hilang), tapi diredupkan spy tidak berebut
    perhatian dgn atlet yg sudah ada capaian. */
-.qs-total-card.is-empty { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.14); }
-.qs-total-card.is-empty .qs-total-icon { background: rgba(255, 255, 255, 0.10); color: rgba(248, 250, 252, 0.5); }
+.qs-total-card.is-empty { background: rgba(15, 23, 42, 0.03); border-color: rgba(15, 23, 42, 0.08); }
+.qs-total-card.is-empty .qs-total-icon { background: rgba(15, 23, 42, 0.05); color: rgba(15, 23, 42, 0.4); }
+
+/* ── Tampilan: aksen per kartu grafik (status = biru, lari/gym = teal, tren = violet) ── */
+.ad-chart { position: relative; overflow: hidden; }
+.ad-chart::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+  background: linear-gradient(90deg, var(--acc, #2563eb), transparent);
+}
+.ad-charts-grid .ad-chart:nth-child(1) { --acc: #2563eb; }
+.ad-charts-grid .ad-chart:nth-child(2) { --acc: #0d9488; }
+.ad-chart--line { --acc: #7c3aed; }
 </style>
