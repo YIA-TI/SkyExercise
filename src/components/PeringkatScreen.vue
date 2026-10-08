@@ -45,11 +45,7 @@
         </div>
       </div>
       <div class="lb-league-card-bottom">
-        <p class="lb-league-sub">XP dihitung {{ leaguePeriod === 'weekly' ? 'minggu ini' : 'bulan ini' }}, reset otomatis tiap {{ leaguePeriod === 'weekly' ? 'minggu' : 'bulan' }}.</p>
-        <div class="mui-toggle lb-period-toggle">
-          <button type="button" :class="{ 'is-active': leaguePeriod === 'weekly' }" @click="leaguePeriod = 'weekly'">Mingguan</button>
-          <button type="button" :class="{ 'is-active': leaguePeriod === 'monthly' }" @click="leaguePeriod = 'monthly'">Bulanan</button>
-        </div>
+        <p class="lb-league-sub">XP dihitung minggu ini (Senin–Minggu), reset otomatis tiap Senin.</p>
       </div>
     </div>
 
@@ -117,7 +113,7 @@ import { LEAGUE_TIER_ORDER } from '../lib/leagueTier.js'
 import RefreshingBadge from './RefreshingBadge.vue'
 
 const activeMode = ref('running')
-const leaguePeriod = ref('monthly')
+const leaguePeriod = 'weekly'
 
 // Sebagian foto profil (mis. dari Strava) bisa berupa path relatif yang gagal
 // dimuat, bukan URL valid — daripada nampilin ikon broken-image, jatuhkan ke
@@ -131,7 +127,7 @@ const initials = computed(() =>
 const tierOrder = LEAGUE_TIER_ORDER
 const TIER_ICON = { bronze: Shield, silver: Award, gold: Star, diamond: Gem }
 
-// Leaderboard nyata (RPC): jarak/bulan, effort/minggu, atau liga (XP mingguan/bulanan).
+// Leaderboard nyata (RPC): semua mode dihitung mingguan (Senin-Minggu).
 const { rows, loading } = useLeaderboard(activeMode, leaguePeriod)
 
 const currentRankData = computed(() =>
@@ -141,7 +137,7 @@ const currentRankData = computed(() =>
     avatar: r.avatar,
     tier: r.tier,
     isMe: r.athleteId === authState.athleteId,
-    unit: activeMode.value === 'running' ? 'km / bulan' : activeMode.value === 'effort' ? 'poin / minggu' : `XP / ${leaguePeriod.value === 'weekly' ? 'minggu' : 'bulan'}`,
+    unit: activeMode.value === 'running' ? 'km / minggu' : activeMode.value === 'effort' ? 'poin / minggu' : 'XP / minggu',
     value: activeMode.value === 'running'
       ? `${r.distanceKm} km`
       : activeMode.value === 'effort'

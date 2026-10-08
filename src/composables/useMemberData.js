@@ -53,7 +53,7 @@ export function useLeaderboard(mode, leaguePeriod) {
   const { data, loading, error, refresh } = useAsync(async () => {
     const m = unref(mode)
     if (m === 'league') {
-      const rows = await fetchLeagueLeaderboard(unref(leaguePeriod) || 'monthly')
+      const rows = await fetchLeagueLeaderboard(unref(leaguePeriod) || 'weekly')
       return rows.map((r, i) => ({ ...r, rank: i + 1, tier: tierForRank(i + 1, rows.length) }))
     }
     const rows = m === 'effort' ? await fetchEffortLeaderboard() : await fetchDistanceLeaderboard()

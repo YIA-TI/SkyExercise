@@ -1,11 +1,11 @@
 // src/services/leaderboard.js
 // Leaderboard via RPC security-definer (agregat lintas peserta, tetap hormati privasi RLS).
 import { supabase } from '../lib/supabase.js'
-import { startOfMonthISO, startOfWeekISO } from '../lib/normalize.js'
+import { startOfWeekISO } from '../lib/normalize.js'
 
 export async function fetchDistanceLeaderboard() {
   const { data, error } = await supabase.rpc('leaderboard_distance', {
-    period_start: startOfMonthISO(),
+    period_start: startOfWeekISO(),
   })
   if (error) throw error
   return (data ?? []).map((r) => ({
@@ -29,9 +29,9 @@ export async function fetchEffortLeaderboard() {
 
 // Ranking XP ("Liga") — RPC baru & terpisah dari leaderboard_distance/effort di
 // atas, jadi ikut balikin profile_photo langsung (dua RPC lama itu tidak).
-// period: 'weekly' | 'monthly' (default) — dikirim ke RPC, reset otomatis
-// mengikuti jendela waktu berjalan.
-export async function fetchLeagueLeaderboard(period = 'monthly') {
+// period: 'weekly' (default, Senin-Minggu) | 'monthly' — dikirim ke RPC, reset
+// otomatis mengikuti jendela waktu berjalan.
+export async function fetchLeagueLeaderboard(period = 'weekly') {
   const { data, error } = await supabase.rpc('leaderboard_league', { p_period: period })
   if (error) throw error
   return (data ?? []).map((r) => ({

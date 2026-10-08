@@ -42,11 +42,7 @@
         </div>
       </div>
       <div class="lb-league-card-bottom">
-        <p class="lb-league-sub">XP dihitung {{ leaguePeriod === 'weekly' ? 'minggu ini' : 'bulan ini' }}, reset otomatis tiap {{ leaguePeriod === 'weekly' ? 'minggu' : 'bulan' }}.</p>
-        <div class="mui-toggle lb-period-toggle">
-          <button type="button" :class="{ 'is-active': leaguePeriod === 'weekly' }" @click="leaguePeriod = 'weekly'">Mingguan</button>
-          <button type="button" :class="{ 'is-active': leaguePeriod === 'monthly' }" @click="leaguePeriod = 'monthly'">Bulanan</button>
-        </div>
+        <p class="lb-league-sub">XP dihitung minggu ini (Senin–Minggu), reset otomatis tiap Senin.</p>
       </div>
     </div>
 
@@ -110,7 +106,7 @@ import { LEAGUE_TIER_ORDER } from '../lib/leagueTier.js'
 import RefreshingBadge from './RefreshingBadge.vue'
 
 const activeMode = ref('running')
-const leaguePeriod = ref('monthly')
+const leaguePeriod = 'weekly'
 
 // Sebagian foto profil (mis. dari Strava) bisa berupa path relatif yang gagal
 // dimuat, bukan URL valid — daripada nampilin ikon broken-image, jatuhkan ke
@@ -133,7 +129,7 @@ const currentRankData = computed(() =>
     name: r.name,
     avatar: r.avatar,
     tier: r.tier,
-    unit: activeMode.value === 'running' ? 'km / bulan' : activeMode.value === 'effort' ? 'poin / minggu' : `XP / ${leaguePeriod.value === 'weekly' ? 'minggu' : 'bulan'}`,
+    unit: activeMode.value === 'running' ? 'km / minggu' : activeMode.value === 'effort' ? 'poin / minggu' : 'XP / minggu',
     value: activeMode.value === 'running'
       ? `${r.distanceKm} km`
       : activeMode.value === 'effort'
