@@ -84,6 +84,9 @@
           </svg>
           {{ syncingStrava ? 'Mengambil…' : 'Ambil dari Strava' }}
         </button>
+        <button class="ins-card-danger" type="button" :disabled="deleting" @click="hapusData()">
+          {{ deleting ? 'Menghapus…' : 'Hapus semua data atlet' }}
+        </button>
       </div>
 
       <!-- Grafik jarak per sesi lari (dalam periode dipilih) -->
@@ -141,7 +144,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAdminParticipantDetail } from '../composables/useAdminData.js'
-import { syncParticipantStrava } from '../services/admin.js'
+import { syncParticipantStrava, deleteParticipantData } from '../services/admin.js'
 import { showToast } from '../store/toast.js'
 import { calcBmi, bmiCategory, daysAgoDateStr, toDateStr } from '../lib/normalize.js'
 import DateRangeFilter from './DateRangeFilter.vue'
@@ -181,6 +184,26 @@ async function syncFromStrava() {
     showToast(e?.message || 'Gagal mengambil data dari Strava — pastikan atlet sudah terhubung', 'error')
   } finally {
     syncingStrava.value = false
+  }
+}
+
+// Permintaan penghapusan data dari atlet: hapus profil, aktivitas, progres & akunnya
+// (Edge Function `strava-delete-data`). Tak bisa dibatalkan, jadi minta konfirmasi dulu.
+const deleting = ref(false)
+async function hapusData() {
+  if (deleting.value) return
+  const nama = member.value?.name || 'atlet ini'
+  if (!window.confirm(`Hapus SEMUA data ${nama} (profil, aktivitas, XP, dan akun)? Tindakan ini tidak bisa dibatalkan.`)) return
+  deleting.value = true
+  autoSyncAttempted.value = true // cegah auto-sync jalan lagi saat data kosong
+  try {
+    await deleteParticipantData(athleteId.value)
+    showToast('Data atlet berhasil dihapus')
+    kembali()
+  } catch (e) {
+    showToast(e?.message || 'Gagal menghapus data atlet', 'error')
+  } finally {
+    deleting.value = false
   }
 }
 
@@ -498,6 +521,22 @@ const filteredActivities = computed(() => {
 }
 .ins-card-cta:hover:not(:disabled) { transform: translateY(-1px); }
 .ins-card-cta:disabled { opacity: 0.65; cursor: default; }
+
+.ins-card-danger {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  border-radius: 16px;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #dc2626;
+}
+.ins-card-danger:hover:not(:disabled) { background: rgba(220, 38, 38, 0.08); }
+.ins-card-danger:disabled { opacity: 0.65; cursor: default; }
 
 /* Grafik jarak */
 .ins-chart { display: flex; align-items: flex-end; gap: 8px; height: 96px; }

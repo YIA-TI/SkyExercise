@@ -61,6 +61,16 @@ export async function syncParticipantStrava(athleteId) {
   return data // { synced, seen, pages }
 }
 
+// Hapus seluruh data seorang atlet (permintaan penghapusan data) lewat Edge Function
+// `strava-delete-data` — admin only, tak bisa dibatalkan.
+export async function deleteParticipantData(athleteId) {
+  const { data, error } = await supabase.functions.invoke('strava-delete-data', {
+    body: { athlete_id: athleteId },
+  })
+  if (error) throw new Error(await extractFunctionErrorMessage(error))
+  if (data?.error) throw new Error(data.error)
+}
+
 // supabase-js cuma kasih pesan generik ("Edge Function returned a non-2xx status
 // code") di `error.message` — alasan aslinya (yang dikirim balik Edge Function,
 // mis. "Kredensial tak ditemukan untuk atlet X") ada di body response, dibaca lewat

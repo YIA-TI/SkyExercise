@@ -36,6 +36,12 @@ Deno.serve(async (req) => {
       event_time: event.event_time ? new Date(event.event_time * 1000).toISOString() : null,
     })
 
+    // Atlet mencabut akses langsung dari Strava → buang token-nya (data lama tetap,
+    // dihapus hanya lewat permintaan penghapusan data — lihat strava-delete-data).
+    if (event.object_type === 'athlete' && event.updates?.authorized === 'false') {
+      await db.from('strava_credentials').delete().eq('athlete_id', event.owner_id)
+    }
+
     if (event.object_type === 'activity') {
       if (event.aspect_type === 'create' || event.aspect_type === 'update') {
         await handleActivity(db, event.owner_id, event.object_id)
