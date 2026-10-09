@@ -61,7 +61,7 @@ export async function refreshStravaStatus() {
     .order('fetched_at', { ascending: false })
     .limit(1)
     .maybeSingle()
-  state.lastSynced = data?.fetched_at ? formatWaktu(data.fetched_at) : 'Belum ada sinkron'
+  state.lastSynced = data?.fetched_at ? formatWaktu(data.fetched_at) : 'Never synced'
 }
 
 // Putuskan koneksi (via Edge Function service-role).
@@ -94,7 +94,7 @@ export async function syncStrava() {
 }
 
 function formatWaktu(iso) {
-  return new Date(iso).toLocaleString('id-ID', {
+  return new Date(iso).toLocaleString('en-US', {
     day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
   })
 }

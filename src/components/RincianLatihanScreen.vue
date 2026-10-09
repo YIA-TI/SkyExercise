@@ -4,11 +4,11 @@
     <!-- Header + kembali -->
     <header class="mui-header">
       <div class="h-left">
-        <button class="rl-back" type="button" aria-label="Kembali" @click="kembali">
+        <button class="rl-back" type="button" aria-label="Back" @click="kembali">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div>
-          <p class="mui-h-title">Rincian Latihan</p>
+          <p class="mui-h-title">Training Details</p>
           <p class="mui-h-sub">{{ activity ? formatTanggal(activity.startDate) : '—' }}</p>
         </div>
       </div>
@@ -18,13 +18,13 @@
     </header>
 
     <template v-if="loading">
-      <p class="rl-empty">Memuat rincian aktivitas…</p>
+      <p class="rl-empty">Loading activity details…</p>
     </template>
 
     <template v-else-if="activity">
       <!-- Info sesi -->
       <div class="mui-card rl-session">
-        <p class="rl-session-title">{{ activity.name || (activity.type === 'run' ? 'Lari' : 'Gym') }}</p>
+        <p class="rl-session-title">{{ activity.name || (activity.type === 'run' ? 'Run' : 'Gym') }}</p>
         <p class="rl-session-type">Sport Type: {{ activity.sportType }}{{ activity.sufferScore != null ? ` · Relative Effort ${activity.sufferScore}` : '' }}</p>
       </div>
 
@@ -39,15 +39,15 @@
       </div>
 
       <p v-if="activity.type === 'gym'" class="rl-note">
-        Catatan: set/reps/beban untuk sesi gym tidak tersedia dari Strava — perlu input manual.
+        Note: sets/reps/weight for gym sessions aren't available from Strava — manual entry is needed.
       </p>
       <p v-else class="rl-note">
-        Catatan: grafik & split per-km memerlukan data time-series Strava yang tidak disimpan
-        (lihat docs/database-schema.md) — hanya ringkasan sesi yang ditampilkan.
+        Note: charts & per-km splits require Strava time-series data that isn't stored
+        (see docs/database-schema.md) — only the session summary is shown.
       </p>
     </template>
 
-    <p v-else class="rl-empty">Aktivitas tidak ditemukan.</p>
+    <p v-else class="rl-empty">Activity not found.</p>
   </div>
 </div>
 </template>
@@ -63,7 +63,7 @@ const router = useRouter()
 function kembali() { router.back() }
 
 function formatTanggal(iso) {
-  return new Date(iso).toLocaleString('id-ID', {
+  return new Date(iso).toLocaleString('en-US', {
     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
 }
@@ -79,22 +79,22 @@ const ringkasan = computed(() => {
   if (!a) return []
   const rows = []
   if (a.type === 'run') {
-    rows.push({ label: 'Jarak Total', value: a.distanceKm ?? '—', unit: 'km', acc: '#2563eb' })
+    rows.push({ label: 'Total Distance', value: a.distanceKm ?? '—', unit: 'km', acc: '#2563eb' })
     rows.push({ label: 'Pace', value: a.pacePerKm ?? '—', unit: '/km', acc: '#0891b2' })
   }
-  rows.push({ label: 'Kalori', value: a.calories ?? '—', unit: 'kkal', acc: '#d97706' })
+  rows.push({ label: 'Calories', value: a.calories ?? '—', unit: 'kcal', acc: '#d97706' })
   rows.push({
-    label: 'Detak Rata-rata',
+    label: 'Avg Heart Rate',
     value: a.avgHeartrate ? Math.round(a.avgHeartrate) : '—',
     unit: 'bpm',
     acc: '#e11d48',
   })
-  rows.push({ label: 'Durasi Sesi', value: a.durationLabel ?? '—', unit: '', acc: '#7c3aed' })
+  rows.push({ label: 'Session Duration', value: a.durationLabel ?? '—', unit: '', acc: '#7c3aed' })
   if (a.type === 'run' && a.elevationGain != null) {
-    rows.push({ label: 'Elevasi', value: Math.round(a.elevationGain), unit: 'm', acc: '#059669' })
+    rows.push({ label: 'Elevation', value: Math.round(a.elevationGain), unit: 'm', acc: '#059669' })
   }
   if (a.maxHeartrate) {
-    rows.push({ label: 'Detak Maksimum', value: Math.round(a.maxHeartrate), unit: 'bpm', acc: '#fb7185' })
+    rows.push({ label: 'Max Heart Rate', value: Math.round(a.maxHeartrate), unit: 'bpm', acc: '#fb7185' })
   }
   return rows
 })

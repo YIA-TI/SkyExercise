@@ -5,7 +5,7 @@
     <div v-else-if="status === 'error'" class="cb-ic cb-ic--err">!</div>
     <p class="cb-title">{{ message }}</p>
     <button v-if="status === 'error'" class="cb-btn" type="button" @click="kembali">
-      Kembali ke Masuk
+      Back to Sign In
     </button>
   </div>
 </div>
@@ -21,7 +21,7 @@ import { refreshStravaStatus } from '../store/strava.js'
 const route = useRoute()
 const router = useRouter()
 const status = ref('loading')
-const message = ref('Menghubungkan ke Strava…')
+const message = ref('Connecting to Strava…')
 
 function kembali() { router.replace('/signin') }
 
@@ -31,7 +31,7 @@ onMounted(async () => {
 
   if (errParam || !code) {
     status.value = 'error'
-    message.value = 'Otorisasi Strava dibatalkan.'
+    message.value = 'Strava authorization was canceled.'
     return
   }
 
@@ -53,18 +53,18 @@ onMounted(async () => {
 
     // 4. Backfill riwayat aktivitas (sekali, otomatis) — tidak fatal bila gagal,
     //    peserta tetap bisa lanjut & sinkron manual belakangan.
-    message.value = 'Menyinkronkan riwayat aktivitas…'
+    message.value = 'Syncing activity history…'
     try {
       await supabase.functions.invoke('strava-sync', { body: { athlete_id: data.athlete_id } })
     } catch (syncErr) {
-      console.error('Auto-sync gagal:', syncErr)
+      console.error('Auto-sync failed:', syncErr)
     }
 
     await refreshStravaStatus()
     router.replace('/welcome-back')
   } catch (e) {
     status.value = 'error'
-    message.value = 'Gagal menghubungkan: ' + (e?.message || e)
+    message.value = 'Failed to connect: ' + (e?.message || e)
   }
 })
 </script>

@@ -1,21 +1,21 @@
 <template>
 <div class="bm-modal-backdrop">
   <div class="bm-modal mui-card" role="dialog" aria-modal="true" aria-labelledby="bm-modal-title">
-    <button v-if="dismissible" class="bm-modal-close" type="button" aria-label="Tutup" @click="closeBodyMetricsModal">✕</button>
-    <p id="bm-modal-title" class="bm-modal-title">{{ dismissible ? 'Edit Data Tubuh' : 'Lengkapi Data Tubuh' }}</p>
+    <button v-if="dismissible" class="bm-modal-close" type="button" aria-label="Close" @click="closeBodyMetricsModal">✕</button>
+    <p id="bm-modal-title" class="bm-modal-title">{{ dismissible ? 'Edit Body Data' : 'Complete Your Body Data' }}</p>
     <p class="bm-modal-sub">
-      {{ dismissible ? 'Perbarui berat & tinggi badan untuk BMI yang akurat.' : 'Isi berat & tinggi badan dulu sebelum lanjut menggunakan aplikasi.' }}
+      {{ dismissible ? 'Update your weight & height for an accurate BMI.' : 'Fill in your weight & height before continuing to use the app.' }}
     </p>
 
     <!-- Kartu ringkasan BMI: skala berwarna sesuai kategori (dihitung dari input di bawah) -->
     <div class="bm-bmi-card" :class="bmiTone">
       <div class="bm-bmi-top">
         <div>
-          <p class="bm-bmi-label">BMI kamu</p>
+          <p class="bm-bmi-label">Your BMI</p>
           <p class="bm-bmi-value mui-mono">{{ bmiPreview ?? '—' }}</p>
         </div>
-        <span v-if="bmiCategoryPreview" class="bm-bmi-chip">{{ bmiCategoryPreview }}</span>
-        <span v-else class="bm-bmi-hint">Isi berat &amp; tinggi</span>
+        <span v-if="bmiCategoryPreview" class="bm-bmi-chip">{{ bmiCategoryLabel }}</span>
+        <span v-else class="bm-bmi-hint">Enter weight &amp; height</span>
       </div>
       <div class="bm-scale">
         <span class="bm-seg is-kurus"></span>
@@ -25,12 +25,12 @@
         <span v-if="bmiPreview" class="bm-marker" :style="{ left: markerPct + '%' }"></span>
       </div>
       <div class="bm-scale-labels">
-        <span>Kurus</span><span>Normal</span><span>Gemuk</span><span>Obesitas</span>
+        <span>Underweight</span><span>Normal</span><span>Overweight</span><span>Obese</span>
       </div>
     </div>
 
     <form class="gp-form" @submit.prevent="handleSubmit">
-      <label class="gp-label" for="bmm-weight">Berat Badan (kg)</label>
+      <label class="gp-label" for="bmm-weight">Weight (kg)</label>
       <div class="gp-input-wrap">
         <input
           id="bmm-weight"
@@ -39,12 +39,12 @@
           type="number"
           min="1"
           step="0.1"
-          placeholder="mis. 68"
+          placeholder="e.g. 68"
           inputmode="decimal"
         />
       </div>
 
-      <label class="gp-label" for="bmm-height">Tinggi Badan (cm)</label>
+      <label class="gp-label" for="bmm-height">Height (cm)</label>
       <div class="gp-input-wrap">
         <input
           id="bmm-height"
@@ -53,20 +53,20 @@
           type="number"
           min="1"
           step="0.1"
-          placeholder="mis. 172"
+          placeholder="e.g. 172"
           inputmode="decimal"
         />
       </div>
 
       <p v-if="bmiPreview" class="bm-preview">
-        BMI kamu: <strong>{{ bmiPreview }}</strong> ({{ bmiCategoryPreview }})
+        Your BMI: <strong>{{ bmiPreview }}</strong> ({{ bmiCategoryLabel }})
       </p>
 
       <p v-if="errorMsg" class="gp-error">{{ errorMsg }}</p>
 
       <button class="gp-submit" type="submit" :disabled="!canSubmit">
         <svg v-if="saving" class="spin-icon is-spinning" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-        {{ saving ? 'Menyimpan…' : 'Simpan Data Tubuh' }}
+        {{ saving ? 'Saving…' : 'Save Body Data' }}
       </button>
     </form>
   </div>
@@ -101,6 +101,11 @@ const stopPrefill = watch(profile, (p) => {
 const bmiPreview = computed(() => calcBmi(weight.value, height.value))
 const bmiCategoryPreview = computed(() => bmiCategory(bmiPreview.value))
 
+// bmiCategory() returns Indonesian labels (shared with the admin detail screen,
+// which must keep showing them in Indonesian) — map to English for display here only.
+const BMI_LABEL_EN = { Kurus: 'Underweight', Normal: 'Normal', Gemuk: 'Overweight', Obesitas: 'Obese' }
+const bmiCategoryLabel = computed(() => BMI_LABEL_EN[bmiCategoryPreview.value] || bmiCategoryPreview.value)
+
 // Tampilan: warna kartu & posisi penanda pada skala BMI 15–35 (di luar rentang → ujung skala)
 const bmiTone = computed(() => ({
   'is-kurus': bmiCategoryPreview.value === 'Kurus',
@@ -129,7 +134,7 @@ async function handleSubmit() {
     await reloadAuth() // authState.needsBodyMetrics jadi false -> modal ini otomatis hilang
     closeBodyMetricsModal() // jaga-jaga kalau dibuka manual (edit mode)
   } catch (e) {
-    errorMsg.value = 'Gagal menyimpan: ' + (e?.message || e)
+    errorMsg.value = 'Failed to save: ' + (e?.message || e)
   } finally {
     saving.value = false
   }

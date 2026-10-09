@@ -9,11 +9,11 @@
       <div class="greeting-left">
         <div class="avatar">{{ initials }}</div>
         <div class="greeting-text">
-          <p class="hello">Halo, {{ firstName }}!</p>
-          <p class="role">Anggota ARFF · Siap latihan</p>
+          <p class="hello">Hi, {{ firstName }}!</p>
+          <p class="role">ARFF Member · Ready to train</p>
         </div>
       </div>
-      <button class="icon-btn" type="button" aria-label="Notifikasi" @click="goNotifikasi">
+      <button class="icon-btn" type="button" aria-label="Notifications" @click="goNotifikasi">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
           <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
@@ -31,12 +31,12 @@
           </svg>
         </span>
         <div v-if="stravaState.connected">
-          <p class="strava-title">Terhubung dengan Strava</p>
-          <p class="strava-sub">Sinkron terakhir: {{ stravaState.lastSynced }}</p>
+          <p class="strava-title">Connected to Strava</p>
+          <p class="strava-sub">Last synced: {{ stravaState.lastSynced }}</p>
         </div>
         <div v-else>
-          <p class="strava-title">Strava belum terhubung</p>
-          <p class="strava-sub">Hubungkan untuk sinkron aktivitas otomatis</p>
+          <p class="strava-title">Strava not connected</p>
+          <p class="strava-sub">Connect to sync activities automatically</p>
         </div>
       </div>
       <button v-if="stravaState.connected" class="strava-sync" type="button" :disabled="syncing" @click="handleSync">
@@ -45,27 +45,27 @@
           <polyline points="1 20 1 14 7 14"/>
           <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
         </svg>
-        {{ syncing ? 'Menyinkronkan…' : 'Sinkronkan' }}
+        {{ syncing ? 'Syncing…' : 'Sync' }}
       </button>
-      <button v-else class="strava-sync" type="button" @click="goConnectStrava">Hubungkan</button>
+      <button v-else class="strava-sync" type="button" @click="goConnectStrava">Connect</button>
     </div>
     </div>
 
     <!-- Reminder mingguan: update berat badan -->
     <div v-if="showWeightReminder" class="weight-reminder">
-      <span class="weight-reminder-text">Waktunya update mingguan — perbarui berat badan kamu untuk BMI yang akurat.</span>
+      <span class="weight-reminder-text">Time for your weekly update — update your weight for an accurate BMI.</span>
       <div class="weight-reminder-actions">
         <button class="weight-reminder-btn" type="button" @click="goUpdateWeight">Update</button>
-        <button class="weight-reminder-dismiss" type="button" aria-label="Tutup" @click="dismissWeightReminder">✕</button>
+        <button class="weight-reminder-dismiss" type="button" aria-label="Close" @click="dismissWeightReminder">✕</button>
       </div>
     </div>
 
     <!-- Statistik — coverflow 3D, putar & pilih -->
     <section class="stats-wrap">
       <div class="stats-head">
-        <h2 class="section-title">Statistik</h2>
-        <RefreshingBadge v-if="statsLoading && stats" />
-        <span v-else class="swipe-hint">Putar ↔</span>
+        <h2 class="section-title">Statistics</h2>
+        <RefreshingBadge v-if="statsLoading && stats" label="Refreshing…" />
+        <span v-else class="swipe-hint">Swipe ↔</span>
       </div>
 
       <div v-if="statsLoading && !stats" class="stats-skel">
@@ -87,54 +87,54 @@
               <!-- Jarak -->
               <template v-if="c.type === 'distance'">
                 <div class="stat-card-head">
-                  <span class="stat-card-title">Jarak</span>
-                  <span class="hchip">Minggu ini</span>
+                  <span class="stat-card-title">Distance</span>
+                  <span class="hchip">This week</span>
                 </div>
                 <p class="stat-big mono">{{ distance.weekKm }}<small>km</small></p>
                 <div class="mini-bars">
                   <span v-for="(h, k) in distance.bars" :key="k" class="mini-bar" :style="{ height: h + '%' }"></span>
                 </div>
-                <p class="stat-note">Pace {{ distance.pace }} /km · {{ distance.runCount }} lari</p>
+                <p class="stat-note">Pace {{ distance.pace }} /km · {{ distance.runCount }} runs</p>
               </template>
 
               <!-- Detak Jantung (avg/max per sesi — Strava) -->
               <template v-else-if="c.type === 'heart-rate'">
                 <div class="stat-card-head">
-                  <span class="stat-card-title">Detak Jantung</span>
-                  <span class="hchip hchip--orange">Sesi terakhir</span>
+                  <span class="stat-card-title">Heart Rate</span>
+                  <span class="hchip hchip--orange">Last session</span>
                 </div>
                 <p class="stat-big mono">{{ heartRate.avg }}<small>bpm avg</small></p>
                 <div class="mini-bars">
                   <span v-for="(h, k) in heartRate.bars" :key="k" class="mini-bar" :style="{ height: (h - 100) + '%' }"></span>
                 </div>
-                <p class="stat-note">Maks {{ heartRate.max }} bpm</p>
+                <p class="stat-note">Max {{ heartRate.max }} bpm</p>
               </template>
 
               <!-- Kalori (tanpa makro) -->
               <template v-else-if="c.type === 'calories'">
                 <div class="stat-card-head">
-                  <span class="stat-card-title">Kalori</span>
-                  <span class="hchip">Hari ini</span>
+                  <span class="stat-card-title">Calories</span>
+                  <span class="hchip">Today</span>
                 </div>
-                <p class="stat-big mono">{{ calories.today }}<small>kkal</small></p>
-                <p class="stat-note">Sesi terakhir {{ calories.lastSession }} kkal terbakar</p>
+                <p class="stat-big mono">{{ calories.today }}<small>kcal</small></p>
+                <p class="stat-note">Last session burned {{ calories.lastSession }} kcal</p>
               </template>
 
               <!-- Relative Effort (suffer score — Strava) -->
               <template v-else-if="c.type === 'effort'">
                 <div class="stat-card-head">
                   <span class="stat-card-title">Relative Effort</span>
-                  <span class="hchip hchip--orange">Zona {{ effort.zone }}</span>
+                  <span class="hchip hchip--orange">Zone {{ effort.zone }}</span>
                 </div>
-                <p class="stat-big mono">{{ effort.last }}<small>poin</small></p>
+                <p class="stat-big mono">{{ effort.last }}<small>pts</small></p>
                 <div class="mini-bars">
                   <span v-for="(h, k) in effort.bars" :key="k" class="mini-bar" :style="{ height: h + '%' }"></span>
                 </div>
-                <p class="stat-note">Minggu ini {{ effort.weekTotal }} poin</p>
+                <p class="stat-note">This week {{ effort.weekTotal }} pts</p>
               </template>
 
               <span class="stat-more">
-                {{ isCenter(i) ? 'Ketuk untuk detail' : 'Geser ke tengah' }}
+                {{ isCenter(i) ? 'Tap for details' : 'Swipe to center' }}
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
               </span>
             </div>
@@ -149,7 +149,7 @@
           :key="c.type"
           class="sphere-dot"
           :class="{ 'is-active': isCenter(i) }"
-          :aria-label="`Ke kartu ${i + 1}`"
+          :aria-label="`Go to card ${i + 1}`"
           @click="goTo(i)"
         ></button>
       </div>
@@ -159,18 +159,18 @@
     <section class="stats-wrap act-section">
       <div class="stats-head">
         <h2 class="section-title">My Activity</h2>
-        <RefreshingBadge v-if="activitiesLoading && rawActivities" />
-        <span v-else class="hchip">{{ filteredActivities.length }} aktivitas</span>
+        <RefreshingBadge v-if="activitiesLoading && rawActivities" label="Refreshing…" />
+        <span v-else class="hchip">{{ filteredActivities.length }} activities</span>
       </div>
 
       <div class="filter-row">
         <button
           v-for="f in filters"
-          :key="f"
+          :key="f.value"
           class="filter-chip"
-          :class="{ 'is-active': activeFilter === f }"
-          @click="activeFilter = f"
-        >{{ f }}</button>
+          :class="{ 'is-active': activeFilter === f.value }"
+          @click="activeFilter = f.value"
+        >{{ f.label }}</button>
       </div>
 
       <div v-if="activitiesLoading && !rawActivities" class="act-list">
@@ -199,7 +199,7 @@
           </div>
           <span class="act-time mono">{{ a.waktu }}</span>
         </div>
-        <p v-if="filteredActivities.length === 0" class="act-empty">Tidak ada aktivitas untuk filter ini.</p>
+        <p v-if="filteredActivities.length === 0" class="act-empty">No activities for this filter.</p>
       </div>
 
       <button
@@ -208,7 +208,7 @@
         type="button"
         @click="showAllActivities = !showAllActivities"
       >
-        {{ showAllActivities ? 'Sembunyikan' : `Tampilkan Semua (${filteredActivities.length})` }}
+        {{ showAllActivities ? 'Hide' : `Show All (${filteredActivities.length})` }}
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: showAllActivities ? 'rotate(180deg)' : 'none' }"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
     </section>
@@ -231,6 +231,7 @@ import {
 import { stravaState } from '../store/strava.js'
 import { useStravaConnection } from '../composables/useStravaConnection.js'
 import { useHomeStats, useActivities, checkAchievements } from '../composables/useMemberData.js'
+import { achievementEn } from '../lib/achievementsEn.js'
 import RefreshingBadge from './RefreshingBadge.vue'
 import { formatDateTime } from '../lib/normalize.js'
 import { showToast } from '../store/toast.js'
@@ -271,7 +272,7 @@ async function handleSync() {
 async function runAchievementCheck() {
   try {
     const newlyUnlocked = await checkAchievements()
-    newlyUnlocked.forEach((a) => showToast(`Achievement baru: ${a.name}!`))
+    newlyUnlocked.forEach((a) => showToast(`New achievement: ${achievementEn(a).name}!`))
   } catch {
     // Diam-diam abaikan — bukan alur kritis, jangan ganggu Home kalau gagal.
   }
@@ -420,7 +421,14 @@ function goTo(i) {
 const runIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>'
 const gymIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/></svg>'
 
-const filters = ['Semua', 'Lari', 'Gym']
+// value dikirim apa adanya ke fetchActivities()/Supabase query (lihat
+// services/activities.js, filter === 'Lari'/'Gym') — JANGAN diterjemahkan,
+// cuma label tampilannya yg bahasa Inggris.
+const filters = [
+  { value: 'Semua', label: 'All' },
+  { value: 'Lari', label: 'Run' },
+  { value: 'Gym', label: 'Gym' },
+]
 const activeFilter = ref('Semua')
 
 // Aktivitas nyata dari Strava (seluruh histori, difilter server-side lewat composable).
@@ -723,17 +731,19 @@ const visibleActivities = computed(() =>
   background:
     linear-gradient(120deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 32%),
     linear-gradient(165deg, color-mix(in srgb, var(--acc) 20%, white) 0%, color-mix(in srgb, var(--acc) 7%, white) 100%);
-  /* Pinggiran emas glossy — bukan ikut warna aksen lagi, supaya tiap kartu
-     punya "bingkai" senada (kesan premium), dibantu bevel kaca di bawah. */
-  border: 1.5px solid #f59e0b;
+  /* Pinggiran glossy ikut warna aksen tiap kartu (dulu emas dipaksa sama
+     rata, jadi tabrakan di kartu pink/ungu) — bevel kaca tetap (highlight
+     putih di atas, rim pucat, bayangan gelap di bawah), cuma tintnya kini
+     senada kartunya sendiri, lebih menyatu & "sengaja" terasa. */
+  border: 1.5px solid var(--acc);
   border-radius: 26px;
   padding: var(--card-pad);
   overflow: hidden;
   box-shadow:
     inset 0 1.5px 0 rgba(255, 255, 255, 0.85),
-    inset 0 0 0 1px rgba(253, 230, 138, 0.6),
-    inset 0 -1.5px 0 rgba(120, 53, 15, 0.3),
-    0 0 0 1px rgba(245, 158, 11, 0.18),
+    inset 0 0 0 1px color-mix(in srgb, var(--acc2) 55%, white),
+    inset 0 -1.5px 0 color-mix(in srgb, var(--acc) 55%, black),
+    0 0 0 1px color-mix(in srgb, var(--acc) 28%, transparent),
     0 20px 40px -24px rgba(15, 23, 42, 0.22);
   transform-style: preserve-3d;
   backface-visibility: hidden;
@@ -747,19 +757,21 @@ const visibleActivities = computed(() =>
    datar) — kartu samping tetap solid tanpa blur supaya aman dari bug WebKit
    yang dikenal soal backdrop-filter di dalam elemen ber-perspective/rotateY. */
 .aeroguard-home .stat-card.is-center {
-  background:
-    linear-gradient(120deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 35%),
-    linear-gradient(145deg, var(--acc) 0%, var(--acc2) 100%);
-  border-color: #fbbf24;
+  /* Warna solid rata, tanpa lapisan putih/semburat — sempat dicoba dikasih
+     highlight kaca & sapuan diagonal putih tapi malah kelihatan kaya
+     semburat kotor, jadi dibalikin flat sesuai var(--acc)/--acc2 saja. */
+  background: linear-gradient(145deg, var(--acc) 0%, var(--acc2) 100%);
+  border-color: var(--acc2);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  /* Bevel emas lebih tegas di kartu tengah — highlight terang di tepi atas,
-     rim gelap keemasan di tepi bawah, kesan bingkai logam mengkilap. */
+  /* Bevel lebih tegas di kartu tengah, tintnya ikut var(--acc)/--acc2 —
+     highlight terang di tepi atas, rim pucat & bayangan gelap senada warna
+     kartu di tepi bawah, kesan bingkai logam mengkilap yg "pas" warnanya. */
   box-shadow:
     inset 0 1.5px 0 rgba(255, 255, 255, 0.85),
-    inset 0 0 0 1px rgba(253, 230, 138, 0.55),
-    inset 0 -1.5px 0 rgba(120, 53, 15, 0.35),
-    0 0 0 1px rgba(245, 158, 11, 0.25),
+    inset 0 0 0 1px color-mix(in srgb, var(--acc2) 60%, white),
+    inset 0 -1.5px 0 color-mix(in srgb, var(--acc) 60%, black),
+    0 0 0 1px color-mix(in srgb, var(--acc) 35%, transparent),
     0 20px 40px -16px color-mix(in srgb, var(--acc) 55%, transparent);
 }
 /* Cahaya lembut di pojok kartu — detail dekoratif supaya tiap kartu terasa
@@ -775,7 +787,7 @@ const visibleActivities = computed(() =>
 }
 .aeroguard-home .stat-card.is-center::after {
   width: 220px; height: 220px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, transparent 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--acc2) 30%, transparent) 0%, transparent 70%);
 }
 .aeroguard-home .stat-card.is-center .stat-inner {
   position: relative;
@@ -920,7 +932,7 @@ const visibleActivities = computed(() =>
 
 /* ----- Kartu hero: sapaan + Strava dalam satu panel ----- */
 .aeroguard-home .hero-card {
-  position: relative; z-index: 20; overflow: visible; border-radius: 24px;
+  position: relative; z-index: 20; overflow: hidden; border-radius: 24px;
   background: #ffffff;
   border: 1px solid rgba(37, 99, 235, 0.14);
   box-shadow:
@@ -939,16 +951,28 @@ const visibleActivities = computed(() =>
 }
 .aeroguard-home .hero-card .greeting-card::before { display: none; }
 .aeroguard-home .hero-card .strava-card {
-  background: rgba(251, 146, 60, 0.08); border: none; border-top: 1px solid rgba(37, 99, 235, 0.1);
-  border-radius: 0; padding: 14px 20px;
+  position: relative;
+  background: linear-gradient(135deg, rgba(252, 100, 45, 0.1) 0%, rgba(255, 145, 77, 0.05) 100%);
+  border: none;
+  border-radius: 0; padding: 16px 20px;
 }
-.aeroguard-home .hero-card .strava-card.is-disconnected { background: rgba(15, 23, 42, 0.03); }
+/* Garis pemisah tipis gradien (senada aksen biru di tepi atas kartu), bukan
+   border-top polos — supaya transisi antar panel terasa lebih halus. */
+.aeroguard-home .hero-card .strava-card::before {
+  content: ''; position: absolute; left: 20px; right: 20px; top: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.14) 15%, rgba(37, 99, 235, 0.14) 85%, transparent);
+}
+.aeroguard-home .hero-card .strava-card.is-disconnected { background: rgba(15, 23, 42, 0.025); }
 .aeroguard-home .hero-card .strava-title { font-size: 14px; }
 .aeroguard-home .hero-card .strava-sub { color: rgba(15, 23, 42, 0.55); }
 .aeroguard-home .hero-card .hello { font-size: 20px; }
 .aeroguard-home .hero-card .avatar {
   width: 50px; height: 50px;
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14), 0 10px 20px -8px rgba(37, 99, 235, 0.4);
+}
+.aeroguard-home .hero-card .strava-icon {
+  width: 44px; height: 44px; border-radius: 14px;
+  box-shadow: 0 0 0 4px rgba(252, 100, 45, 0.12), 0 10px 20px -8px rgba(252, 100, 45, 0.6);
 }
 .aeroguard-home .hero-card .strava-sync {
   background: linear-gradient(45deg, rgb(252, 100, 45) 0%, rgb(255, 145, 77) 100%);
@@ -963,7 +987,6 @@ const visibleActivities = computed(() =>
 .aeroguard-home .hero-card .strava-sync:active:not(:disabled) {
   transform: scale(0.96);
 }
-.aeroguard-home .hero-card .strava-icon { border-radius: 14px; }
 
 
 /* ========== TAMPILAN LEBIH HIDUP (hanya visual, struktur & data tetap) ========== */

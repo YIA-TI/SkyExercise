@@ -534,9 +534,9 @@
   }
 }
 
-/* Brand "AeroGuard" di puncak sidebar admin — placeholder ruang utk logo,
-   cuma muncul di sidebar desktop (disembunyikan di bottom-tab-bar mobile,
-   ruangnya tak cukup & tak perlu di sana). */
+/* Brand "Almira" di puncak sidebar admin — cuma muncul di sidebar desktop
+   (disembunyikan di bottom-tab-bar mobile, ruangnya tak cukup & tak perlu
+   di sana). */
 .admin-brand { display: none; }
 
 /* ── Sidebar Admin ≥ 768px: dulu pill melayang ala app HP (sama kaya member)
@@ -552,23 +552,11 @@
     margin-bottom: 12px;
     border-bottom: 1px solid rgba(15, 23, 42, 0.08);
   }
-  .admin-brand-mark {
-    flex-shrink: 0;
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    display: grid;
-    place-content: center;
-    color: #ffffff;
-    background: linear-gradient(45deg, #2563eb 0%, #60a5fa 100%);
-    box-shadow: 0 6px 14px -8px rgba(37, 99, 235, 0.5);
-  }
-  .admin-brand-text {
-    font-family: "Barlow Condensed", system-ui, sans-serif;
-    font-size: 17px;
-    font-weight: 800;
-    letter-spacing: -0.2px;
-    color: #0f172a;
+  .admin-brand-logo {
+    display: block;
+    width: 100%;
+    max-width: 210px;
+    height: auto;
   }
 
   .m-tabbar.admin-sidebar {
@@ -628,6 +616,9 @@
   .m-tabbar.admin-sidebar .m-tab {
     font-size: 14px;
     padding: 13px 16px;
+  }
+  .admin-brand-logo {
+    max-width: 230px;
   }
 }
 

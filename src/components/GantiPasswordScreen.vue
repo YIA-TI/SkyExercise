@@ -3,19 +3,19 @@
   <div class="mui-col">
     <header class="mui-header">
       <div class="h-left">
-        <button class="gp-back" type="button" aria-label="Kembali" @click="kembali">
+        <button class="gp-back" type="button" aria-label="Back" @click="kembali">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div>
-          <p class="mui-h-title">Ganti Password</p>
-          <p class="mui-h-sub">Perbarui kata sandi akunmu</p>
+          <p class="mui-h-title">Change Password</p>
+          <p class="mui-h-sub">Update your account password</p>
         </div>
       </div>
     </header>
 
     <form class="mui-card gp-form" @submit.prevent="handleSubmit">
       <!-- Kata sandi baru -->
-      <label class="gp-label" for="gp-new">Kata Sandi Baru</label>
+      <label class="gp-label" for="gp-new">New Password</label>
       <div class="gp-input-wrap">
         <svg class="gp-input-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         <input
@@ -23,10 +23,10 @@
           v-model="newPassword"
           class="gp-input"
           :type="showNew ? 'text' : 'password'"
-          placeholder="Minimal 8 karakter"
+          placeholder="At least 8 characters"
           autocomplete="new-password"
         />
-        <button class="gp-eye" type="button" :aria-label="showNew ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'" @click="showNew = !showNew">
+        <button class="gp-eye" type="button" :aria-label="showNew ? 'Hide password' : 'Show password'" @click="showNew = !showNew">
           <svg v-if="showNew" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
           <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
@@ -41,7 +41,7 @@
       </div>
 
       <!-- Konfirmasi -->
-      <label class="gp-label" for="gp-confirm">Konfirmasi Kata Sandi Baru</label>
+      <label class="gp-label" for="gp-confirm">Confirm New Password</label>
       <div class="gp-input-wrap" :class="{ 'has-error': confirmError }">
         <svg class="gp-input-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         <input
@@ -49,25 +49,25 @@
           v-model="confirmPassword"
           class="gp-input"
           :type="showConfirm ? 'text' : 'password'"
-          placeholder="Ulangi kata sandi baru"
+          placeholder="Re-enter your new password"
           autocomplete="new-password"
         />
-        <button class="gp-eye" type="button" :aria-label="showConfirm ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'" @click="showConfirm = !showConfirm">
+        <button class="gp-eye" type="button" :aria-label="showConfirm ? 'Hide password' : 'Show password'" @click="showConfirm = !showConfirm">
           <svg v-if="showConfirm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
           <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </div>
-      <p v-if="confirmError" class="gp-error">Konfirmasi kata sandi tidak cocok.</p>
+      <p v-if="confirmError" class="gp-error">Password confirmation doesn't match.</p>
       <p v-if="errorMsg" class="gp-error">{{ errorMsg }}</p>
 
       <button class="gp-submit" type="submit" :disabled="!canSubmit">
         <svg v-if="saving" class="spin-icon is-spinning" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-        {{ saving ? 'Menyimpan…' : 'Simpan Kata Sandi Baru' }}
+        {{ saving ? 'Saving…' : 'Save New Password' }}
       </button>
 
       <p v-if="success" class="gp-success">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Kata sandi berhasil diperbarui.
+        Password updated successfully.
       </p>
     </form>
   </div>
@@ -109,11 +109,11 @@ const strength = computed(() => {
 })
 
 const strengthMeta = [
-  { label: 'Sangat Lemah', color: '#dc2626' },
-  { label: 'Lemah', color: '#dc2626' },
-  { label: 'Sedang', color: '#ea580c' },
-  { label: 'Kuat', color: '#059669' },
-  { label: 'Sangat Kuat', color: '#059669' },
+  { label: 'Very Weak', color: '#dc2626' },
+  { label: 'Weak', color: '#dc2626' },
+  { label: 'Medium', color: '#ea580c' },
+  { label: 'Strong', color: '#059669' },
+  { label: 'Very Strong', color: '#059669' },
 ]
 
 const strengthLabel = computed(() => strengthMeta[strength.value].label)
@@ -137,7 +137,7 @@ async function handleSubmit() {
     confirmPassword.value = ''
     setTimeout(() => router.push('/profil'), 1200)
   } catch (e) {
-    errorMsg.value = 'Gagal memperbarui kata sandi: ' + (e?.message || e)
+    errorMsg.value = 'Failed to update password: ' + (e?.message || e)
   } finally {
     saving.value = false
   }

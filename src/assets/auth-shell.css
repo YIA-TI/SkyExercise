@@ -15,12 +15,11 @@
   padding: 24px;
   box-sizing: border-box;
   overflow: hidden;
-  background-image:
-    radial-gradient(820px 420px at 100% -8%, rgba(59, 130, 246, 0.14), transparent 62%),
-    radial-gradient(760px 460px at -10% 108%, rgba(96, 165, 250, 0.12), transparent 58%),
-    linear-gradient(160deg, #ffffff 0%, #eff6ff 55%, #dbeafe 100%);
-  background-color: #eff6ff;
-  background-repeat: no-repeat, no-repeat, no-repeat;
+  /* Gradasi diagonal oranye (Strava) → biru (Almira) full-bleed — dua warna
+     identitas app ini ketemu di satu latar, senada dgn garis aksen di tepi
+     atas kartu. */
+  background-image: linear-gradient(145deg, #fb923c 0%, #fc4c02 20%, #6d6aa3 52%, #2563eb 78%, #1d4ed8 100%);
+  background-color: #2563eb;
   background-attachment: fixed;
   animation: none;
   font-family: "Barlow", system-ui, sans-serif;
@@ -41,11 +40,12 @@
   box-sizing: border-box;
   animation: auth-card-in 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
 }
-/* Garis aksen biru di tepi atas + cahaya ambient di belakang badge */
+/* Garis aksen tepi atas — oranye (Strava) ke biru (Almira), spt rujukan
+   desain: dua identitas warna app ini ketemu di satu garis. */
 .aeroguard-signin .phone-frame::before {
   content: '';
-  position: absolute; left: 0; right: 0; top: 0; height: 3px;
-  background: linear-gradient(90deg, transparent, #2563eb 35%, #60a5fa 65%, transparent);
+  position: absolute; left: 0; right: 0; top: 0; height: 4px;
+  background: linear-gradient(90deg, #fc4c02 0%, #60a5fa 55%, #2563eb 100%);
 }
 .aeroguard-signin .phone-frame::after {
   content: '';
@@ -66,30 +66,17 @@
   text-align: center;
 }
 
-.aeroguard-signin .badge {
-  position: relative;
-  display: grid;
-  place-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
-  background: linear-gradient(45deg, #2563eb 0%, #60a5fa 100%);
-  box-shadow: 0 12px 24px -10px rgba(37, 99, 235, 0.55);
-  animation: auth-badge-float 3.2s ease-in-out infinite;
-}
-@keyframes auth-badge-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+/* Logo Almira — dulu badge kotak gradien + ikon pesawat generik, sekarang
+   logo aslinya langsung yg tampil, diam (tanpa animasi) & lebih besar. */
+.aeroguard-signin .brand-logo {
+  display: block;
+  width: 260px;
+  max-width: 82%;
+  height: auto;
+  filter: drop-shadow(0 10px 18px rgba(37, 99, 235, 0.3));
 }
 @media (prefers-reduced-motion: reduce) {
   .aeroguard-signin .phone-frame { animation: none; }
-  .aeroguard-signin .badge { animation: none; }
-}
-
-.aeroguard-signin .badge-icon {
-  width: 30px;
-  height: 30px;
-  filter: drop-shadow(0 2px 3px rgba(15, 23, 42, 0.25));
 }
 
 .aeroguard-signin .title {
@@ -254,6 +241,15 @@
 }
 .aeroguard-signin .strava-cta:hover { transform: translateY(-1px) scale(1.01); }
 .aeroguard-signin .strava-cta:active { transform: scale(0.98); }
+
+.aeroguard-signin .strava-powered-by {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: rgba(15, 23, 42, 0.4);
+}
 
 .aeroguard-signin .social-row {
   display: flex;

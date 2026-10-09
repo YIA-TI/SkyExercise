@@ -243,12 +243,14 @@ async function copyUsername(a) {
   text-transform: uppercase;
   color: #ffffff;
   background: linear-gradient(135deg, var(--seed, #2563eb) 0%, color-mix(in srgb, var(--seed, #2563eb) 55%, white) 100%);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--seed, #2563eb) 14%, transparent), 0 6px 14px -8px var(--seed, #2563eb);
+  box-shadow: 0 6px 14px -8px var(--seed, #2563eb);
 }
 
 .an-avatar-img {
+  display: block;
   width: 100%;
   height: 100%;
+  border-radius: 50%;
   object-fit: cover;
 }
 

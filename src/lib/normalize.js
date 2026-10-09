@@ -99,13 +99,15 @@ export function dateStrEndISO(dateStr) {
   return new Date(`${dateStr}T23:59:59.999`).toISOString()
 }
 
-// ISO timestamp → "3 Agu, 06:15" (tanggal + jam lokal, dipakai di daftar aktivitas).
+// ISO timestamp → "3 Aug, 06:15" (date + local time, used in the activity list).
+// Dipakai cuma oleh HomeScreen.vue (member) — locale 'en-US' aman diubah tanpa
+// pengaruh ke layar lain/admin (lihat grep: tak ada pemanggil lain).
 export function formatDateTime(iso) {
   if (!iso) return '—'
   const d = new Date(iso)
-  const tanggal = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
-  const jam = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-  return `${tanggal}, ${jam}`
+  const date = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
+  const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  return `${date}, ${time}`
 }
 
 export function normalizeProfile(row) {

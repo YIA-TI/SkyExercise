@@ -5,19 +5,19 @@
       <div class="h-left">
         <div class="mui-avatar">{{ initials }}</div>
         <div>
-          <p class="mui-h-title">Profil Saya</p>
-          <p class="mui-h-sub">Anggota ARFF aktif</p>
+          <p class="mui-h-title">My Profile</p>
+          <p class="mui-h-sub">Active ARFF member</p>
         </div>
       </div>
-      <RefreshingBadge v-if="profileLoading && profile" />
-      <span v-else class="mui-pill mui-pill--success">Aktif</span>
+      <RefreshingBadge v-if="profileLoading && profile" label="Refreshing…" />
+      <span v-else class="mui-pill mui-pill--success">Active</span>
     </header>
 
     <!-- Kartu spotlight: identitas + statistik + pengaturan, satu panel gelap -->
     <div class="pf-card">
       <span class="pf-status">
         <span class="pf-status-dot"></span>
-        Aktif Bertugas
+        On Duty
       </span>
 
       <div v-if="profileLoading && !profile" class="pf-avatar-wrap">
@@ -40,7 +40,7 @@
             <path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </p>
-        <p class="pf-role">Anggota ARFF · {{ profile?.city || '—' }}</p>
+        <p class="pf-role">ARFF Member · {{ profile?.city || '—' }}</p>
       </template>
 
       <div v-if="statsLoading && !stats" class="pf-stats">
@@ -52,6 +52,7 @@
       <div v-else class="pf-stats">
         <div v-for="s in quickStats" :key="s.label" class="pf-stat" :style="{ '--acc': s.acc }">
           <p class="pf-stat-value mui-mono">{{ s.value }}</p>
+          <p v-if="s.sub" class="pf-stat-sub">{{ s.sub }}</p>
           <p class="pf-stat-label">{{ s.label }}</p>
         </div>
       </div>
@@ -82,29 +83,29 @@
         <template v-else>
           <div v-if="stravaState.connected" class="pf-linkrow">
             <span class="pf-linkrow-ic" v-html="icons.shield"></span>
-            <span class="pf-linkrow-label">Strava Terhubung</span>
-            <button class="pf-linkrow-action" type="button" @click="handleDisconnectStrava">Putuskan</button>
+            <span class="pf-linkrow-label">Strava Connected</span>
+            <button class="pf-linkrow-action" type="button" @click="handleDisconnectStrava">Disconnect</button>
           </div>
           <div v-else class="pf-linkrow">
             <span class="pf-linkrow-ic pf-linkrow-ic--strava" v-html="icons.strava"></span>
-            <span class="pf-linkrow-label">Strava belum terhubung</span>
+            <span class="pf-linkrow-label">Strava not connected</span>
           </div>
         </template>
       </div>
 
       <template v-if="activeTab === 'info'">
         <div class="pf-divider"></div>
-        <p class="pf-group-label">Pengaturan Akun</p>
+        <p class="pf-group-label">Account Settings</p>
 
         <div class="pf-quick-icons">
           <button class="pf-quick-row" type="button" @click="goDataTubuh">
             <span class="pf-quick-row-ic" v-html="icons.scale"></span>
-            <span class="pf-quick-row-label">Edit Data Tubuh</span>
+            <span class="pf-quick-row-label">Edit Body Data</span>
             <svg class="pf-quick-row-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
           <button class="pf-quick-row" type="button" @click="goGantiPassword">
             <span class="pf-quick-row-ic" v-html="icons.lock"></span>
-            <span class="pf-quick-row-label">Ganti Password</span>
+            <span class="pf-quick-row-label">Change Password</span>
             <svg class="pf-quick-row-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         </div>
@@ -115,12 +116,12 @@
       <button
         class="pf-cta" type="button" :class="stravaState.connected ? 'is-logout' : 'is-connect'"
         @click="stravaState.connected ? handleLogout() : goConnectStrava()"
-      >{{ stravaState.connected ? 'Keluar dari Akun' : 'Hubungkan ke Strava' }}</button>
+      >{{ stravaState.connected ? 'Log Out' : 'Connect to Strava' }}</button>
     </div>
 
     <!-- Grafik jarak per hari, Senin–Minggu minggu ini (Strava — total lari per hari) -->
     <section class="mui-block">
-      <h2 class="mui-section-title">Jarak Minggu Ini</h2>
+      <h2 class="mui-section-title">This Week's Distance</h2>
       <div v-if="statsLoading && !stats" class="mui-card">
         <div class="pf-chart">
           <div v-for="i in 7" :key="i" class="pf-chart-col">
@@ -136,14 +137,14 @@
             <span class="pf-chart-label" :class="{ 'is-today': i === todayIdx }">{{ dayLabels[i] }}</span>
           </div>
         </div>
-        <p v-if="weekTotalKm === 0" class="pf-chart-empty">Belum ada lari minggu ini. Batang akan terisi setelah sinkron Strava.</p>
+        <p v-if="weekTotalKm === 0" class="pf-chart-empty">No runs yet this week. Bars will fill in after a Strava sync.</p>
       </div>
     </section>
 
     <section class="mui-block">
       <button class="pf-danger" type="button" @click="handleDelete">
         <span v-html="icons.trash"></span>
-        Hapus Akun
+        Delete Account
       </button>
     </section>
   </div>
@@ -179,7 +180,7 @@ const initials = computed(() =>
   (authState.userName || 'Citra Dewi').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
 )
 
-const dayLabels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
+const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const todayIdx = (new Date().getDay() + 6) % 7 // Senin = 0
 const dailyKm = computed(() => distance.value.daily ?? [0, 0, 0, 0, 0, 0, 0])
 const weekTotalKm = computed(() => dailyKm.value.reduce((s, km) => s + km, 0))
@@ -213,35 +214,41 @@ function goConnectStrava() {
 }
 
 function handleDisconnectStrava() {
-  if (window.confirm('Putuskan koneksi Strava?')) {
+  if (window.confirm('Disconnect from Strava?')) {
     disconnectStrava()
   }
 }
 
 function handleDelete() {
-  if (window.confirm('Yakin ingin menghapus akun? Tindakan ini tidak dapat dibatalkan.')) {
+  if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
     logout()
     router.push('/')
   }
 }
 
 const bmi = computed(() => calcBmi(profile.value?.weight, profile.value?.height))
-const bmiLabel = computed(() => bmi.value != null ? `${bmi.value} · ${bmiCategory(bmi.value)}` : '—')
+// bmiCategory() returns Indonesian labels (shared with the admin detail screen,
+// which must keep showing them in Indonesian) — map to English for display here only.
+const BMI_LABEL_EN = { Kurus: 'Underweight', Normal: 'Normal', Gemuk: 'Overweight', Obesitas: 'Obese' }
+const bmiCategoryLabel = computed(() => {
+  const cat = bmi.value != null ? bmiCategory(bmi.value) : null
+  return cat ? (BMI_LABEL_EN[cat] || cat) : null
+})
 
 const infoDiri = computed(() => [
-  { label: 'Nama Lengkap', value: profile.value?.name || authState.userName || '—' },
-  { label: 'Jenis Kelamin', value: profile.value?.sex === 'M' ? 'Laki-laki' : profile.value?.sex === 'F' ? 'Perempuan' : '—' },
-  { label: 'Kota', value: profile.value?.city || '—' },
-  { label: 'Negara', value: profile.value?.country || '—' },
-  { label: 'Berat Badan', value: profile.value?.weight ? `${profile.value.weight} kg` : '—' },
-  { label: 'Tinggi Badan', value: profile.value?.height ? `${profile.value.height} cm` : '—' },
+  { label: 'Full Name', value: profile.value?.name || authState.userName || '—' },
+  { label: 'Gender', value: profile.value?.sex === 'M' ? 'Male' : profile.value?.sex === 'F' ? 'Female' : '—' },
+  { label: 'City', value: profile.value?.city || '—' },
+  { label: 'Country', value: profile.value?.country || '—' },
+  { label: 'Weight', value: profile.value?.weight ? `${profile.value.weight} kg` : '—' },
+  { label: 'Height', value: profile.value?.height ? `${profile.value.height} cm` : '—' },
 ])
 
 const quickStats = computed(() => [
-  { label: 'Sesi Minggu Ini', value: String(stats.value?.effort?.weekSessions ?? '—'), acc: '#2563eb' },
-  { label: 'Pace Tercepat', value: distance.value.bestPace, acc: '#0891b2' },
-  { label: 'Peringkat Effort', value: effortRank.value, acc: '#d97706' },
-  { label: 'BMI', value: bmiLabel.value, acc: '#059669' },
+  { label: 'Weekly Sessions', value: String(stats.value?.effort?.weekSessions ?? '—'), acc: '#2563eb' },
+  { label: 'Fastest Pace', value: distance.value.bestPace, acc: '#0891b2' },
+  { label: 'Effort Rank', value: effortRank.value, acc: '#d97706' },
+  { label: 'BMI', value: bmi.value ?? '—', sub: bmiCategoryLabel.value, acc: '#059669' },
 ])
 
 const icons = {
@@ -380,8 +387,9 @@ const icons = {
   background: var(--acc, #2563eb);
   opacity: 0.85;
 }
-.pf-stat-value { margin: 0; font-size: 12.5px; font-weight: 700; color: color-mix(in srgb, var(--acc, #2563eb) 65%, #0f172a); letter-spacing: -0.1px; line-height: 1.25; overflow-wrap: break-word; }
-.pf-stat-label { margin: 4px 0 0; font-size: 10.5px; color: rgba(15, 23, 42, 0.55); line-height: 1.3; }
+.pf-stat-value { margin: 0; font-size: 12.5px; font-weight: 700; color: color-mix(in srgb, var(--acc, #2563eb) 65%, #0f172a); letter-spacing: -0.1px; line-height: 1.25; white-space: nowrap; }
+.pf-stat-sub { margin: 2px 0 0; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: color-mix(in srgb, var(--acc, #2563eb) 55%, transparent); white-space: nowrap; }
+.pf-stat-label { margin: 4px 0 0; font-size: 10.5px; color: rgba(15, 23, 42, 0.55); line-height: 1.3; text-wrap: balance; }
 
 /* Tab tersegmentasi (Info / Strava) */
 .pf-tabs {

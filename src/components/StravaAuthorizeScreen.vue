@@ -29,8 +29,8 @@
         </span>
       </div>
 
-      <h1 class="so-title">AeroGuard ingin terhubung dengan Strava</h1>
-      <p class="so-sub">Masuk sebagai <b>{{ authState.userName || 'Citra Dewi' }}</b></p>
+      <h1 class="so-title">Almira wants to connect with Strava</h1>
+      <p class="so-sub">Signed in as <b>{{ authState.userName || 'Citra Dewi' }}</b></p>
 
       <ul class="so-perms">
         <li v-for="p in permissions" :key="p">
@@ -40,18 +40,18 @@
       </ul>
 
       <p v-if="capFull" class="so-full">
-        Kuota koneksi Strava sedang penuh ({{ capInfo.used }}/{{ capInfo.max }}). Coba lagi nanti — kuota akan ditambah setelah app disetujui Strava.
+        Strava connection quota is full ({{ capInfo.used }}/{{ capInfo.max }}). Please try again later — the quota will be increased once the app is approved by Strava.
       </p>
 
       <div class="so-actions">
-        <button class="so-cancel" type="button" :disabled="authorizing" @click="handleCancel">Batalkan</button>
+        <button class="so-cancel" type="button" :disabled="authorizing" @click="handleCancel">Cancel</button>
         <button class="so-authorize" type="button" :disabled="authorizing || capFull" @click="handleAuthorize">
           <svg v-if="authorizing" class="so-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-          {{ authorizing ? 'Menghubungkan…' : 'Otorisasi' }}
+          {{ authorizing ? 'Connecting…' : 'Authorize' }}
         </button>
       </div>
 
-      <p class="so-note">Kamu bisa memutuskan koneksi ini kapan saja dari halaman Profil.</p>
+      <p class="so-note">You can disconnect this connection anytime from the Profile page.</p>
     </div>
   </div>
 </div>
@@ -69,9 +69,9 @@ const capFull = ref(false)
 const capInfo = ref({ used: 0, max: 10 })
 
 const permissions = [
-  'Lihat profil publik kamu (nama, foto, kota)',
-  'Lihat data aktivitas lari & gym',
-  'Lihat statistik dan pencapaian',
+  'View your public profile (name, photo, city)',
+  'View running & gym activity data',
+  'View your stats and achievements',
 ]
 
 // Cek kuota begitu halaman dibuka, agar user langsung tahu sebelum klik.

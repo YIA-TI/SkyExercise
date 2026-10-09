@@ -5,11 +5,11 @@
       <div class="h-left">
         <div class="mui-avatar">{{ initials }}</div>
         <div>
-          <p class="mui-h-title">Notifikasi</p>
-          <p class="mui-h-sub">{{ notifications.length ? `${notifications.length} pemberitahuan` : 'Semua sudah beres' }}</p>
+          <p class="mui-h-title">Notifications</p>
+          <p class="mui-h-sub">{{ notifications.length ? `${notifications.length} notifications` : 'All caught up' }}</p>
         </div>
       </div>
-      <span class="mui-pill">Terbaru</span>
+      <span class="mui-pill">Latest</span>
     </header>
 
     <div v-if="notifications.length" class="nt-list">
@@ -27,8 +27,8 @@
       <div class="nt-empty-ic">
         <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
       </div>
-      <p class="nt-empty-title">Belum ada notifikasi baru</p>
-      <p class="nt-empty-sub">Quest yang siap diklaim dan pencapaian baru akan muncul di sini.</p>
+      <p class="nt-empty-title">No new notifications yet</p>
+      <p class="nt-empty-sub">Quests ready to claim and new achievements will show up here.</p>
     </div>
   </div>
 </div>
@@ -41,6 +41,7 @@ import { authState } from '../store/auth.js'
 import { openBodyMetricsModal } from '../store/bodyMetricsModal.js'
 import { useQuests } from '../composables/useQuests.js'
 import { useAchievements } from '../composables/useMemberData.js'
+import { achievementEn } from '../lib/achievementsEn.js'
 
 const router = useRouter()
 
@@ -62,21 +63,21 @@ const notifications = computed(() => {
   const list = []
   if (authState.needsWeightReminder) {
     list.push({
-      key: 'weight', title: 'Update berat badan', sub: 'Perbarui untuk BMI yang akurat',
+      key: 'weight', title: 'Update your weight', sub: 'Update it for an accurate BMI',
       cls: 'is-orange', icon: ICON.scale, action: () => openBodyMetricsModal(),
     })
   }
   ;(quests.value || [])
     .filter((q) => !q.claimed && Number(q.progress) >= Number(q.target))
     .forEach((q) => list.push({
-      key: `quest-${q.id}`, title: 'Quest siap diklaim', sub: q.title,
+      key: `quest-${q.id}`, title: 'Quest ready to claim', sub: q.title,
       cls: 'is-green', icon: ICON.flag, action: () => router.push('/latihan'),
     }))
   const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
   ;(achievements.value || [])
     .filter((a) => a.unlockedAt && new Date(a.unlockedAt).getTime() >= weekAgo)
     .forEach((a) => list.push({
-      key: `ach-${a.id}`, title: 'Pencapaian baru', sub: a.name,
+      key: `ach-${a.id}`, title: 'New achievement', sub: achievementEn(a).name,
       cls: 'is-amber', icon: ICON.star, action: () => router.push('/latihan'),
     }))
   return list

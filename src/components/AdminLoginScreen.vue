@@ -1,25 +1,9 @@
 <template>
 <div class="aeroguard-signin">
   <div class="phone-frame">
-    <!-- Header dengan badge ikon AeroGuard -->
+    <!-- Header dengan logo Almira -->
     <div class="top-visual">
-      <div class="badge">
-        <svg class="badge-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M12 2.4c-.66 0-1.15.72-1.15 1.95v5.03L3.4 13.86a.92.92 0 0 0-.4.77v1.02c0 .3.29.52.58.44l7.27-2.02v4.35l-1.73 1.24a.52.52 0 0 0-.22.42v.98c0 .28.28.48.55.4L12 20.98l2.55.72c.27.08.55-.12.55-.4v-.98a.52.52 0 0 0-.22-.42l-1.73-1.24v-4.35l7.27 2.02c.29.08.58-.14.58-.44v-1.02a.92.92 0 0 0-.4-.77l-7.45-4.48V4.35c0-1.23-.49-1.95-1.15-1.95Z"
-            fill="url(#adminLoginGrad)"
-            stroke="rgba(255,255,255,0.9)"
-            stroke-width="0.5"
-            stroke-linejoin="round"
-          />
-          <defs>
-            <linearGradient id="adminLoginGrad" x1="12" y1="2.4" x2="12" y2="21.7" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#ffffff" />
-              <stop offset="1" stop-color="#ccfbf1" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
+      <img src="../assets/img/almira-logo.png" alt="Almira" class="brand-logo" />
       <h1 class="title">Masuk sebagai Admin</h1>
       <p class="subtitle">Kelola pemantauan latihan peserta</p>
     </div>

@@ -5,18 +5,18 @@
       <div class="h-left">
         <div class="mui-avatar">{{ initials }}</div>
         <div>
-          <p class="mui-h-title">Papan Peringkat</p>
-          <p class="mui-h-sub">Divisi ARFF · {{ currentRankData.length }} anggota</p>
+          <p class="mui-h-title">Leaderboard</p>
+          <p class="mui-h-sub">ARFF Division · {{ currentRankData.length }} members</p>
         </div>
       </div>
-      <RefreshingBadge v-if="loading && rows" />
-      <span v-else class="mui-pill">Posisi #{{ myRank }}</span>
+      <RefreshingBadge v-if="loading && rows" label="Refreshing…" />
+      <span v-else class="mui-pill">Position #{{ myRank }}</span>
     </header>
 
     <div class="mui-toggle">
       <button :class="{ 'is-active': activeMode === 'running' }" @click="activeMode = 'running'">
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        Jarak
+        Distance
       </button>
       <button :class="{ 'is-active': activeMode === 'effort' }" @click="activeMode = 'effort'">
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -24,7 +24,7 @@
       </button>
       <button :class="{ 'is-active': activeMode === 'league' }" @click="activeMode = 'league'">
         <Shield :size="15" />
-        Liga
+        League
       </button>
     </div>
 
@@ -40,12 +40,14 @@
           v-for="t in tierOrder" :key="t.key" class="lb-league-badge"
           :class="{ 'is-current': myTier === t.key }" :style="{ color: t.color }"
         >
-          <component :is="TIER_ICON[t.key]" :size="18" />
-          <span>{{ t.label }}</span>
+          <span class="lb-league-badge-ic">
+            <component :is="TIER_ICON[t.key]" :size="18" />
+          </span>
+          <span class="lb-league-badge-label">{{ t.label }}</span>
         </div>
       </div>
       <div class="lb-league-card-bottom">
-        <p class="lb-league-sub">XP dihitung minggu ini (Senin–Minggu), reset otomatis tiap Senin.</p>
+        <p class="lb-league-sub">XP is counted this week (Monday–Sunday), resets automatically every Monday.</p>
       </div>
     </div>
 
@@ -68,7 +70,7 @@
         </div>
         <p class="lb-podium-name">
           {{ p.name }}
-          <span v-if="p.isMe" class="mui-tag mui-tag--accent">Kamu</span>
+          <span v-if="p.isMe" class="mui-tag mui-tag--accent">You</span>
         </p>
         <span v-if="p.tier" class="lb-tier-chip" :style="{ color: p.tier.color }">{{ p.tier.label }}</span>
         <p class="lb-podium-value mui-mono">{{ p.value }}</p>
@@ -83,15 +85,15 @@
       </div>
     </div>
     <div v-else class="mui-rank-list">
-      <div v-for="item in restRankData" :key="item.id" class="mui-rank" :class="{ 'mui-rank--me': item.isMe, 'lb-band-top': item.rank <= 10 }">
+      <div v-for="item in restRankData" :key="item.id" class="mui-rank" :class="{ 'mui-rank--me': item.isMe }" :style="{ '--tier': rowColor(item) }">
         <div class="mui-rank-num mui-rank-num--normal">{{ item.rank }}</div>
-        <div class="lb-row-avatar" :style="{ '--tier': item.tier?.color }">
+        <div class="lb-row-avatar">
           <img v-if="item.avatar && !brokenAvatars.has(item.id)" :src="item.avatar" alt="" @error="brokenAvatars.add(item.id)" />
           <template v-else>{{ initialsOf(item.name) }}</template>
         </div>
         <div class="mui-rank-name">
           {{ item.name }}
-          <span v-if="item.isMe" class="mui-tag mui-tag--accent">Kamu</span>
+          <span v-if="item.isMe" class="mui-tag mui-tag--accent">You</span>
           <span v-if="item.tier" class="lb-tier-chip" :style="{ color: item.tier.color }">{{ item.tier.label }}</span>
         </div>
         <div class="mui-rank-trail">
@@ -127,6 +129,19 @@ const initials = computed(() =>
 const tierOrder = LEAGUE_TIER_ORDER
 const TIER_ICON = { bronze: Shield, silver: Award, gold: Star, diamond: Gem }
 
+// Warna tier liga sering kosong (null) utk akun yg belum kehitung XP-nya —
+// kalau cuma andalin itu, baris2 jatuh ke 1 warna fallback yg sama semua.
+// Warna cadangan ini deterministik dari nama jadi tetap berwarna-warni walau
+// tier kosong, tapi tier asli tetap diprioritaskan kalau ada (sama dgn versi admin).
+const ROW_COLOR_PALETTE = ['#2563eb', '#7c3aed', '#0d9488', '#d97706', '#e11d48', '#0891b2']
+function rowColor(item) {
+  if (item.tier?.color) return item.tier.color
+  const name = item.name || ''
+  let hash = 0
+  for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
+  return ROW_COLOR_PALETTE[hash % ROW_COLOR_PALETTE.length]
+}
+
 // Leaderboard nyata (RPC): semua mode dihitung mingguan (Senin-Minggu).
 const { rows, loading } = useLeaderboard(activeMode, leaguePeriod)
 
@@ -137,12 +152,12 @@ const currentRankData = computed(() =>
     avatar: r.avatar,
     tier: r.tier,
     isMe: r.athleteId === authState.athleteId,
-    unit: activeMode.value === 'running' ? 'km / minggu' : activeMode.value === 'effort' ? 'poin / minggu' : 'XP / minggu',
+    unit: activeMode.value === 'running' ? 'km / week' : activeMode.value === 'effort' ? 'pts / week' : 'XP / week',
     value: activeMode.value === 'running'
       ? `${r.distanceKm} km`
       : activeMode.value === 'effort'
-        ? Number(r.effort).toLocaleString('id-ID')
-        : Number(r.xp).toLocaleString('id-ID'),
+        ? Number(r.effort).toLocaleString('en-US')
+        : Number(r.xp).toLocaleString('en-US'),
   })),
 )
 
@@ -185,9 +200,11 @@ function isZeroValue(v) {
   justify-content: center;
   gap: 10px;
   background: #ffffff;
-  border: 1px solid rgba(37, 99, 235, 0.14);
+  border: 1.5px solid rgba(245, 158, 11, 0.28);
   border-radius: 20px;
-  box-shadow: 0 16px 32px -26px rgba(15, 23, 42, 0.22);
+  box-shadow:
+    0 16px 32px -26px rgba(15, 23, 42, 0.2),
+    0 18px 36px -24px rgba(245, 158, 11, 0.35);
   padding: 22px 14px 16px;
 }
 .lb-podium::before {
@@ -313,21 +330,28 @@ function isZeroValue(v) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 8px 4px;
+  gap: 7px;
+  padding: 10px 4px;
   border-radius: 14px;
-  opacity: 0.68;
-  transition: opacity 0.15s ease, background 0.15s ease;
 }
-.lb-league-badge span { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; }
-.lb-league-badge span { color: rgba(15, 23, 42, 0.8); }
+.lb-league-badge-ic {
+  display: grid;
+  place-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: color-mix(in srgb, currentColor 16%, white);
+  box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 30%, transparent);
+}
+.lb-league-badge-label { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; color: rgba(15, 23, 42, 0.75); }
 
-/* ── Tampilan: peringkat 4–10 diberi garis aksen emas; baris "Kamu" lebih menyala ── */
-.lb-band-top { border-left: 3px solid #f59e0b; padding-left: 13px; }
+/* ── Tampilan: baris "Kamu" lebih menyala ── */
 .mui-rank--me { box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22), 0 14px 28px -18px rgba(37, 99, 235, 0.35); }
 .lb-league-badge.is-current {
-  opacity: 1; background: rgba(37, 99, 235, 0.06);
-  box-shadow: inset 0 0 0 1.5px currentColor, 0 10px 20px -14px currentColor;
+  background: color-mix(in srgb, currentColor 16%, white);
+}
+.lb-league-badge.is-current .lb-league-badge-ic {
+  box-shadow: 0 0 0 2px currentColor, 0 10px 20px -14px currentColor;
 }
 
 .lb-league-card-bottom {
@@ -357,18 +381,28 @@ function isZeroValue(v) {
   border-radius: 50%;
   overflow: hidden;
   display: grid; place-content: center;
-  font-weight: 700; font-size: 11px; color: rgba(15, 23, 42, 0.75);
-  background: rgba(37, 99, 235, 0.08);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--tier, #f59e0b) 55%, transparent);
+  font-weight: 700; font-size: 11px;
+  background: rgba(15, 23, 42, 0.06);
+  color: rgba(15, 23, 42, 0.7);
+  box-shadow: 0 0 0 3px var(--tier, #f59e0b);
 }
 
-/* ── Tampilan: baris peringkat punya sapuan warna dari tepi (bukan polos),
-   angka ringkas dgn depth, dan trailing value/unit ditumpuk spy lebih jelas. ── */
+/* ── Tampilan: baris putih bersih, warnanya (var(--tier) — tier liga asli
+   atau cadangan deterministik dari nama, lihat rowColor() di script) dipakai
+   SOLID & tegas di badge nomor peringkat, kartunya dikasih warna lewat garis
+   tepi tipis + glow bayangan lembut di bawahnya — sama kaya versi admin. ── */
 .mui-rank {
-  background: linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, #ffffff 45%);
+  background: #ffffff;
+  border: 1.5px solid color-mix(in srgb, var(--tier, #2563eb) 32%, transparent);
+  box-shadow: 0 16px 30px -20px color-mix(in srgb, var(--tier, #2563eb) 55%, transparent);
 }
-.mui-rank-num {
-  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06), 0 6px 14px -8px rgba(15, 23, 42, 0.15);
+.mui-rank:hover {
+  box-shadow: 0 18px 34px -18px color-mix(in srgb, var(--tier, #2563eb) 60%, transparent);
+}
+.mui-rank .mui-rank-num--normal {
+  background: color-mix(in srgb, var(--tier, #2563eb) 14%, white);
+  color: var(--tier, #2563eb);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--tier, #2563eb) 45%, transparent);
 }
 .mui-rank-trail {
   display: flex;

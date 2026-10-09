@@ -5,8 +5,8 @@
       <div class="h-left">
         <div class="mui-avatar">{{ initials }}</div>
         <div>
-          <p class="mui-h-title">Latihan Saya</p>
-          <p class="mui-h-sub">Misi latihan &amp; pencapaianmu</p>
+          <p class="mui-h-title">My Training</p>
+          <p class="mui-h-sub">Your training missions &amp; achievements</p>
         </div>
       </div>
       <span class="mui-pill" :style="{ '--pill': tier.color }">{{ tier.label }}</span>
@@ -23,25 +23,26 @@
         </div>
         <div class="q-streak">
           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2s4 4 4 8a4 4 0 0 1-8 0c0-1 .5-2 .5-2S8 10 8 12a4 4 0 1 0 8 0c0-5-4-10-4-10z"/></svg>
-          {{ streak }} hari
+          {{ streak }} days
         </div>
       </div>
       <div class="q-xpbar"><div class="q-xpfill" :style="{ width: tier.pct + '%' }"></div></div>
       <p class="q-tier-caption mono">
-        <template v-if="tier.next">{{ totalXp - tier.minXp }} / {{ tier.next.minXp - tier.minXp }} XP menuju {{ tier.next.label }}</template>
-        <template v-else>Tier tertinggi tercapai</template>
+        <template v-if="tier.next">{{ totalXp - tier.minXp }} / {{ tier.next.minXp - tier.minXp }} XP to {{ tier.next.label }}</template>
+        <template v-else>Highest tier reached</template>
       </p>
       <div class="q-hero-stats">
-        <div><p class="q-stat-val mono">{{ completedCount }}</p><p class="q-stat-lbl">Quest Selesai</p></div>
-        <div><p class="q-stat-val mono">{{ totalXp.toLocaleString('id-ID') }}</p><p class="q-stat-lbl">Total XP</p></div>
-        <div><p class="q-stat-val mono">{{ effortRank }}</p><p class="q-stat-lbl">Peringkat</p></div>
+        <div><p class="q-stat-val mono">{{ completedCount }}</p><p class="q-stat-lbl">Quests Done</p></div>
+        <div><p class="q-stat-val mono">{{ totalXp.toLocaleString('en-US') }}</p><p class="q-stat-lbl">Total XP</p></div>
+        <div><p class="q-stat-val mono">{{ effortRank }}</p><p class="q-stat-lbl">Ranking</p></div>
       </div>
     </div>
 
-    <!-- Tab Harian / Mingguan -->
+    <!-- Tab Harian / Mingguan — value internal tetap 'harian'/'mingguan'
+         (dicocokkan ke q.scope dari data quest), cuma labelnya bahasa Inggris. -->
     <div class="mui-toggle">
-      <button :class="{ 'is-active': tab === 'harian' }" @click="tab = 'harian'">Harian</button>
-      <button :class="{ 'is-active': tab === 'mingguan' }" @click="tab = 'mingguan'">Mingguan</button>
+      <button :class="{ 'is-active': tab === 'harian' }" @click="tab = 'harian'">Daily</button>
+      <button :class="{ 'is-active': tab === 'mingguan' }" @click="tab = 'mingguan'">Weekly</button>
     </div>
 
     <!-- Jalur quest -->
@@ -93,11 +94,11 @@
                 @click.stop="claim(q)"
               >
                 <svg v-if="claimingIds.has(q.id)" class="spin-icon is-spinning" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                Klaim {{ q.reward }} XP
+                Claim {{ q.reward }} XP
               </button>
-              <span v-else-if="statusOf(q) === 'done'" class="q-claimed">✓ Reward diklaim</span>
-              <span v-else-if="statusOf(q) === 'locked'" class="q-locked-note">Terkunci — selesaikan quest sebelumnya</span>
-              <span v-else class="q-inprogress">Lanjutkan latihan untuk menyelesaikan</span>
+              <span v-else-if="statusOf(q) === 'done'" class="q-claimed">✓ Reward claimed</span>
+              <span v-else-if="statusOf(q) === 'locked'" class="q-locked-note">Locked — complete the previous quest</span>
+              <span v-else class="q-inprogress">Keep training to complete this</span>
             </div>
           </transition>
         </div>
@@ -108,10 +109,10 @@
           class="q-claim-mini"
           :disabled="claimingIds.has(q.id)"
           @click.stop="claim(q)"
-          aria-label="Klaim reward"
+          aria-label="Claim reward"
         >
           <svg v-if="claimingIds.has(q.id)" class="spin-icon is-spinning" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-          Klaim
+          Claim
         </button>
       </article>
     </section>
@@ -120,7 +121,7 @@
     <section class="mui-block">
       <button class="q-ach-toggle" type="button" @click="achievementsOpen = !achievementsOpen">
         <span class="q-ach-toggle-left">
-          <h2 class="mui-section-title">Pencapaian</h2>
+          <h2 class="mui-section-title">Achievements</h2>
           <span class="mui-tag mui-tag--gray">{{ unlockedAchCount }}/{{ totalAchCount }}</span>
         </span>
         <svg class="q-ach-chevron" :class="{ 'is-open': achievementsOpen }" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
@@ -137,7 +138,7 @@
         </span>
       </button>
       <p v-if="!achievementsOpen && nextAchLatihan" class="q-ach-next">
-        Berikutnya: <strong>{{ nextAchLatihan.name }}</strong> — {{ nextAchLatihan.description }}
+        Next: <strong>{{ nextAchLatihan.name }}</strong> — {{ nextAchLatihan.description }}
       </p>
 
       <transition name="q-ach-expand">
@@ -158,7 +159,7 @@
                   <span class="mui-tag" :style="{ background: categoryTone(a.category).bg, color: categoryTone(a.category).fg }">{{ a.category }}</span>
                 </div>
                 <p class="q-ach-desc">{{ a.description }}</p>
-                <p v-if="a.unlockedAt" class="q-ach-unlocked">Diraih {{ formatAchDate(a.unlockedAt) }}</p>
+                <p v-if="a.unlockedAt" class="q-ach-unlocked">Unlocked {{ formatAchDate(a.unlockedAt) }}</p>
               </div>
             </div>
           </template>
@@ -176,6 +177,7 @@ import { useQuests } from '../composables/useQuests.js'
 import { useLeaderboard, useAchievements, checkAchievements } from '../composables/useMemberData.js'
 import { tierForXp } from '../lib/xpTier.js'
 import { showToast } from '../store/toast.js'
+import { achievementEn } from '../lib/achievementsEn.js'
 
 const initials = computed(() =>
   (authState.userName || 'Citra Dewi').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
@@ -241,7 +243,7 @@ async function claim(q) {
     await claimQuest(q.id)
     await runAchievementCheck()
   } catch (e) {
-    alert('Gagal klaim: ' + (e?.message || e))
+    alert('Failed to claim: ' + (e?.message || e))
   } finally {
     const next = new Set(claimingIds.value)
     next.delete(q.id)
@@ -251,7 +253,10 @@ async function claim(q) {
 
 // ── Pencapaian (real, 12 badge tetap — lihat services/achievements.js) ──
 const achievementsOpen = ref(false)
-const { achievements, loading: achLoading, refresh: refreshAchievements } = useAchievements()
+const { achievements: achievementsRaw, loading: achLoading, refresh: refreshAchievements } = useAchievements()
+// Nama/deskripsi/kategori datanya dari DB (bahasa Indonesia) — dipetakan ke Inggris
+// khusus untuk tampilan member (lihat lib/achievementsEn.js).
+const achievements = computed(() => (achievementsRaw.value ?? []).map(achievementEn))
 const totalAchCount = computed(() => achievements.value?.length ?? 0)
 const unlockedAchCount = computed(() => (achievements.value ?? []).filter((a) => a.unlockedAt).length)
 const nextAchLatihan = computed(() => (achievements.value ?? []).find((a) => !a.unlockedAt) ?? null)
@@ -277,7 +282,7 @@ function categoryTone(cat) {
 }
 
 function formatAchDate(iso) {
-  return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+  return new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 // Evaluasi ulang kriteria (RPC) & toast perayaan utk yang baru unlock — dipanggil
@@ -287,7 +292,7 @@ async function runAchievementCheck() {
   try {
     const newlyUnlocked = await checkAchievements()
     if (newlyUnlocked.length) await refreshAchievements()
-    newlyUnlocked.forEach((a) => showToast(`Achievement baru: ${a.name}!`))
+    newlyUnlocked.forEach((a) => showToast(`New achievement: ${achievementEn(a).name}!`))
   } catch {
     // Diam-diam abaikan — bukan alur kritis.
   }

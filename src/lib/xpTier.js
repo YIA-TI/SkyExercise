@@ -3,11 +3,11 @@
 // LEAGUE_TIERS (lib/leagueTier.js) yang berbasis posisi rank bulanan & bisa turun;
 // tier ini SELALU naik seiring XP terkumpul (quest diklaim), cocok utk hero Latihan.
 export const XP_TIERS = [
-  { key: 'bronze',   label: 'Bronze',   minXp: 0,     color: '#c2703d', badgeFile: 'tier-bronze.png',   tagline: 'Awal perjalananmu menuju puncak!' },
-  { key: 'silver',   label: 'Silver',   minXp: 1000,  color: '#78716c', badgeFile: 'tier-silver.png',   tagline: 'Terus tingkatkan kemampuanmu!' },
-  { key: 'gold',     label: 'Gold',     minXp: 3000,  color: '#b8862f', badgeFile: 'tier-gold.png',     tagline: 'Konsistensi adalah kunci kemenangan!' },
-  { key: 'platinum', label: 'Platinum', minXp: 6000,  color: '#fb7185', badgeFile: 'tier-platinum.png', tagline: 'Kamu semakin dekat ke level terbaik!' },
-  { key: 'diamond',  label: 'Diamond',  minXp: 10000, color: '#fde047', badgeFile: 'tier-diamond.png',  tagline: 'Hanya yang terbaik berada di sini!' },
+  { key: 'bronze',   label: 'Bronze',   minXp: 0,     color: '#c2703d', badgeFile: 'tier-bronze.png',   tagline: 'The start of your journey to the top!' },
+  { key: 'silver',   label: 'Silver',   minXp: 1000,  color: '#78716c', badgeFile: 'tier-silver.png',   tagline: 'Keep pushing your limits!' },
+  { key: 'gold',     label: 'Gold',     minXp: 3000,  color: '#b8862f', badgeFile: 'tier-gold.png',     tagline: 'Consistency is the key to victory!' },
+  { key: 'platinum', label: 'Platinum', minXp: 6000,  color: '#fb7185', badgeFile: 'tier-platinum.png', tagline: 'You\'re getting closer to the top level!' },
+  { key: 'diamond',  label: 'Diamond',  minXp: 10000, color: '#fde047', badgeFile: 'tier-diamond.png',  tagline: 'Only the best make it here!' },
 ]
 
 // Tier saat ini + batas tier berikutnya (null kalau sudah di tier puncak) berdasar total XP.

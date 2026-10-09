@@ -133,7 +133,7 @@ onBeforeUnmount(() => {
   opacity: 0;
   animation:
     splash-plane-arrive 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards,
-    splash-plane-depart 1.05s cubic-bezier(0.5, -0.1, 0.4, 1) 2.15s forwards;
+    splash-plane-depart 1.3s cubic-bezier(0.3, 0, 0.2, 1) 2.15s forwards;
 }
 
 @keyframes splash-pad-arrive {
@@ -193,18 +193,20 @@ onBeforeUnmount(() => {
   }
 }
 
+/* Lepas landas lurus ke atas — tanpa rotasi/kemiringan, biar pesawatnya tetap
+   tegak selama terbang (dulu ada rotate() yang bikin kesannya miring & patah). */
 @keyframes splash-plane-depart {
   0% {
     opacity: 1;
-    transform: translate(0, 0) rotate(0deg) scale(1);
+    transform: translate(0, 0) scale(1);
   }
-  25% {
+  18% {
     opacity: 1;
-    transform: translate(4px, -36px) rotate(-8deg) scale(1.08);
+    transform: translate(0, -28px) scale(1.05);
   }
   100% {
     opacity: 0;
-    transform: translate(34px, -420px) rotate(-26deg) scale(0.3);
+    transform: translate(0, -420px) scale(0.32);
   }
 }
 
