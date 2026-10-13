@@ -174,7 +174,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { authState } from '../store/auth.js'
 import { useQuests } from '../composables/useQuests.js'
-import { useLeaderboard, useAchievements, checkAchievements } from '../composables/useMemberData.js'
+import { useMyStanding, useAchievements, checkAchievements } from '../composables/useMemberData.js'
 import { tierForXp } from '../lib/xpTier.js'
 import { showToast } from '../store/toast.js'
 import { achievementEn } from '../lib/achievementsEn.js'
@@ -194,12 +194,9 @@ const totalXp = computed(() => totalXpRef.value)
 const streak = computed(() => streakRef.value)
 const tier = computed(() => tierForXp(totalXp.value))
 
-// Peringkat effort nyata (RPC) — posisi atlet sendiri di leaderboard.
-const { rows: effortRows } = useLeaderboard('effort')
-const effortRank = computed(() => {
-  const i = (effortRows.value || []).findIndex((r) => r.athleteId === authState.athleteId)
-  return i >= 0 ? `#${i + 1}` : '—'
-})
+// Posisi effort milik sendiri (RPC server-side; data peserta lain tidak dikirim).
+const { standing: effortStanding } = useMyStanding('effort')
+const effortRank = computed(() => (effortStanding.value ? `#${effortStanding.value.rank}` : '—'))
 
 // ── Quest ──
 const tab = ref('harian')

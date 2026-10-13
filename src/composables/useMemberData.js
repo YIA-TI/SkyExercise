@@ -5,7 +5,7 @@ import { authState } from '../store/auth.js'
 import { fetchProfile } from '../services/profile.js'
 import { fetchHomeStats } from '../services/stats.js'
 import { fetchActivities, fetchActivityDetail } from '../services/activities.js'
-import { fetchDistanceLeaderboard, fetchEffortLeaderboard, fetchLeagueLeaderboard, fetchRosterAvatars } from '../services/leaderboard.js'
+import { fetchMyStanding, fetchMemberLeaderboard, fetchAdminLeaderboard } from '../services/leaderboard.js'
 import { tierForRank } from '../lib/leagueTier.js'
 import { fetchMyAchievements, checkAchievements } from '../services/achievements.js'
 import { useAsync } from './useAsync.js'
@@ -47,18 +47,39 @@ export function useActivityDetail(activityId) {
   return { activity: data, loading, error, refresh }
 }
 
-// mode: ref/getter → 'running' | 'effort' | 'league'
-// leaguePeriod: ref/getter → 'weekly' | 'monthly' (cuma dipakai saat mode === 'league')
-export function useLeaderboard(mode, leaguePeriod) {
+// Posisi MILIK SENDIRI di leaderboard — data peserta lain tidak pernah dikirim ke klien.
+// mode: ref/getter → 'running' | 'effort' | 'league'. Hasil: { rank, total, value } | null
+export function useMyStanding(mode, leaguePeriod) {
+  const { data, loading, error, refresh } = useAsync(
+    () => fetchMyStanding(unref(mode), unref(leaguePeriod) || 'weekly'),
+    [() => unref(mode), () => unref(leaguePeriod)],
+    ['activities', 'athlete_progress'],
+  )
+  return { standing: data, loading, error, refresh }
+}
+
+// Daftar peringkat untuk anggota yang ikut leaderboard (opt-in). Kalau belum ikut, tidak
+// ada request sama sekali (hasil []), dan server pun menolak mengembalikan data.
+export function useMemberLeaderboard(mode, leaguePeriod, joined) {
+  const { data, loading, error, refresh } = useAsync(async () => {
+    if (!unref(joined)) return []
+    const m = unref(mode)
+    const rows = await fetchMemberLeaderboard(m, unref(leaguePeriod) || 'weekly')
+    if (m !== 'league') return rows
+    // Tier liga dihitung dari posisi asli di antara seluruh anggota (rank bisa berlubang).
+    const total = Math.max(0, ...rows.map((r) => r.rank))
+    return rows.map((r) => ({ ...r, tier: tierForRank(r.rank, total) }))
+  }, [() => unref(mode), () => unref(leaguePeriod), () => unref(joined)], ['activities', 'athlete_progress'])
+  return { rows: data, loading, error, refresh }
+}
+
+// Daftar peringkat lengkap — HANYA untuk admin (RPC admin_leaderboard dijaga is_admin()).
+export function useAdminLeaderboard(mode, leaguePeriod) {
   const { data, loading, error, refresh } = useAsync(async () => {
     const m = unref(mode)
-    if (m === 'league') {
-      const rows = await fetchLeagueLeaderboard(unref(leaguePeriod) || 'weekly')
-      return rows.map((r, i) => ({ ...r, rank: i + 1, tier: tierForRank(i + 1, rows.length) }))
-    }
-    const rows = m === 'effort' ? await fetchEffortLeaderboard() : await fetchDistanceLeaderboard()
-    const avatarMap = await fetchRosterAvatars()
-    return rows.map((r) => ({ ...r, avatar: avatarMap.get(r.athleteId) ?? null }))
+    const rows = await fetchAdminLeaderboard(m, unref(leaguePeriod) || 'weekly')
+    if (m !== 'league') return rows
+    return rows.map((r, i) => ({ ...r, rank: i + 1, tier: tierForRank(i + 1, rows.length) }))
   }, [() => unref(mode), () => unref(leaguePeriod)], ['activities', 'athlete_progress'])
   return { rows: data, loading, error, refresh }
 }

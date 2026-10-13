@@ -6,10 +6,10 @@
         <div class="mui-avatar">{{ initials }}</div>
         <div>
           <p class="mui-h-title">Leaderboard</p>
-          <p class="mui-h-sub">ARFF Division · {{ currentRankData.length }} members</p>
+          <p class="mui-h-sub">ARFF Division · {{ standing ? standing.total : '—' }} members</p>
         </div>
       </div>
-      <RefreshingBadge v-if="loading && rows" label="Refreshing…" />
+      <RefreshingBadge v-if="loading && standing" label="Refreshing…" />
       <span v-else class="mui-pill">Position #{{ myRank }}</span>
     </header>
 
@@ -29,7 +29,7 @@
     </div>
 
     <div v-if="activeMode === 'league'" class="lb-league-card">
-      <div v-if="loading && !rows" class="lb-league-badges">
+      <div v-if="loading && !standing" class="lb-league-badges">
         <div v-for="i in 4" :key="i" class="lb-league-badge">
           <div class="mui-skel mui-skel--circle" style="width: 18px; height: 18px;"></div>
           <div class="mui-skel mui-skel--text" style="width: 30px; margin-top: 4px;"></div>
@@ -38,7 +38,7 @@
       <div v-else class="lb-league-badges">
         <div
           v-for="t in tierOrder" :key="t.key" class="lb-league-badge"
-          :class="{ 'is-current': myTier === t.key }" :style="{ color: t.color }"
+          :class="{ 'is-current': myTier?.key === t.key }" :style="{ color: t.color }"
         >
           <span class="lb-league-badge-ic">
             <component :is="TIER_ICON[t.key]" :size="18" />
@@ -51,6 +51,30 @@
       </div>
     </div>
 
+    <!-- Not joined: members only see their OWN position; others' data is never sent to them. -->
+    <template v-if="!joined">
+      <div v-if="loading && !standing" class="lb-me-card">
+        <div class="mui-skel mui-skel--text" style="width: 40%; margin: 0 auto;"></div>
+        <div class="mui-skel" style="width: 96px; height: 56px; margin: 12px auto 0;"></div>
+      </div>
+      <div v-else class="lb-me-card">
+        <p class="lb-me-label">Your position this week</p>
+        <p class="lb-me-rank mui-mono">{{ standing ? '#' + standing.rank : '—' }}</p>
+        <p class="lb-me-of">{{ standing ? 'out of ' + standing.total + ' members' : 'Sync a workout to get ranked.' }}</p>
+        <span v-if="myTier" class="lb-tier-chip" :style="{ color: myTier.color }">{{ myTier.label }}</span>
+        <p v-if="standing" class="lb-me-value mui-mono">{{ myValue }} <span class="lb-me-unit">{{ unit }}</span></p>
+      </div>
+      <div class="lb-join-card">
+        <p class="lb-join-title">Want to see how others are doing?</p>
+        <p class="lb-join-text">
+          Join the leaderboard to see other members who joined, and let them see your name, photo and weekly totals.
+          You can leave any time.
+        </p>
+        <button class="lb-join-btn" type="button" @click="openLeaderboardConsent()">Join the leaderboard</button>
+      </div>
+    </template>
+
+    <template v-else>
     <div v-if="loading && !rows" class="lb-podium">
       <div v-for="i in 3" :key="i" class="lb-podium-item">
         <div class="mui-skel mui-skel--circle" style="width: 50px; height: 50px;"></div>
@@ -102,6 +126,7 @@
         </div>
       </div>
     </div>
+    </template>
   </div>
 </div>
 </template>
@@ -110,8 +135,9 @@
 import { ref, computed, reactive } from 'vue'
 import { Crown, Shield, Award, Star, Gem } from '@lucide/vue'
 import { authState } from '../store/auth.js'
-import { useLeaderboard } from '../composables/useMemberData.js'
-import { LEAGUE_TIER_ORDER } from '../lib/leagueTier.js'
+import { useMyStanding, useMemberLeaderboard } from '../composables/useMemberData.js'
+import { openLeaderboardConsent } from '../store/leaderboardConsent.js'
+import { LEAGUE_TIER_ORDER, tierForRank } from '../lib/leagueTier.js'
 import RefreshingBadge from './RefreshingBadge.vue'
 
 const activeMode = ref('running')
@@ -142,34 +168,42 @@ function rowColor(item) {
   return ROW_COLOR_PALETTE[hash % ROW_COLOR_PALETTE.length]
 }
 
-// Leaderboard nyata (RPC): semua mode dihitung mingguan (Senin-Minggu).
-const { rows, loading } = useLeaderboard(activeMode, leaguePeriod)
+// Semua mode dihitung mingguan (Senin-Minggu). Posisi sendiri selalu tersedia; daftar
+// peringkat hanya untuk anggota yang ikut (opt-in) dan hanya berisi anggota yang ikut.
+const joined = computed(() => authState.leaderboardOptIn === true)
+const { standing, loading: standingLoading } = useMyStanding(activeMode, leaguePeriod)
+const { rows, loading: listLoading } = useMemberLeaderboard(activeMode, leaguePeriod, joined)
+const loading = computed(() => standingLoading.value || (joined.value && listLoading.value))
+
+const unit = computed(() =>
+  activeMode.value === 'running' ? 'km / week' : activeMode.value === 'effort' ? 'pts / week' : 'XP / week',
+)
+function formatValue(v) {
+  const n = Number(v) || 0
+  return activeMode.value === 'running' ? n.toFixed(1) + ' km' : n.toLocaleString('en-US')
+}
 
 const currentRankData = computed(() =>
   (rows.value || []).map((r) => ({
     id: r.athleteId,
+    rank: r.rank,
     name: r.name,
     avatar: r.avatar,
     tier: r.tier,
-    isMe: r.athleteId === authState.athleteId,
-    unit: activeMode.value === 'running' ? 'km / week' : activeMode.value === 'effort' ? 'pts / week' : 'XP / week',
-    value: activeMode.value === 'running'
-      ? `${r.distanceKm} km`
-      : activeMode.value === 'effort'
-        ? Number(r.effort).toLocaleString('en-US')
-        : Number(r.xp).toLocaleString('en-US'),
+    isMe: r.isMe,
+    unit: unit.value,
+    value: formatValue(r.value),
   })),
 )
 
-const myTier = computed(() => currentRankData.value.find((r) => r.isMe)?.tier?.key)
+const myTier = computed(() =>
+  standing.value && activeMode.value === 'league' ? tierForRank(standing.value.rank, standing.value.total) : null,
+)
+const myValue = computed(() => formatValue(standing.value?.value))
+const myRank = computed(() => (standing.value ? standing.value.rank : '—'))
 
-const myRank = computed(() => {
-  const i = currentRankData.value.findIndex((r) => r.isMe)
-  return i >= 0 ? i + 1 : '—'
-})
-
-// Ranking + nomor urut asli, dipecah jadi podium (1-3) & sisanya (4+).
-const rankedData = computed(() => currentRankData.value.map((item, i) => ({ ...item, rank: i + 1 })))
+// Ranking asli (bisa berlubang bila ada anggota yang tidak ikut), dipecah jadi podium (3 teratas) & sisanya.
+const rankedData = computed(() => currentRankData.value)
 // Urutan visual panggung: perak-emas-perunggu (juara 1 di tengah, lebih tinggi).
 const podium = computed(() => {
   const top3 = rankedData.value.slice(0, 3)
@@ -424,4 +458,16 @@ function isZeroValue(v) {
   color: rgba(15, 23, 42, 0.7);
   white-space: nowrap;
 }
+
+/* Own-standing card + join CTA (members who haven't joined only see their own position) */
+.lb-me-card { margin-top: 14px; padding: 22px 18px; text-align: center; border-radius: 20px; background: var(--card, #fff); border: 1px solid rgba(15, 23, 42, 0.08); }
+.lb-me-label { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.6; }
+.lb-me-rank { margin-top: 6px; font-size: 56px; font-weight: 800; line-height: 1; }
+.lb-me-of { margin-top: 6px; font-size: 13px; opacity: 0.7; }
+.lb-me-value { margin-top: 12px; font-size: 20px; font-weight: 700; }
+.lb-me-unit { font-size: 12px; font-weight: 600; opacity: 0.6; }
+.lb-join-card { margin-top: 12px; padding: 16px; border-radius: 18px; border: 1px dashed rgba(15, 23, 42, 0.2); text-align: center; }
+.lb-join-title { font-size: 14px; font-weight: 700; }
+.lb-join-text { margin: 6px 0 12px; font-size: 12.5px; line-height: 1.5; opacity: 0.7; }
+.lb-join-btn { padding: 11px 18px; border: none; border-radius: 14px; font-family: inherit; font-size: 13.5px; font-weight: 700; color: #fff; cursor: pointer; background: linear-gradient(45deg, rgb(252, 100, 45), rgb(255, 145, 77)); }
 </style>

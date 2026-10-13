@@ -13,6 +13,12 @@ export async function fetchProfile(athleteId) {
   return data ? normalizeProfile(data) : null
 }
 
+// Peserta mencatat pilihan ikut/tidak ikut leaderboard (consent eksplisit, RPC security-definer).
+export async function setLeaderboardOptIn(optIn) {
+  const { error } = await supabase.rpc('set_leaderboard_opt_in', { p_opt_in: !!optIn })
+  if (error) throw error
+}
+
 // Peserta memperbarui berat/tinggi sendiri lewat RPC security-definer.
 export async function updateBodyMetrics(weightKg, heightCm) {
   const { error } = await supabase.rpc('update_my_body_metrics', {

@@ -103,7 +103,7 @@
 import { ref, computed, reactive } from 'vue'
 import { Crown, Shield, Award, Star, Gem } from '@lucide/vue'
 import { authState } from '../store/auth.js'
-import { useLeaderboard } from '../composables/useMemberData.js'
+import { useAdminLeaderboard } from '../composables/useMemberData.js'
 import { LEAGUE_TIER_ORDER } from '../lib/leagueTier.js'
 import RefreshingBadge from './RefreshingBadge.vue'
 
@@ -137,7 +137,7 @@ function rowColor(item) {
 }
 
 // Leaderboard nyata (RPC) — sama sumber dengan tampilan peserta.
-const { rows, loading } = useLeaderboard(activeMode, leaguePeriod)
+const { rows, loading } = useAdminLeaderboard(activeMode, leaguePeriod)
 
 const currentRankData = computed(() =>
   (rows.value || []).map((r) => ({
@@ -147,10 +147,8 @@ const currentRankData = computed(() =>
     tier: r.tier,
     unit: activeMode.value === 'running' ? 'km / week' : activeMode.value === 'effort' ? 'pts / week' : 'XP / week',
     value: activeMode.value === 'running'
-      ? `${r.distanceKm} km`
-      : activeMode.value === 'effort'
-        ? Number(r.effort).toLocaleString('en-US')
-        : Number(r.xp).toLocaleString('en-US'),
+      ? `${r.value} km`
+      : Number(r.value).toLocaleString('en-US'),
   })),
 )
 

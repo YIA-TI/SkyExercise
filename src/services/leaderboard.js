@@ -1,51 +1,54 @@
 // src/services/leaderboard.js
-// Leaderboard via RPC security-definer (agregat lintas peserta, tetap hormati privasi RLS).
+// Strava data of one athlete may only be shown to that athlete, so members only ever
+// get THEIR OWN standing (rank / total / value) — computed server-side by
+// `my_leaderboard_standing`. Full ranked lists come from `admin_leaderboard` (admin only).
 import { supabase } from '../lib/supabase.js'
-import { startOfWeekISO } from '../lib/normalize.js'
 
-export async function fetchDistanceLeaderboard() {
-  const { data, error } = await supabase.rpc('leaderboard_distance', {
-    period_start: startOfWeekISO(),
+// mode: 'running' (km) | 'effort' (points) | 'league' (XP). Week = Monday–Sunday (WIB).
+// Returns { rank, total, value } or null when the athlete is not ranked yet.
+export async function fetchMyStanding(mode, period = 'weekly') {
+  const { data, error } = await supabase.rpc('my_leaderboard_standing', {
+    p_mode: mode,
+    p_period: period,
+  })
+  if (error) throw error
+  const row = (data ?? [])[0]
+  if (!row) return null
+  return { rank: Number(row.out_rank), total: Number(row.out_total), value: Number(row.out_value) }
+}
+
+// Ranked list for members who joined the leaderboard (opt-in). The server returns nothing
+// unless the caller joined, and only includes other members who joined. `rank` is the real
+// position among all members (gaps = members who did not opt in).
+export async function fetchMemberLeaderboard(mode, period = 'weekly') {
+  const { data, error } = await supabase.rpc('member_leaderboard', {
+    p_mode: mode,
+    p_period: period,
   })
   if (error) throw error
   return (data ?? []).map((r) => ({
-    athleteId: r.athlete_id,
-    name: r.name,
-    distanceKm: +(r.total / 1000).toFixed(1),
+    rank: Number(r.out_rank),
+    athleteId: r.out_athlete_id,
+    name: r.out_name,
+    avatar: r.out_photo,
+    value: Number(r.out_value),
+    isMe: r.out_is_me,
   }))
 }
 
-export async function fetchEffortLeaderboard() {
-  const { data, error } = await supabase.rpc('leaderboard_effort', {
-    period_start: startOfWeekISO(),
+// Full ranked list for the admin dashboard (RPC is gated by is_admin()).
+// Rows: { athleteId, name, avatar, value } — value is km for 'running', points for
+// 'effort', XP for 'league'.
+export async function fetchAdminLeaderboard(mode, period = 'weekly') {
+  const { data, error } = await supabase.rpc('admin_leaderboard', {
+    p_mode: mode,
+    p_period: period,
   })
   if (error) throw error
   return (data ?? []).map((r) => ({
-    athleteId: r.athlete_id,
-    name: r.name,
-    effort: Number(r.total),
+    athleteId: r.out_athlete_id,
+    name: r.out_name,
+    avatar: r.out_photo,
+    value: Number(r.out_value),
   }))
-}
-
-// Ranking XP ("Liga") — RPC baru & terpisah dari leaderboard_distance/effort di
-// atas, jadi ikut balikin profile_photo langsung (dua RPC lama itu tidak).
-// period: 'weekly' (default, Senin-Minggu) | 'monthly' — dikirim ke RPC, reset
-// otomatis mengikuti jendela waktu berjalan.
-export async function fetchLeagueLeaderboard(period = 'weekly') {
-  const { data, error } = await supabase.rpc('leaderboard_league', { p_period: period })
-  if (error) throw error
-  return (data ?? []).map((r) => ({
-    athleteId: r.athlete_id,
-    name: r.name,
-    avatar: r.profile_photo,
-    xp: Number(r.xp),
-  }))
-}
-
-// Avatar seluruh roster — dipakai buat nge-merge foto profil ke leaderboard
-// Jarak/Effort (RPC lama itu cuma balikin name+total, tanpa foto).
-export async function fetchRosterAvatars() {
-  const { data, error } = await supabase.rpc('roster_avatars')
-  if (error) throw error
-  return new Map((data ?? []).map((r) => [r.athlete_id, r.profile_photo]))
 }

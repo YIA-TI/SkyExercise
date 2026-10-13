@@ -103,6 +103,11 @@
             <span class="pf-quick-row-label">Edit Body Data</span>
             <svg class="pf-quick-row-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
+          <button class="pf-quick-row" type="button" @click="toggleLeaderboard">
+            <span class="pf-quick-row-ic" v-html="icons.shield"></span>
+            <span class="pf-quick-row-label">Leaderboard: {{ authState.leaderboardOptIn ? 'Joined' : 'Not joined' }}</span>
+            <span class="pf-linkrow-action">{{ authState.leaderboardOptIn ? 'Leave' : 'Join' }}</span>
+          </button>
           <button class="pf-quick-row" type="button" @click="goGantiPassword">
             <span class="pf-quick-row-ic" v-html="icons.lock"></span>
             <span class="pf-quick-row-label">Change Password</span>
@@ -154,12 +159,15 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { authState, logout } from '../store/auth.js'
+import { authState, logout, reloadAuth } from '../store/auth.js'
 import { distance as mockDistance } from '../store/stats.js'
 import { stravaState, disconnectStrava } from '../store/strava.js'
-import { useProfile, useHomeStats, useLeaderboard } from '../composables/useMemberData.js'
+import { useProfile, useHomeStats, useMyStanding } from '../composables/useMemberData.js'
 import { calcBmi, bmiCategory } from '../lib/normalize.js'
 import { openBodyMetricsModal } from '../store/bodyMetricsModal.js'
+import { openLeaderboardConsent } from '../store/leaderboardConsent.js'
+import { setLeaderboardOptIn } from '../services/profile.js'
+import { showToast } from '../store/toast.js'
 import RefreshingBadge from './RefreshingBadge.vue'
 
 const router = useRouter()
@@ -169,12 +177,9 @@ const { profile, loading: profileLoading } = useProfile()
 const { stats, loading: statsLoading } = useHomeStats()
 const distance = computed(() => ({ ...mockDistance, ...(stats.value?.distance || {}) }))
 
-// Peringkat effort nyata (RPC) — cari posisi atlet sendiri di leaderboard.
-const { rows: effortRows } = useLeaderboard('effort')
-const effortRank = computed(() => {
-  const i = (effortRows.value || []).findIndex((r) => r.athleteId === authState.athleteId)
-  return i >= 0 ? `#${i + 1}` : '—'
-})
+// Posisi effort milik sendiri (RPC server-side; data peserta lain tidak dikirim).
+const { standing: effortStanding } = useMyStanding('effort')
+const effortRank = computed(() => (effortStanding.value ? `#${effortStanding.value.rank}` : '—'))
 
 const initials = computed(() =>
   (authState.userName || 'Citra Dewi').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
@@ -207,6 +212,19 @@ function goGantiPassword() {
 
 function goDataTubuh() {
   openBodyMetricsModal()
+}
+
+// Keluar dari leaderboard langsung berlaku; ikut → buka modal persetujuan (consent eksplisit).
+async function toggleLeaderboard() {
+  if (!authState.leaderboardOptIn) return openLeaderboardConsent()
+  if (!window.confirm('Leave the leaderboard? Other members will no longer see your name, photo and totals.')) return
+  try {
+    await setLeaderboardOptIn(false)
+    await reloadAuth()
+    showToast('You left the leaderboard')
+  } catch (e) {
+    showToast(e?.message || 'Failed to update leaderboard setting', 'error')
+  }
 }
 
 function goConnectStrava() {

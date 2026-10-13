@@ -3,12 +3,14 @@ import { computed, defineAsyncComponent } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import { authState } from './store/auth.js'
 import { bodyMetricsModalState } from './store/bodyMetricsModal.js'
+import { leaderboardConsentState } from './store/leaderboardConsent.js'
 import ToastHost from './components/ToastHost.vue'
 import MemberTabBar from './components/MemberTabBar.vue'
 import AdminTabBar from './components/AdminTabBar.vue'
 
 // Modal jarang tampil (cuma isi awal / dibuka manual) — muat lazy, jangan ikut bundle awal.
 const BodyMetricsModal = defineAsyncComponent(() => import('./components/BodyMetricsModal.vue'))
+const LeaderboardConsentModal = defineAsyncComponent(() => import('./components/LeaderboardConsentModal.vue'))
 
 // Tab bar dirender di sini (bukan per-screen) supaya TIDAK ikut ter-animasi oleh
 // transisi pindah halaman di bawah — nav bar harus terasa statis/persisten.
@@ -22,6 +24,14 @@ const showBodyMetricsModal = computed(() =>
   !route.meta.isSplash &&
   ((!authState.loading && authState.needsBodyMetrics) || bodyMetricsModalState.open),
 )
+
+// Persetujuan leaderboard: wajib dipilih sekali (ikut / tidak), sesudah data tubuh terisi; bisa dibuka manual.
+const showLeaderboardConsent = computed(() =>
+  authState.userRole === 'anggota' &&
+  !route.meta.isSplash &&
+  !showBodyMetricsModal.value &&
+  ((!authState.loading && authState.needsLeaderboardConsent) || leaderboardConsentState.open),
+)
 </script>
 
 <template>
@@ -33,6 +43,7 @@ const showBodyMetricsModal = computed(() =>
   <MemberTabBar v-if="authState.userRole === 'anggota' && showTabBar" />
   <AdminTabBar v-if="authState.userRole === 'admin' && showTabBar" />
   <BodyMetricsModal v-if="showBodyMetricsModal" />
+  <LeaderboardConsentModal v-if="showLeaderboardConsent" />
   <ToastHost />
 </template>
 
