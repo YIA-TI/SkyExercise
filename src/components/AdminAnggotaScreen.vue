@@ -5,17 +5,17 @@
       <div class="h-left">
         <div class="mui-avatar">{{ initials }}</div>
         <div>
-          <p class="mui-h-title">Data Anggota</p>
-          <p class="mui-h-sub">Direktori anggota ARFF</p>
+          <p class="mui-h-title">Member Data</p>
+          <p class="mui-h-sub">ARFF member directory</p>
         </div>
       </div>
       <RefreshingBadge v-if="loading && participants" />
-      <span v-else class="mui-pill">{{ anggotaList.length }} Anggota</span>
+      <span v-else class="mui-pill">{{ anggotaList.length }} Members</span>
     </header>
 
     <div class="an-search">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input v-model="search" type="text" placeholder="Cari nama anggota..." />
+      <input v-model="search" type="text" placeholder="Search member name..." />
     </div>
 
     <div v-if="loading && !participants" class="an-list">
@@ -42,7 +42,7 @@
             <template v-else>{{ initialsOf(a.name) }}</template>
             <span class="an-avatar-dot" :class="a.aktif ? 'is-on' : 'is-off'"></span>
           </div>
-          <span class="mui-tag" :class="a.aktif ? 'mui-tag--green' : 'mui-tag--gray'">{{ a.aktif ? 'Aktif' : 'Nonaktif' }}</span>
+          <span class="mui-tag" :class="a.aktif ? 'mui-tag--green' : 'mui-tag--gray'">{{ a.aktif ? 'Active' : 'Inactive' }}</span>
         </div>
 
         <p class="an-name">{{ a.name }}</p>
@@ -52,14 +52,14 @@
           <div class="an-meta-item">
             <span class="an-meta-label">
               <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              Kota
+              City
             </span>
             <span class="an-meta-value">{{ a.city || '—' }}</span>
           </div>
           <div class="an-meta-item">
             <span class="an-meta-label">
               <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
-              ID Anggota
+              Member ID
             </span>
             <span class="an-meta-value mui-mono">{{ a.memberId }}</span>
           </div>
@@ -70,7 +70,7 @@
           <button
             type="button"
             class="an-copy-btn"
-            :aria-label="`Salin username ${a.username}`"
+            :aria-label="`Copy username ${a.username}`"
             @click.stop="copyUsername(a)"
           >
             <svg v-if="copiedId !== a.id" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -78,7 +78,7 @@
           </button>
         </div>
       </article>
-      <p v-if="filteredAnggota.length === 0" class="an-empty">Tidak ada data ditemukan.</p>
+      <p v-if="filteredAnggota.length === 0" class="an-empty">No data found.</p>
     </div>
   </div>
 </div>
@@ -126,7 +126,7 @@ const anggotaList = computed(() =>
     avatar: p.avatar,
     username: p.username,
     aktif: true,
-    peran: 'Atlet',
+    peran: 'Athlete',
     city: p.city,
     memberId: `#${p.athleteId}`,
   })),

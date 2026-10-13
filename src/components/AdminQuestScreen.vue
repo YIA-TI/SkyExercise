@@ -5,47 +5,47 @@
       <div class="h-left">
         <div class="mui-avatar">{{ initials }}</div>
         <div>
-          <p class="mui-h-title">Kelola Tantangan</p>
-          <p class="mui-h-sub">Atur misi latihan peserta</p>
+          <p class="mui-h-title">Manage Quests</p>
+          <p class="mui-h-sub">Manage participant training missions</p>
         </div>
       </div>
-      <span class="mui-pill">{{ quests.length }} Tantangan</span>
+      <span class="mui-pill">{{ quests.length }} Quests</span>
     </header>
 
     <!-- Form tambah tantangan -->
     <section class="mui-block">
-      <h2 class="mui-section-title">Tambah Tantangan</h2>
+      <h2 class="mui-section-title">Add Quest</h2>
       <form class="qf" @submit.prevent="submit">
         <label class="qf-field">
-          <span>Judul</span>
-          <input v-model="form.title" type="text" placeholder="mis. Lari 5 KM" required />
+          <span>Title</span>
+          <input v-model="form.title" type="text" placeholder="e.g. Run 5 KM" required />
         </label>
 
         <label class="qf-field">
-          <span>Deskripsi</span>
-          <input v-model="form.description" type="text" placeholder="Keterangan singkat" />
+          <span>Description</span>
+          <input v-model="form.description" type="text" placeholder="Short description" />
         </label>
 
         <div class="qf-field">
-          <span>Periode</span>
+          <span>Period</span>
           <div class="mui-toggle qf-scope-toggle">
             <button type="button" :class="{ 'is-active': form.scope === 'harian' }" @click="form.scope = 'harian'">
-              <Sun :size="15" /> Harian
+              <Sun :size="15" /> Daily
             </button>
             <button type="button" :class="{ 'is-active': form.scope === 'mingguan' }" @click="form.scope = 'mingguan'">
-              <CalendarDays :size="15" /> Mingguan
+              <CalendarDays :size="15" /> Weekly
             </button>
           </div>
         </div>
 
         <label class="qf-field">
-          <span>{{ form.scope === 'mingguan' ? 'Tanggal (dalam minggu target)' : 'Tanggal' }}</span>
+          <span>{{ form.scope === 'mingguan' ? 'Date (within target week)' : 'Date' }}</span>
           <input v-model="form.quest_date" type="date" required />
         </label>
-        <p v-if="questDatePreview" class="qf-hint">Berlaku: {{ questDatePreview }}</p>
+        <p v-if="questDatePreview" class="qf-hint">Active: {{ questDatePreview }}</p>
 
         <div class="qf-field">
-          <span>Metrik</span>
+          <span>Metric</span>
           <div class="qf-metric-grid">
             <button
               v-for="m in METRIC_OPTIONS" :key="m.value" type="button"
@@ -77,15 +77,15 @@
 
         <!-- Preview live — WYSIWYG, bentuk kartunya sama persis dgn kartu di Daftar Tantangan -->
         <div class="qf-preview">
-          <p class="qf-preview-label">Preview Tantangan</p>
+          <p class="qf-preview-label">Quest Preview</p>
           <article class="ql-item" :class="'ql-item--' + form.scope">
             <div class="ql-icon-badge" :style="{ '--mc': metricColor(form.metric) }">
               <component :is="metricIcon(form.metric)" :size="18" />
             </div>
             <div class="ql-body">
               <div class="ql-top">
-                <span class="ql-title">{{ form.title || 'Judul tantangan…' }}</span>
-                <span class="mui-tag" :class="form.scope === 'harian' ? 'mui-tag--blue' : 'mui-tag--orange'">{{ form.scope }}</span>
+                <span class="ql-title">{{ form.title || 'Quest title…' }}</span>
+                <span class="mui-tag" :class="form.scope === 'harian' ? 'mui-tag--blue' : 'mui-tag--orange'">{{ scopeLabel(form.scope) }}</span>
               </div>
               <p class="ql-meta">
                 {{ metricLabel(form.metric) }} · target {{ form.target || 0 }} {{ targetUnit }}
@@ -100,14 +100,14 @@
         <button class="qf-submit" type="submit" :disabled="saving">
           <svg v-if="saving" class="spin-icon is-spinning" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
           <Rocket v-else :size="16" />
-          {{ saving ? 'Menyimpan…' : 'Tambah Tantangan' }}
+          {{ saving ? 'Saving…' : 'Add Quest' }}
         </button>
       </form>
     </section>
 
     <!-- Daftar tantangan -->
     <section class="mui-block">
-      <h2 class="mui-section-title">Daftar Tantangan</h2>
+      <h2 class="mui-section-title">Quest List</h2>
       <div v-if="loading" class="ql-list">
         <div v-for="i in 3" :key="i" class="ql-item">
           <div class="mui-skel mui-skel--circle" style="width: 38px; height: 38px; flex-shrink: 0;"></div>
@@ -126,7 +126,7 @@
           <div class="ql-body">
             <div class="ql-top">
               <span class="ql-title">{{ q.title }}</span>
-              <span class="mui-tag" :class="q.scope === 'harian' ? 'mui-tag--blue' : 'mui-tag--orange'">{{ q.scope }}</span>
+              <span class="mui-tag" :class="q.scope === 'harian' ? 'mui-tag--blue' : 'mui-tag--orange'">{{ scopeLabel(q.scope) }}</span>
             </div>
             <p class="ql-meta">
               {{ metricLabel(q.metric) }} · target {{ q.target }} {{ q.unit }}
@@ -135,35 +135,35 @@
 
             <div v-if="editingId === q.id" class="ql-edit-date">
               <input v-model="editDate" type="date" />
-              <span v-if="questPeriodLabel(q.scope, editDate)" class="qf-hint">Berlaku: {{ questPeriodLabel(q.scope, editDate) }}</span>
+              <span v-if="questPeriodLabel(q.scope, editDate)" class="qf-hint">Active: {{ questPeriodLabel(q.scope, editDate) }}</span>
               <div class="ql-edit-date-actions">
                 <button class="ql-btn ql-btn--sm" type="button" :disabled="savingDate" @click="saveDate(q)">
                   <svg v-if="savingDate" class="spin-icon is-spinning" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                  {{ savingDate ? 'Menyimpan…' : 'Simpan' }}
+                  {{ savingDate ? 'Saving…' : 'Save' }}
                 </button>
-                <button class="ql-btn ql-btn--sm" type="button" :disabled="savingDate" @click="cancelEditDate">Batal</button>
+                <button class="ql-btn ql-btn--sm" type="button" :disabled="savingDate" @click="cancelEditDate">Cancel</button>
               </div>
             </div>
           </div>
           <div class="ql-side">
             <span class="ql-xp-badge"><Trophy :size="12" /> {{ q.reward }} XP</span>
             <div class="ql-actions">
-              <button v-if="editingId !== q.id" class="ql-icon-btn" type="button" title="Ubah Tanggal" aria-label="Ubah Tanggal" @click="startEditDate(q)">
+              <button v-if="editingId !== q.id" class="ql-icon-btn" type="button" title="Edit Date" aria-label="Edit Date" @click="startEditDate(q)">
                 <CalendarClock :size="15" />
               </button>
-              <label class="ql-switch" :class="{ 'is-disabled': togglingIds.has(q.id) }" :title="q.active ? 'Nonaktifkan' : 'Aktifkan'">
+              <label class="ql-switch" :class="{ 'is-disabled': togglingIds.has(q.id) }" :title="q.active ? 'Deactivate' : 'Activate'">
                 <input type="checkbox" :checked="q.active" :disabled="togglingIds.has(q.id)" @change="toggleActive(q)" />
                 <span class="ql-switch-track"><span class="ql-switch-thumb"></span></span>
               </label>
               <svg class="spin-icon ql-toggle-spinner" :class="{ 'is-spinning': togglingIds.has(q.id) }" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-              <button class="ql-icon-btn ql-icon-btn--del" type="button" title="Hapus" aria-label="Hapus" :disabled="deletingIds.has(q.id)" @click="hapus(q)">
+              <button class="ql-icon-btn ql-icon-btn--del" type="button" title="Delete" aria-label="Delete" :disabled="deletingIds.has(q.id)" @click="hapus(q)">
                 <svg v-if="deletingIds.has(q.id)" class="spin-icon is-spinning" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
                 <Trash2 v-else :size="15" />
               </button>
             </div>
           </div>
         </article>
-        <p v-if="quests.length === 0" class="qf-muted">Belum ada tantangan.</p>
+        <p v-if="quests.length === 0" class="qf-muted">No quests yet.</p>
       </div>
     </section>
   </div>
@@ -199,11 +199,16 @@ const form = reactive({
 
 const questDatePreview = computed(() => questPeriodLabel(form.scope, form.quest_date))
 
+// scope mentah ('harian'/'mingguan') tersimpan apa adanya di DB & dipakai utk
+// nama class (.ql-item--harian/mingguan) — ini cuma label tampilannya.
+const SCOPE_LABELS = { harian: 'Daily', mingguan: 'Weekly' }
+function scopeLabel(scope) { return SCOPE_LABELS[scope] || scope }
+
 const METRIC_LABELS = {
-  run_distance: 'Jarak lari',
-  run_sessions: 'Sesi lari',
-  gym_sessions: 'Sesi gym',
-  gym_duration: 'Durasi gym',
+  run_distance: 'Run Distance',
+  run_sessions: 'Run Sessions',
+  gym_sessions: 'Gym Sessions',
+  gym_duration: 'Gym Duration',
 }
 function metricLabel(m) { return METRIC_LABELS[m] || m }
 
@@ -231,19 +236,19 @@ function metricColor(m) { return METRIC_COLORS[m] || '#2563eb' }
 
 // Opsi picker metrik (kartu 2x2 di form) — urutan sejajar dgn METRIC_ICONS/METRIC_META.
 const METRIC_OPTIONS = [
-  { value: 'run_distance', label: 'Jarak Lari', icon: Footprints },
-  { value: 'run_sessions', label: 'Sesi Lari', icon: Repeat },
-  { value: 'gym_sessions', label: 'Sesi Gym', icon: Dumbbell },
-  { value: 'gym_duration', label: 'Durasi Gym', icon: Timer },
+  { value: 'run_distance', label: 'Run Distance', icon: Footprints },
+  { value: 'run_sessions', label: 'Run Sessions', icon: Repeat },
+  { value: 'gym_sessions', label: 'Gym Sessions', icon: Dumbbell },
+  { value: 'gym_duration', label: 'Gym Duration', icon: Timer },
 ]
 
 // Target & satuan mengikuti metrik — jarak dalam km, sesi/hitungan dalam bilangan
 // bulat, durasi dalam menit. Mencegah kombinasi ganjil spt "5 menit" utk jarak lari.
 const METRIC_META = {
   run_distance: { unit: 'km', step: 0.1, defaultTarget: 5 },
-  run_sessions: { unit: 'sesi', step: 1, defaultTarget: 3 },
-  gym_sessions: { unit: 'sesi', step: 1, defaultTarget: 2 },
-  gym_duration: { unit: 'menit', step: 1, defaultTarget: 30 },
+  run_sessions: { unit: 'sessions', step: 1, defaultTarget: 3 },
+  gym_sessions: { unit: 'sessions', step: 1, defaultTarget: 2 },
+  gym_duration: { unit: 'minutes', step: 1, defaultTarget: 30 },
 }
 const targetUnit = computed(() => METRIC_META[form.metric]?.unit || '')
 const targetStep = computed(() => METRIC_META[form.metric]?.step || 1)
@@ -260,9 +265,9 @@ watch(() => form.metric, (metric) => {
 async function runBackfill(questId) {
   try {
     const n = await backfillQuestClaims(questId)
-    if (n > 0) showToast(`${n} atlet otomatis dinyatakan selesai dari aktivitas lampau`)
+    if (n > 0) showToast(`${n} athletes automatically marked complete from past activity`)
   } catch (e) {
-    showToast(e?.message || 'Gagal memeriksa aktivitas lampau', 'error')
+    showToast(e?.message || 'Failed to check past activity', 'error')
   }
 }
 
@@ -287,11 +292,11 @@ async function submit() {
     form.title = ''
     form.description = ''
     form.quest_date = ''
-    showToast('Tantangan berhasil ditambahkan')
+    showToast('Quest added successfully')
     if (questDate) await runBackfill(newId)
   } catch (e) {
-    formError.value = 'Gagal menyimpan: ' + (e?.message || e)
-    showToast('Gagal menambahkan tantangan', 'error')
+    formError.value = 'Failed to save: ' + (e?.message || e)
+    showToast('Failed to add quest', 'error')
   } finally {
     saving.value = false
   }
@@ -302,9 +307,9 @@ async function toggleActive(q) {
   togglingIds.value = new Set(togglingIds.value).add(q.id)
   try {
     await update(q.id, { active: !q.active })
-    showToast(q.active ? 'Tantangan dinonaktifkan' : 'Tantangan diaktifkan')
+    showToast(q.active ? 'Quest deactivated' : 'Quest activated')
   } catch (e) {
-    showToast(e?.message || 'Gagal mengubah status tantangan', 'error')
+    showToast(e?.message || 'Failed to change quest status', 'error')
   } finally {
     const next = new Set(togglingIds.value)
     next.delete(q.id)
@@ -333,22 +338,22 @@ async function saveDate(q) {
     await update(q.id, { quest_date: newDate || null })
     if (newDate) await runBackfill(q.id)
     cancelEditDate()
-    showToast('Tanggal tantangan berhasil diperbarui')
+    showToast('Quest date updated successfully')
   } catch (e) {
-    showToast(e?.message || 'Gagal memperbarui tanggal', 'error')
+    showToast(e?.message || 'Failed to update date', 'error')
   } finally {
     savingDate.value = false
   }
 }
 
 async function hapus(q) {
-  if (deletingIds.value.has(q.id) || !window.confirm(`Hapus tantangan "${q.title}"?`)) return
+  if (deletingIds.value.has(q.id) || !window.confirm(`Delete quest "${q.title}"?`)) return
   deletingIds.value = new Set(deletingIds.value).add(q.id)
   try {
     await remove(q.id)
-    showToast('Tantangan berhasil dihapus')
+    showToast('Quest deleted successfully')
   } catch (e) {
-    showToast(e?.message || 'Gagal menghapus tantangan', 'error')
+    showToast(e?.message || 'Failed to delete quest', 'error')
   } finally {
     const next = new Set(deletingIds.value)
     next.delete(q.id)

@@ -1,11 +1,11 @@
 <template>
 <div class="drf">
   <label class="drf-field">
-    <span>Dari</span>
+    <span>From</span>
     <input v-model="start" type="date" :max="end || undefined" />
   </label>
   <label class="drf-field">
-    <span>Sampai</span>
+    <span>To</span>
     <input v-model="end" type="date" :min="start || undefined" />
   </label>
 </div>

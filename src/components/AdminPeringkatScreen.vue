@@ -5,8 +5,8 @@
       <div class="h-left">
         <div class="mui-avatar">{{ initials }}</div>
         <div>
-          <p class="mui-h-title">Papan Peringkat</p>
-          <p class="mui-h-sub">Pantauan performa divisi</p>
+          <p class="mui-h-title">Leaderboard</p>
+          <p class="mui-h-sub">Division performance overview</p>
         </div>
       </div>
       <RefreshingBadge v-if="loading && rows" />
@@ -16,7 +16,7 @@
     <div class="mui-toggle">
       <button :class="{ 'is-active': activeMode === 'running' }" @click="activeMode = 'running'">
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-        Jarak
+        Distance
       </button>
       <button :class="{ 'is-active': activeMode === 'effort' }" @click="activeMode = 'effort'">
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -24,7 +24,7 @@
       </button>
       <button :class="{ 'is-active': activeMode === 'league' }" @click="activeMode = 'league'">
         <Shield :size="15" />
-        Liga
+        League
       </button>
     </div>
 
@@ -44,7 +44,7 @@
         </div>
       </div>
       <div class="lb-league-card-bottom">
-        <p class="lb-league-sub">XP dihitung minggu ini (Senin–Minggu), reset otomatis tiap Senin.</p>
+        <p class="lb-league-sub">XP is counted this week (Monday–Sunday), resets automatically every Monday.</p>
       </div>
     </div>
 
@@ -145,12 +145,12 @@ const currentRankData = computed(() =>
     name: r.name,
     avatar: r.avatar,
     tier: r.tier,
-    unit: activeMode.value === 'running' ? 'km / minggu' : activeMode.value === 'effort' ? 'poin / minggu' : 'XP / minggu',
+    unit: activeMode.value === 'running' ? 'km / week' : activeMode.value === 'effort' ? 'pts / week' : 'XP / week',
     value: activeMode.value === 'running'
       ? `${r.distanceKm} km`
       : activeMode.value === 'effort'
-        ? Number(r.effort).toLocaleString('id-ID')
-        : Number(r.xp).toLocaleString('id-ID'),
+        ? Number(r.effort).toLocaleString('en-US')
+        : Number(r.xp).toLocaleString('en-US'),
   })),
 )
 

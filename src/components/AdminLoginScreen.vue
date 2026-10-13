@@ -4,13 +4,13 @@
     <!-- Header dengan logo Almira -->
     <div class="top-visual">
       <img src="../assets/img/almira-logo.png" alt="Almira" class="brand-logo" />
-      <h1 class="title">Masuk sebagai Admin</h1>
-      <p class="subtitle">Kelola pemantauan latihan peserta</p>
+      <h1 class="title">Log in as Admin</h1>
+      <p class="subtitle">Manage participant training monitoring</p>
     </div>
 
     <form class="form" @submit.prevent="handleSignIn">
       <!-- Email -->
-      <label class="field-label" for="admin-email">Alamat Email</label>
+      <label class="field-label" for="admin-email">Email Address</label>
       <div class="input-wrap">
         <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="2" y="4" width="20" height="16" rx="2" />
@@ -28,7 +28,7 @@
       </div>
 
       <!-- Kata Sandi -->
-      <label class="field-label" for="admin-password">Kata Sandi</label>
+      <label class="field-label" for="admin-password">Password</label>
       <div class="input-wrap">
         <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3" y="11" width="18" height="11" rx="2" />
@@ -40,13 +40,13 @@
           class="input"
           :type="showPassword ? 'text' : 'password'"
           name="password"
-          placeholder="Kata sandi"
+          placeholder="Password"
           autocomplete="current-password"
         />
         <button
           class="toggle-eye"
           type="button"
-          :aria-label="showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'"
+          :aria-label="showPassword ? 'Hide password' : 'Show password'"
           @click="showPassword = !showPassword"
         >
           <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -66,7 +66,7 @@
 
       <button class="submit" type="submit" :disabled="submitting">
         <svg v-if="submitting" class="signin-spin" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-        <span>{{ submitting ? 'Memproses…' : 'Masuk' }}</span>
+        <span>{{ submitting ? 'Processing…' : 'Log In' }}</span>
         <svg v-if="!submitting" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <line x1="5" y1="12" x2="19" y2="12" />
           <polyline points="12 5 19 12 12 19" />
@@ -99,7 +99,7 @@ async function handleSignIn() {
     await signInAdmin(email.value, password.value)
     router.push('/welcome-back')
   } catch (_e) {
-    errorMsg.value = 'Email atau kata sandi salah.'
+    errorMsg.value = 'Invalid email or password.'
   } finally {
     submitting.value = false
   }

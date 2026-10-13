@@ -3,15 +3,15 @@
   <div class="mui-col mui-col--full">
     <header class="mui-header">
       <div class="h-left">
-        <button class="ins-back" type="button" aria-label="Kembali" @click="kembali">
+        <button class="ins-back" type="button" aria-label="Back" @click="kembali">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div>
-          <p class="mui-h-title">{{ member ? member.name : 'Anggota' }}</p>
+          <p class="mui-h-title">{{ member ? member.name : 'Member' }}</p>
           <p class="mui-h-sub" v-if="member">{{ member.peran }} · {{ member.spesialisasi }}</p>
         </div>
       </div>
-      <span v-if="member" class="mui-tag" :class="member.aktif ? 'mui-tag--green' : 'mui-tag--gray'">{{ member.aktif ? 'Aktif' : 'Nonaktif' }}</span>
+      <span v-if="member" class="mui-tag" :class="member.aktif ? 'mui-tag--green' : 'mui-tag--gray'">{{ member.aktif ? 'Active' : 'Inactive' }}</span>
     </header>
 
     <div v-if="loading && !detail" class="ins-card">
@@ -22,7 +22,7 @@
     <template v-else-if="member">
       <!-- Filter tanggal — jadi dasar semua ringkasan & daftar di bawah -->
       <section class="mui-block">
-        <h2 class="mui-section-title">Periode</h2>
+        <h2 class="mui-section-title">Period</h2>
         <DateRangeFilter v-model:start="filterStart" v-model:end="filterEnd" />
       </section>
 
@@ -30,7 +30,7 @@
       <div class="ins-card">
         <span class="ins-card-status" :class="{ 'is-off': !member.aktif }">
           <span class="ins-card-status-dot"></span>
-          {{ member.aktif ? 'Aktif Bertugas' : 'Nonaktif' }}
+          {{ member.aktif ? 'On Duty' : 'Inactive' }}
         </span>
 
         <div class="ins-card-avatar-wrap">
@@ -71,7 +71,7 @@
           </template>
           <template v-else>
             <div class="ins-card-linkrow">
-              <span class="ins-card-linkrow-label">Data lari/gym ditarik langsung dari akun Strava atlet ini.</span>
+              <span class="ins-card-linkrow-label">Run/gym data is pulled directly from this athlete's Strava account.</span>
             </div>
           </template>
         </div>
@@ -82,23 +82,23 @@
             <polyline points="1 20 1 14 7 14"/>
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
           </svg>
-          {{ syncingStrava ? 'Mengambil…' : 'Ambil dari Strava' }}
+          {{ syncingStrava ? 'Fetching…' : 'Fetch from Strava' }}
         </button>
         <button class="ins-card-danger" type="button" :disabled="deleting" @click="hapusData()">
-          {{ deleting ? 'Menghapus…' : 'Hapus semua data atlet' }}
+          {{ deleting ? 'Deleting…' : 'Delete all athlete data' }}
         </button>
       </div>
 
       <!-- Grafik jarak per sesi lari (dalam periode dipilih) -->
       <section class="mui-block">
-        <h2 class="mui-section-title">Jarak per Sesi Lari</h2>
+        <h2 class="mui-section-title">Distance per Run Session</h2>
         <div class="mui-card">
           <div class="ins-chart">
             <div v-for="(h, i) in member.bars" :key="i" class="ins-chart-col">
               <span class="ins-chart-bar" :style="{ height: h + '%' }"></span>
               <span class="ins-chart-label">{{ member.barLabels[i] }}</span>
             </div>
-            <p v-if="member.bars.length === 0" class="ins-act-empty">Tidak ada sesi lari pada periode ini.</p>
+            <p v-if="member.bars.length === 0" class="ins-act-empty">No run sessions in this period.</p>
           </div>
         </div>
       </section>
@@ -106,8 +106,8 @@
       <!-- Aktivitas + filter -->
       <section class="mui-block">
         <div class="ins-act-head">
-          <h2 class="mui-section-title">Aktivitas</h2>
-          <span class="mui-tag mui-tag--gray">{{ filteredActivities.length }} aktivitas</span>
+          <h2 class="mui-section-title">Activities</h2>
+          <span class="mui-tag mui-tag--gray">{{ filteredActivities.length }} activities</span>
         </div>
 
         <div class="ins-filter-row">
@@ -122,20 +122,20 @@
 
         <div class="ins-act-list ins-act-list--scroll">
           <div v-for="(act, i) in filteredActivities" :key="i" class="ins-act-item">
-            <span class="ins-act-ic" :class="act.type === 'Lari' ? 'is-orange' : 'is-blue'" v-html="act.type === 'Lari' ? icons.run : icons.gym"></span>
+            <span class="ins-act-ic" :class="act.type === 'Run' ? 'is-orange' : 'is-blue'" v-html="act.type === 'Run' ? icons.run : icons.gym"></span>
             <div class="ins-act-body">
               <p class="ins-act-name">{{ act.name }}</p>
               <p class="ins-act-meta">{{ act.meta }}</p>
             </div>
             <span class="ins-act-date mui-mono">{{ act.date }}</span>
           </div>
-          <p v-if="filteredActivities.length === 0 && syncingStrava" class="ins-act-empty">Mengambil data dari Strava…</p>
-          <p v-else-if="filteredActivities.length === 0" class="ins-act-empty">Tidak ada aktivitas untuk filter ini.</p>
+          <p v-if="filteredActivities.length === 0 && syncingStrava" class="ins-act-empty">Fetching data from Strava…</p>
+          <p v-else-if="filteredActivities.length === 0" class="ins-act-empty">No activities for this filter.</p>
         </div>
       </section>
     </template>
 
-    <p v-else class="ins-notfound">Data anggota tidak ditemukan.</p>
+    <p v-else class="ins-notfound">Member data not found.</p>
   </div>
 </div>
 </template>
@@ -179,9 +179,9 @@ async function syncFromStrava() {
   try {
     await syncParticipantStrava(athleteId.value)
     await refreshDetail()
-    showToast('Data berhasil diambil dari Strava')
+    showToast('Data fetched from Strava successfully')
   } catch (e) {
-    showToast(e?.message || 'Gagal mengambil data dari Strava — pastikan atlet sudah terhubung', 'error')
+    showToast(e?.message || 'Failed to fetch data from Strava — make sure the athlete is connected', 'error')
   } finally {
     syncingStrava.value = false
   }
@@ -192,16 +192,16 @@ async function syncFromStrava() {
 const deleting = ref(false)
 async function hapusData() {
   if (deleting.value) return
-  const nama = member.value?.name || 'atlet ini'
-  if (!window.confirm(`Hapus SEMUA data ${nama} (profil, aktivitas, XP, dan akun)? Tindakan ini tidak bisa dibatalkan.`)) return
+  const nama = member.value?.name || 'this athlete'
+  if (!window.confirm(`Delete ALL data for ${nama} (profile, activities, XP, and account)? This action cannot be undone.`)) return
   deleting.value = true
   autoSyncAttempted.value = true // cegah auto-sync jalan lagi saat data kosong
   try {
     await deleteParticipantData(athleteId.value)
-    showToast('Data atlet berhasil dihapus')
+    showToast('Athlete data deleted successfully')
     kembali()
   } catch (e) {
-    showToast(e?.message || 'Gagal menghapus data atlet', 'error')
+    showToast(e?.message || 'Failed to delete athlete data', 'error')
   } finally {
     deleting.value = false
   }
@@ -230,7 +230,7 @@ const member = computed(() => {
   return {
     name: d.profile.name,
     avatar: d.profile.avatar,
-    peran: 'Atlet',
+    peran: 'Athlete',
     spesialisasi: 'ARFF',
     city: d.profile.city || '—',
     aktif: true,
@@ -238,7 +238,7 @@ const member = computed(() => {
     weight: d.profile.weight ? `${d.profile.weight} kg` : '—',
     joined: '—',
     bars: barRuns.map((a) => Math.round(((a.distanceKm || 0) / maxKm) * 100)),
-    barLabels: barRuns.map((a) => new Date(a.startDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })),
+    barLabels: barRuns.map((a) => new Date(a.startDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })),
     stats: {
       distanceKm: distanceKm.toFixed(1),
       avgHr: last?.avgHeartrate ? Math.round(last.avgHeartrate) : '—',
@@ -246,12 +246,12 @@ const member = computed(() => {
       bmi: calcBmi(d.profile.weight, d.profile.height),
     },
     activities: acts.map((a) => ({
-      type: a.type === 'run' ? 'Lari' : 'Gym',
+      type: a.type === 'run' ? 'Run' : 'Gym',
       name: a.name,
       meta: a.type === 'run'
         ? `${a.distanceKm ?? '—'} km · ${a.durationLabel ?? '—'}`
         : `${a.durationLabel ?? '—'} · ${a.avgHeartrate ? Math.round(a.avgHeartrate) + ' bpm' : '—'}`,
-      date: a.startDate ? new Date(a.startDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '—',
+      date: a.startDate ? new Date(a.startDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '—',
     })),
   }
 })
@@ -272,14 +272,22 @@ const icons = {
   effort: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
 }
 
+// bmiCategory() returns Indonesian labels (shared with the member profile
+// screens, which have their own display mapping) — map to English here too.
+const BMI_LABEL_EN = { Kurus: 'Underweight', Normal: 'Normal', Gemuk: 'Overweight', Obesitas: 'Obese' }
+function bmiCategoryLabel(bmi) {
+  const cat = bmiCategory(bmi)
+  return cat ? (BMI_LABEL_EN[cat] || cat) : cat
+}
+
 const quickStats = computed(() => {
   if (!member.value) return []
   const s = member.value.stats
   return [
-    { label: 'Km pada Periode', value: s.distanceKm, cls: 'is-orange', icon: icons.distance },
-    { label: 'Rata HR (bpm)', value: String(s.avgHr), cls: 'is-blue', icon: icons.heart },
+    { label: 'Km This Period', value: s.distanceKm, cls: 'is-orange', icon: icons.distance },
+    { label: 'Avg HR (bpm)', value: String(s.avgHr), cls: 'is-blue', icon: icons.heart },
     { label: 'Relative Effort', value: String(s.effort), cls: 'is-green', icon: icons.effort },
-    { label: 'BMI', value: s.bmi != null ? `${s.bmi} · ${bmiCategory(s.bmi)}` : '—', cls: 'is-purple', icon: icons.gym },
+    { label: 'BMI', value: s.bmi != null ? `${s.bmi} · ${bmiCategoryLabel(s.bmi)}` : '—', cls: 'is-purple', icon: icons.gym },
   ]
 })
 
@@ -287,22 +295,22 @@ const infoDiri = computed(() => {
   if (!member.value) return []
   const m = member.value
   return [
-    { label: 'ID Anggota', value: m.memberId },
-    { label: 'Peran', value: m.peran },
-    { label: 'Spesialisasi', value: m.spesialisasi },
-    { label: 'Kota', value: m.city },
-    { label: 'Berat Badan', value: m.weight },
-    { label: 'Bergabung', value: m.joined },
-    { label: 'Status', value: m.aktif ? 'Aktif Bertugas' : 'Nonaktif' },
+    { label: 'Member ID', value: m.memberId },
+    { label: 'Role', value: m.peran },
+    { label: 'Specialization', value: m.spesialisasi },
+    { label: 'City', value: m.city },
+    { label: 'Weight', value: m.weight },
+    { label: 'Joined', value: m.joined },
+    { label: 'Status', value: m.aktif ? 'On Duty' : 'Inactive' },
   ]
 })
 
-const filters = ['Semua', 'Lari', 'Gym']
-const activeFilter = ref('Semua')
+const filters = ['All', 'Run', 'Gym']
+const activeFilter = ref('All')
 
 const filteredActivities = computed(() => {
   if (!member.value) return []
-  return activeFilter.value === 'Semua'
+  return activeFilter.value === 'All'
     ? member.value.activities
     : member.value.activities.filter(a => a.type === activeFilter.value)
 })

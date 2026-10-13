@@ -1,9 +1,9 @@
 <!-- src/components/RefreshingBadge.vue -->
-<!-- Badge kecil "Menyegarkan..." dgn titik berdenyut — dipakai di header layar
+<!-- Badge kecil "Refreshing..." dgn titik berdenyut — dipakai di header layar
      yang datanya di-refresh otomatis via Supabase Realtime (Phase 1), supaya
      update di background tidak perlu re-render skeleton penuh lagi.
-     Teksnya bisa di-override via prop `label` — default tetap bahasa
-     Indonesia (dipakai layar admin), layar member lewatkan "Refreshing…". -->
+     Teksnya bisa di-override via prop `label` kalau ada layar yang butuh
+     teks lain. -->
 <template>
   <span class="refreshing-badge">
     <span class="refreshing-dot"></span>
@@ -13,7 +13,7 @@
 
 <script setup>
 defineProps({
-  label: { type: String, default: 'Menyegarkan…' },
+  label: { type: String, default: 'Refreshing…' },
 })
 </script>
 

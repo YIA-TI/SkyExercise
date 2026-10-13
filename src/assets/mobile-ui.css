@@ -555,7 +555,7 @@
   .admin-brand-logo {
     display: block;
     width: 100%;
-    max-width: 210px;
+    max-width: 240px;
     height: auto;
   }
 
@@ -618,7 +618,7 @@
     padding: 13px 16px;
   }
   .admin-brand-logo {
-    max-width: 230px;
+    max-width: 260px;
   }
 }
 

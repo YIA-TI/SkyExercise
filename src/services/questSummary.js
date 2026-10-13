@@ -36,7 +36,7 @@ function isoWeekOf(date) {
 }
 
 function shortDate(d) {
-  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
 }
 
 // Label tampilan tanggal/minggu target sebuah quest bertanggal — dipakai di form
@@ -195,7 +195,7 @@ export async function fetchQuestSummary(startDateStr, endDateStr) {
         ).toFixed(2)
 
         return {
-          questId: q.id, title: q.title, scope: 'mingguan', unit: 'minggu',
+          questId: q.id, title: q.title, scope: 'mingguan', unit: 'week',
           achieved: applicable.filter(Boolean).length,
           total: applicable.length,
           perWeek,
@@ -215,7 +215,7 @@ export async function fetchQuestSummary(startDateStr, endDateStr) {
         : +metricValueFromEntry(q.metric, dayActivityMap.get(`${a.athlete_id}:${lastApplicableDay}`)).toFixed(2)
 
       return {
-        questId: q.id, title: q.title, scope: 'harian', unit: 'hari',
+        questId: q.id, title: q.title, scope: 'harian', unit: 'day',
         achieved: perWeek.reduce((s, n) => s + n, 0),
         total: perWeekTotal.reduce((s, n) => s + n, 0),
         perWeek,
@@ -237,7 +237,7 @@ export async function fetchQuestSummary(startDateStr, endDateStr) {
     const bonusPerWeek = weekDayLists.map((wd) => wd.map(dayDetail).filter(Boolean))
     const bonusPerWeekTotal = weekDayLists.map((wd) => wd.length)
     questCols.push({
-      questId: 'bonus-active-days', title: 'Hari Aktif (Bonus)', scope: 'bonus', unit: 'hari',
+      questId: 'bonus-active-days', title: 'Active Days (Bonus)', scope: 'bonus', unit: 'day',
       achieved: activeDays.length,
       total: days.length,
       totalKm: +totalKm.toFixed(1),

@@ -5,8 +5,8 @@
       <div class="h-left">
         <div class="mui-avatar">{{ initials }}</div>
         <div>
-          <p class="mui-h-title">Monitoring ARFF</p>
-          <p class="mui-h-sub">Halo, {{ firstName }} · Administrator</p>
+          <p class="mui-h-title">ARFF Monitoring</p>
+          <p class="mui-h-sub">Hi, {{ firstName }} · Administrator</p>
         </div>
       </div>
       <span class="mui-pill">ARFF Command</span>
@@ -14,7 +14,7 @@
 
     <!-- Ringkasan stat -->
     <section class="mui-block">
-      <h2 class="mui-section-title">Ringkasan Divisi</h2>
+      <h2 class="mui-section-title">Division Overview</h2>
       <DateRangeFilter v-model:start="questFilterStart" v-model:end="questFilterEnd" />
 
       <div v-if="summaryLoading" class="ad-stats">
@@ -41,7 +41,7 @@
              track-nya ikut ditinta warna barnya (bukan abu rata semua), isian
              bar gradasi + kilau, angkanya jadi pil berwarna — biar tak monoton. -->
         <div class="ad-chart">
-          <p class="ad-chart-title">Distribusi Status Tantangan Personil</p>
+          <p class="ad-chart-title">Personnel Quest Status Distribution</p>
           <div v-if="questLoading" class="ad-chart-rows">
             <div v-for="i in 3" :key="i" class="ad-chart-row">
               <div class="mui-skel mui-skel--text" style="width: 100px;"></div>
@@ -62,12 +62,12 @@
                 <span class="ad-chart-value mui-mono">{{ b.count }}</span>
               </div>
             </div>
-            <p v-if="questStatusTotal === 0" class="qf-muted">Belum ada data quest pada periode ini.</p>
+            <p v-if="questStatusTotal === 0" class="qf-muted">No quest data for this period yet.</p>
           </template>
         </div>
 
         <div class="ad-chart">
-          <p class="ad-chart-title">Selesai vs Belum Selesai — Lari &amp; GYM</p>
+          <p class="ad-chart-title">Done vs Not Done — Run &amp; GYM</p>
           <div v-if="questLoading" class="ad-chart-rows">
             <div v-for="i in 4" :key="i" class="ad-chart-row">
               <div class="mui-skel mui-skel--text" style="width: 100px;"></div>
@@ -98,12 +98,12 @@
               </div>
             </div>
           </template>
-          <p v-else class="qf-muted">Belum ada tantangan lari/gym yang berlaku pada periode ini.</p>
+          <p v-else class="qf-muted">No applicable run/gym quests for this period yet.</p>
         </div>
       </div>
 
       <div class="ad-chart ad-chart--line">
-        <p class="ad-chart-title">Persebaran Penyelesaian Tantangan Mingguan</p>
+        <p class="ad-chart-title">Weekly Quest Completion Breakdown</p>
         <div v-if="questLoading" class="ad-linechart-skel">
           <div class="mui-skel" style="height: 140px; border-radius: 12px;"></div>
         </div>
@@ -172,21 +172,21 @@
             <span v-for="(label, i) in questCompletionTrend.labels" :key="i" class="ad-linechart-axis-label">{{ label }}</span>
           </div>
           <div class="ad-linechart-legend">
-            <span class="ad-linechart-legend-item"><span class="ad-linechart-dot" style="background: #fc4c02;"></span>Lari</span>
+            <span class="ad-linechart-legend-item"><span class="ad-linechart-dot" style="background: #fc4c02;"></span>Run</span>
             <span class="ad-linechart-legend-item"><span class="ad-linechart-dot" style="background: #7c3aed;"></span>GYM</span>
           </div>
         </template>
-        <p v-else class="qf-muted">Belum ada data tantangan pada periode ini.</p>
+        <p v-else class="qf-muted">No quest data for this period yet.</p>
       </div>
     </section>
 
     <!-- Ringkasan tantangan (harian + mingguan) — monitoring progress user -->
     <section class="mui-block">
       <div class="qs-head-row">
-        <h2 class="mui-section-title">Ringkasan Tantangan</h2>
+        <h2 class="mui-section-title">Quest Summary</h2>
         <button class="qs-pdf-btn" type="button" :disabled="!canExportQuest || exportingQuest" @click="downloadQuestPdf">
           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          {{ exportingQuest ? 'Menyiapkan…' : 'Download PDF' }}
+          {{ exportingQuest ? 'Preparing…' : 'Download PDF' }}
         </button>
       </div>
       <div v-if="questLoading" class="qs-list qs-list--skel">
@@ -196,9 +196,9 @@
           <div class="mui-skel" style="width: 70px; height: 22px; border-radius: 999px;"></div>
         </div>
       </div>
-      <p v-else-if="questError" class="qf-error">Gagal memuat: {{ questError.message || questError }}</p>
+      <p v-else-if="questError" class="qf-error">Failed to load: {{ questError.message || questError }}</p>
       <template v-else-if="questSummaryData">
-        <p v-if="questProgressRows.length === 0" class="qf-muted">Belum ada personil terdaftar.</p>
+        <p v-if="questProgressRows.length === 0" class="qf-muted">No personnel registered yet.</p>
 
         <div v-else class="qs-list">
           <template v-for="pr in questProgressRows" :key="pr.athleteId">
@@ -217,7 +217,7 @@
               ><polyline points="9 18 15 12 9 6"/></svg>
               <span class="qs-athlete-avatar">{{ initialsOf(pr.name) }}</span>
               <span class="qs-athlete-name">{{ pr.name }}</span>
-              <span class="mui-tag" :class="athleteSummaryTone(pr)">{{ athleteSummary(pr).done }}/{{ athleteSummary(pr).total }} selesai</span>
+              <span class="mui-tag" :class="athleteSummaryTone(pr)">{{ athleteSummary(pr).done }}/{{ athleteSummary(pr).total }} done</span>
             </div>
 
             <template v-if="expandedIds.has(pr.athleteId)">
@@ -229,7 +229,7 @@
                   <div class="qs-quest-item-info">
                     <span class="qs-quest-item-name">{{ qc.title }}</span>
                     <span class="qs-quest-item-scope">
-                      {{ qc.scope === 'mingguan' ? 'Mingguan' : 'Harian' }}<template v-if="columnMetaById.get(qc.questId)?.periodLabel"> · {{ columnMetaById.get(qc.questId).periodLabel }}</template>
+                      {{ qc.scope === 'mingguan' ? 'Weekly' : 'Daily' }}<template v-if="columnMetaById.get(qc.questId)?.periodLabel"> · {{ columnMetaById.get(qc.questId).periodLabel }}</template>
                     </span>
                   </div>
                   <span class="qs-badge" :class="liveStatusClass(qc)">
@@ -242,13 +242,13 @@
                   <div class="qs-total-card qs-total-card--lari" :class="{ 'is-empty': pr.totals.lariSesi === 0 }">
                     <div class="qs-total-icon"><Footprints :size="18" :stroke-width="2.25" /></div>
                     <div class="qs-total-body">
-                      <p class="qs-total-title">Total Lari</p>
+                      <p class="qs-total-title">Total Run</p>
                       <div v-if="pr.totals.lariSesi > 0" class="qs-total-stats">
                         <span class="qs-total-stat"><strong>{{ pr.totals.lariKm }}</strong> km</span>
-                        <span class="qs-total-stat"><strong>{{ pr.totals.lariSesi }}</strong> sesi</span>
-                        <span class="qs-total-stat"><strong>{{ pr.totals.lariMenit }}</strong> menit</span>
+                        <span class="qs-total-stat"><strong>{{ pr.totals.lariSesi }}</strong> sessions</span>
+                        <span class="qs-total-stat"><strong>{{ pr.totals.lariMenit }}</strong> min</span>
                       </div>
-                      <p v-else class="qs-total-empty">Belum ada aktivitas lari</p>
+                      <p v-else class="qs-total-empty">No run activity yet</p>
                     </div>
                   </div>
                   <div class="qs-total-card qs-total-card--gym" :class="{ 'is-empty': pr.totals.gymSesi === 0 }">
@@ -256,10 +256,10 @@
                     <div class="qs-total-body">
                       <p class="qs-total-title">Total GYM</p>
                       <div v-if="pr.totals.gymSesi > 0" class="qs-total-stats">
-                        <span class="qs-total-stat"><strong>{{ pr.totals.gymMenit }}</strong> menit</span>
-                        <span class="qs-total-stat"><strong>{{ pr.totals.gymSesi }}</strong> sesi</span>
+                        <span class="qs-total-stat"><strong>{{ pr.totals.gymMenit }}</strong> min</span>
+                        <span class="qs-total-stat"><strong>{{ pr.totals.gymSesi }}</strong> sessions</span>
                       </div>
-                      <p v-else class="qs-total-empty">Belum ada aktivitas gym</p>
+                      <p v-else class="qs-total-empty">No gym activity yet</p>
                     </div>
                   </div>
                 </div>
@@ -318,7 +318,7 @@ const columnDefs = computed(() => {
       questId: q.id, title: q.title, scope: q.scope,
       periodLabel: questPeriodLabel(q.scope, q.quest_date),
     })),
-    { questId: 'bonus-active-days', title: 'Hari Aktif (Bonus)', scope: 'bonus', periodLabel: null },
+    { questId: 'bonus-active-days', title: 'Active Days (Bonus)', scope: 'bonus', periodLabel: null },
   ]
 })
 
@@ -341,13 +341,13 @@ function liveStatusClass(qc) {
   if (qc.metricValue >= qc.metricTarget) return 'is-full'
   return 'is-partial'
 }
-const LIVE_STATUS_LABEL = { 'is-full': 'Selesai', 'is-partial': 'Berjalan', 'is-none': 'Belum Mulai', 'is-na': 'Belum Berlaku' }
+const LIVE_STATUS_LABEL = { 'is-full': 'Done', 'is-partial': 'In Progress', 'is-none': 'Not Started', 'is-na': 'Not Active Yet' }
 
 function formatMetric(v, unit) {
   return unit === 'km' ? v.toFixed(1) : Math.round(v)
 }
 function liveProgressText(qc) {
-  if (qc.metricValue === null || !qc.metricTarget) return 'Belum ada data'
+  if (qc.metricValue === null || !qc.metricTarget) return 'No data yet'
   return `${formatMetric(qc.metricValue, qc.metricUnit)}/${formatMetric(qc.metricTarget, qc.metricUnit)} ${qc.metricUnit}`
 }
 
@@ -400,9 +400,9 @@ const questStatusChart = computed(() => {
   const total = counts.none + counts.partial + counts.full
   const pct = (n) => (total ? Math.round((n / total) * 100) : 0)
   return [
-    { key: 'none', label: 'Belum Mulai', color: '#dc2626', count: counts.none, pct: pct(counts.none) },
-    { key: 'partial', label: 'Sedang Berjalan', color: '#ea580c', count: counts.partial, pct: pct(counts.partial) },
-    { key: 'full', label: 'Selesai', color: '#059669', count: counts.full, pct: pct(counts.full) },
+    { key: 'none', label: 'Not Started', color: '#dc2626', count: counts.none, pct: pct(counts.none) },
+    { key: 'partial', label: 'In Progress', color: '#ea580c', count: counts.partial, pct: pct(counts.partial) },
+    { key: 'full', label: 'Done', color: '#059669', count: counts.full, pct: pct(counts.full) },
   ]
 })
 const questStatusTotal = computed(() => questStatusChart.value.reduce((s, b) => s + b.count, 0))
@@ -426,7 +426,7 @@ const questCategoryChart = computed(() => {
     }
   }
   return [
-    { key: 'lari', label: 'Lari' },
+    { key: 'lari', label: 'Run' },
     { key: 'gym', label: 'GYM' },
   ].map(({ key, label }) => {
     const { done, notDone } = counts[key]
@@ -435,8 +435,8 @@ const questCategoryChart = computed(() => {
     return {
       key, label, total,
       bars: [
-        { key: 'done', label: 'Selesai', color: '#059669', count: done, pct: pct(done) },
-        { key: 'notDone', label: 'Belum Selesai', color: '#dc2626', count: notDone, pct: pct(notDone) },
+        { key: 'done', label: 'Done', color: '#059669', count: done, pct: pct(done) },
+        { key: 'notDone', label: 'Not Done', color: '#dc2626', count: notDone, pct: pct(notDone) },
       ],
     }
   })
@@ -524,10 +524,10 @@ const ICONS = {
 }
 
 const stats = computed(() => [
-  { label: 'Total Anggota', value: String(summary.value?.totalMembers ?? '—'), cls: 'is-blue', icon: ICONS.members },
-  { label: 'Total Sesi', value: String(summary.value?.totalSessions ?? '—'), cls: 'is-orange', icon: ICONS.clock },
-  { label: 'Total Tantangan Selesai', value: String(totalQuestSelesai.value ?? '—'), cls: 'is-green', icon: ICONS.check },
-  { label: 'Total Peserta Aktif', value: String(summary.value?.totalMembers ?? '—'), cls: 'is-purple', icon: ICONS.bars },
+  { label: 'Total Members', value: String(summary.value?.totalMembers ?? '—'), cls: 'is-blue', icon: ICONS.members },
+  { label: 'Total Sessions', value: String(summary.value?.totalSessions ?? '—'), cls: 'is-orange', icon: ICONS.clock },
+  { label: 'Total Quests Done', value: String(totalQuestSelesai.value ?? '—'), cls: 'is-green', icon: ICONS.check },
+  { label: 'Total Active Participants', value: String(summary.value?.totalMembers ?? '—'), cls: 'is-purple', icon: ICONS.bars },
 ]);
 
 const expandedIds = ref(new Set())
@@ -557,11 +557,11 @@ async function downloadQuestPdf() {
 
     const doc = new jsPDF({ orientation: 'landscape' })
     doc.setFontSize(14)
-    doc.text('Ringkasan Tantangan', 14, 16)
+    doc.text('Quest Summary', 14, 16)
     doc.setFontSize(10)
-    doc.text(`Periode: ${questFilterStart.value} s.d. ${questFilterEnd.value}`, 14, 22)
+    doc.text(`Period: ${questFilterStart.value} to ${questFilterEnd.value}`, 14, 22)
 
-    const head = [['Nama', 'Minggu', ...cols.map((c) => c.title)]]
+    const head = [['Name', 'Week', ...cols.map((c) => c.title)]]
     const body = []
     rows.forEach((row) => {
       weeks.forEach((w, wi) => {
@@ -571,7 +571,7 @@ async function downloadQuestPdf() {
           ...row.questCols.map((qc) => {
             if (qc.scope === 'mingguan') {
               if (qc.perWeek[wi] === null) return 'n/a'
-              return qc.perWeek[wi] ? 'Tercapai' : '-'
+              return qc.perWeek[wi] ? 'Achieved' : '-'
             }
             if (qc.scope === 'bonus') {
               const list = qc.perWeek[wi]
@@ -592,10 +592,10 @@ async function downloadQuestPdf() {
       headStyles: { fillColor: [252, 76, 2] },
     })
 
-    doc.save(`ringkasan-tantangan_${questFilterStart.value}_${questFilterEnd.value}.pdf`)
-    showToast('PDF berhasil diunduh')
+    doc.save(`quest-summary_${questFilterStart.value}_${questFilterEnd.value}.pdf`)
+    showToast('PDF downloaded successfully')
   } catch (e) {
-    showToast(e?.message || 'Gagal membuat PDF', 'error')
+    showToast(e?.message || 'Failed to generate PDF', 'error')
   } finally {
     exportingQuest.value = false
   }
