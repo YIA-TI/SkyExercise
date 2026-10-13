@@ -75,6 +75,8 @@
     </template>
 
     <template v-else>
+      <p v-if="listError" class="lb-me-note lb-me-note--error">Couldn't load the leaderboard: {{ listError.message || listError }}</p>
+      <p v-else-if="!loading && !rankedData.length" class="lb-me-note">Nobody on the leaderboard has a ranked activity this week yet.</p>
     <div v-if="loading && !rows" class="lb-podium">
       <div v-for="i in 3" :key="i" class="lb-podium-item">
         <div class="mui-skel mui-skel--circle" style="width: 50px; height: 50px;"></div>
@@ -172,7 +174,7 @@ function rowColor(item) {
 // peringkat hanya untuk anggota yang ikut (opt-in) dan hanya berisi anggota yang ikut.
 const joined = computed(() => authState.leaderboardOptIn === true)
 const { standing, loading: standingLoading } = useMyStanding(activeMode, leaguePeriod)
-const { rows, loading: listLoading } = useMemberLeaderboard(activeMode, leaguePeriod, joined)
+const { rows, loading: listLoading, error: listError } = useMemberLeaderboard(activeMode, leaguePeriod, joined)
 const loading = computed(() => standingLoading.value || (joined.value && listLoading.value))
 
 const unit = computed(() =>
@@ -466,6 +468,8 @@ function isZeroValue(v) {
 .lb-me-of { margin-top: 6px; font-size: 13px; opacity: 0.7; }
 .lb-me-value { margin-top: 12px; font-size: 20px; font-weight: 700; }
 .lb-me-unit { font-size: 12px; font-weight: 600; opacity: 0.6; }
+.lb-me-note { margin: 14px 4px 0; font-size: 13px; line-height: 1.5; text-align: center; opacity: 0.7; }
+.lb-me-note--error { color: #dc2626; opacity: 1; }
 .lb-join-card { margin-top: 12px; padding: 16px; border-radius: 18px; border: 1px dashed rgba(15, 23, 42, 0.2); text-align: center; }
 .lb-join-title { font-size: 14px; font-weight: 700; }
 .lb-join-text { margin: 6px 0 12px; font-size: 12.5px; line-height: 1.5; opacity: 0.7; }
