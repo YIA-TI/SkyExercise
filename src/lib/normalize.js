@@ -122,6 +122,10 @@ export function normalizeProfile(row) {
     height: row.height,
     weightUpdatedAt: row.weight_updated_at,
     avatar: row.profile_photo,
+    birthDate: row.birth_date,
+    employmentStatus: row.employment_status,
+    competency: row.competency,
+    certificatePath: row.certificate_path,
   }
 }
 

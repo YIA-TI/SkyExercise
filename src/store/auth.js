@@ -30,6 +30,7 @@ const state = reactive({
   needsWeightReminder: false, // sudah isi, tapi belum update lagi & hari ini Minggu
   leaderboardOptIn: null,   // null = belum ditanya, true = ikut leaderboard, false = tidak ikut
   needsLeaderboardConsent: false, // peserta belum pernah memilih → tampilkan modal persetujuan
+  needsRegistration: false, // peserta belum isi data registrasi (tgl lahir/status/kompetensi/sertifikat)
 })
 
 // Tentukan peran + profil dari sesi Supabase.
@@ -54,13 +55,14 @@ async function resolveRole(session) {
     state.needsWeightReminder = false
     state.leaderboardOptIn = null
     state.needsLeaderboardConsent = false
+    state.needsRegistration = false
     return
   }
 
   // Peserta: cari atlet yang tertaut ke user ini.
   const { data: ath } = await supabase
     .from('athletes')
-    .select('athlete_id, firstname, lastname, weight, height, weight_updated_at, leaderboard_opt_in')
+    .select('athlete_id, firstname, lastname, weight, height, weight_updated_at, leaderboard_opt_in, birth_date, employment_status, competency, certificate_path')
     .eq('user_id', uid)
     .maybeSingle()
 
@@ -72,6 +74,7 @@ async function resolveRole(session) {
   state.needsBodyMetrics = !ath?.weight || !ath?.height
   state.leaderboardOptIn = ath?.leaderboard_opt_in ?? null
   state.needsLeaderboardConsent = !!ath && ath.leaderboard_opt_in == null
+  state.needsRegistration = !ath?.birth_date || !ath?.employment_status || !ath?.competency
   state.needsWeightReminder = !state.needsBodyMetrics && isSunday() && (
     !ath.weight_updated_at ||
     new Date(ath.weight_updated_at).getTime() < startOfToday()
@@ -95,6 +98,7 @@ async function applySession(session) {
     state.needsWeightReminder = false
     state.leaderboardOptIn = null
     state.needsLeaderboardConsent = false
+    state.needsRegistration = false
   }
 }
 

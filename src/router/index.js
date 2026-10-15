@@ -16,6 +16,7 @@ const PeringkatScreen       = () => import('../components/PeringkatScreen.vue')
 const ProfilScreen          = () => import('../components/ProfilScreen.vue')
 const NotifikasiScreen      = () => import('../components/NotifikasiScreen.vue')
 const GantiPasswordScreen   = () => import('../components/GantiPasswordScreen.vue')
+const RegisterScreen        = () => import('../components/RegisterScreen.vue')
 const StravaAuthorizeScreen = () => import('../components/StravaAuthorizeScreen.vue')
 const StravaCallbackScreen  = () => import('../components/StravaCallbackScreen.vue')
 const AdminMonitoringScreen = () => import('../components/AdminMonitoringScreen.vue')
@@ -53,6 +54,7 @@ const routes = [
   { path: '/notifikasi',       name: 'Notifikasi',      component: NotifikasiScreen,     meta: { requiresAuth: true, role: 'anggota' } },
   { path: '/profil/ganti-password', name: 'GantiPassword', component: GantiPasswordScreen, meta: { requiresAuth: true, role: 'anggota' } },
   { path: '/strava/authorize', name: 'StravaAuthorize', component: StravaAuthorizeScreen, meta: { requiresAuth: true, role: 'anggota', hideTabBar: true } },
+  { path: '/register',        name: 'Register',        component: RegisterScreen,       meta: { requiresAuth: true, role: 'anggota', hideTabBar: true, isSplash: true } },
 
   // ── Admin (Monitoring) ──────────────────────────────────
   { path: '/admin',           name: 'AdminMonitoring', component: AdminMonitoringScreen, meta: { requiresAuth: true, role: 'admin' } },
@@ -83,6 +85,12 @@ router.beforeEach((to) => {
     if (authState.userRole === 'admin') return { name: 'AdminMonitoring' }
     if (authState.userRole === 'anggota') return { name: 'Home' }
     return { name: 'SignIn' }
+  }
+
+  // Peserta wajib isi data registrasi (tgl lahir/status/kompetensi/sertifikat)
+  // sebelum masuk ke layar lain — kecuali layar splash (Welcome Back/Strava).
+  if (authState.userRole === 'anggota' && authState.needsRegistration && to.name !== 'Register' && !to.meta.isSplash) {
+    return { name: 'Register' }
   }
 
   return true
