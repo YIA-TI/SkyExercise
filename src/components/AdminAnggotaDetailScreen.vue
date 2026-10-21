@@ -237,6 +237,10 @@ const member = computed(() => {
     memberId: `#${d.profile.athleteId}`,
     weight: d.profile.weight ? `${d.profile.weight} kg` : '—',
     joined: '—',
+    birthDate: d.profile.birthDate,
+    employmentStatus: d.profile.employmentStatus,
+    competency: d.profile.competency,
+    certificatePath: d.profile.certificatePath,
     bars: barRuns.map((a) => Math.round(((a.distanceKm || 0) / maxKm) * 100)),
     barLabels: barRuns.map((a) => new Date(a.startDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })),
     stats: {
@@ -291,6 +295,29 @@ const quickStats = computed(() => {
   ]
 })
 
+// Status pegawai/kompetensi tersimpan huruf kecil di DB (lihat migrasi
+// athlete_registration.sql) — kapital cuma utk tampilan.
+const EMPLOYMENT_STATUS_LABEL = { organik: 'Organik', penunjang: 'Penunjang' }
+const COMPETENCY_LABEL = { basic: 'Basic', junior: 'Junior', senior: 'Senior' }
+
+function calcAge(birthDateStr) {
+  if (!birthDateStr) return null
+  const today = new Date()
+  const birth = new Date(birthDateStr)
+  let age = today.getFullYear() - birth.getFullYear()
+  const beforeBirthday = today.getMonth() < birth.getMonth() ||
+    (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())
+  if (beforeBirthday) age--
+  return age
+}
+
+function formatBirthDate(birthDateStr) {
+  if (!birthDateStr) return '—'
+  const label = new Date(`${birthDateStr}T00:00:00`).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+  const age = calcAge(birthDateStr)
+  return age != null ? `${label} (${age} yrs)` : label
+}
+
 const infoDiri = computed(() => {
   if (!member.value) return []
   const m = member.value
@@ -298,6 +325,10 @@ const infoDiri = computed(() => {
     { label: 'Member ID', value: m.memberId },
     { label: 'Role', value: m.peran },
     { label: 'Specialization', value: m.spesialisasi },
+    { label: 'Date of Birth', value: formatBirthDate(m.birthDate) },
+    { label: 'Employee Status', value: EMPLOYMENT_STATUS_LABEL[m.employmentStatus] || '—' },
+    { label: 'Competency', value: COMPETENCY_LABEL[m.competency] || '—' },
+    { label: 'Certificate', value: m.certificatePath ? 'Uploaded' : 'Not uploaded' },
     { label: 'City', value: m.city },
     { label: 'Weight', value: m.weight },
     { label: 'Joined', value: m.joined },

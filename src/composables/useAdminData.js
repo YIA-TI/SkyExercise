@@ -5,6 +5,7 @@ import {
   fetchDivisionSummary,
   fetchParticipants,
   fetchParticipantDetail,
+  fetchAthletesEmployeeInfo,
 } from '../services/admin.js'
 import { fetchQuestSummary } from '../services/questSummary.js'
 import { useAsync } from './useAsync.js'
@@ -28,6 +29,13 @@ export function useAdminMonitoring(range = {}) {
 export function useAdminParticipants() {
   const { data, loading, error, refresh } = useAsync(fetchParticipants, [], ['athletes'])
   return { participants: data, loading, error, refresh }
+}
+
+// Dipakai Laporan Kinerja Personil (Monitoring) — digabung client-side dengan
+// ringkasan quest per-atlet dari useQuestSummary() by athleteId.
+export function useAthletesEmployeeInfo() {
+  const { data, loading, error, refresh } = useAsync(fetchAthletesEmployeeInfo, [], ['athletes'])
+  return { employeeInfo: data, loading, error, refresh }
 }
 
 // range: { start, end } — ref/getter opsional 'YYYY-MM-DD'. Kosong = default 7 hari terakhir.

@@ -33,6 +33,22 @@ export async function fetchDivisionSummary(range = {}) {
   }
 }
 
+// Data registrasi (tgl lahir/status pegawai/kompetensi) semua peserta — dipakai
+// Laporan Kinerja Personil di Monitoring, digabung client-side dengan ringkasan
+// quest per-atlet (lihat questSummary.js) by athleteId.
+export async function fetchAthletesEmployeeInfo() {
+  const { data, error } = await supabase
+    .from('athletes')
+    .select('athlete_id, birth_date, employment_status, competency')
+  if (error) throw error
+  return (data ?? []).map((a) => ({
+    athleteId: a.athlete_id,
+    birthDate: a.birth_date,
+    employmentStatus: a.employment_status,
+    competency: a.competency,
+  }))
+}
+
 export async function fetchParticipants() {
   const { data, error } = await supabase
     .from('athletes')
@@ -97,7 +113,12 @@ export async function fetchParticipantDetail(athleteId, range) {
   ])
   return {
     profile: prof
-      ? { athleteId: prof.athlete_id, name: nameOf(prof), city: prof.city, avatar: prof.profile_photo, weight: prof.weight, height: prof.height }
+      ? {
+          athleteId: prof.athlete_id, name: nameOf(prof), city: prof.city, avatar: prof.profile_photo,
+          weight: prof.weight, height: prof.height,
+          birthDate: prof.birth_date, employmentStatus: prof.employment_status,
+          competency: prof.competency, certificatePath: prof.certificate_path,
+        }
       : null,
     activities: (acts ?? []).map(normalizeActivity),
   }

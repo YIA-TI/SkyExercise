@@ -253,6 +253,29 @@ const bmiCategoryLabel = computed(() => {
   return cat ? (BMI_LABEL_EN[cat] || cat) : null
 })
 
+// Status pegawai/kompetensi tersimpan huruf kecil di DB (lihat migrasi
+// athlete_registration.sql) — kapital cuma utk tampilan.
+const EMPLOYMENT_STATUS_LABEL = { organik: 'Organik', penunjang: 'Penunjang' }
+const COMPETENCY_LABEL = { basic: 'Basic', junior: 'Junior', senior: 'Senior' }
+
+function calcAge(birthDateStr) {
+  if (!birthDateStr) return null
+  const today = new Date()
+  const birth = new Date(birthDateStr)
+  let age = today.getFullYear() - birth.getFullYear()
+  const beforeBirthday = today.getMonth() < birth.getMonth() ||
+    (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())
+  if (beforeBirthday) age--
+  return age
+}
+
+function formatBirthDate(birthDateStr) {
+  if (!birthDateStr) return '—'
+  const label = new Date(`${birthDateStr}T00:00:00`).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+  const age = calcAge(birthDateStr)
+  return age != null ? `${label} (${age} yrs)` : label
+}
+
 const infoDiri = computed(() => [
   { label: 'Full Name', value: profile.value?.name || authState.userName || '—' },
   { label: 'Gender', value: profile.value?.sex === 'M' ? 'Male' : profile.value?.sex === 'F' ? 'Female' : '—' },
@@ -260,6 +283,10 @@ const infoDiri = computed(() => [
   { label: 'Country', value: profile.value?.country || '—' },
   { label: 'Weight', value: profile.value?.weight ? `${profile.value.weight} kg` : '—' },
   { label: 'Height', value: profile.value?.height ? `${profile.value.height} cm` : '—' },
+  { label: 'Date of Birth', value: formatBirthDate(profile.value?.birthDate) },
+  { label: 'Employee Status', value: EMPLOYMENT_STATUS_LABEL[profile.value?.employmentStatus] || '—' },
+  { label: 'Competency', value: COMPETENCY_LABEL[profile.value?.competency] || '—' },
+  { label: 'Certificate', value: profile.value?.certificatePath ? 'Uploaded' : 'Not uploaded' },
 ])
 
 const quickStats = computed(() => [
