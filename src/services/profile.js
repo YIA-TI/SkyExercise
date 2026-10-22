@@ -13,6 +13,15 @@ export async function fetchProfile(athleteId) {
   return data ? normalizeProfile(data) : null
 }
 
+// Bucket 'sertifikat' privat — ambil URL sementara (bukan getPublicUrl) untuk
+// ditampilkan di CertificatePreviewModal. RLS storage.objects yang menentukan
+// siapa boleh baca path mana (lihat migration athlete_registration.sql).
+export async function getCertificateSignedUrl(path) {
+  const { data, error } = await supabase.storage.from('sertifikat').createSignedUrl(path, 300)
+  if (error) throw error
+  return data.signedUrl
+}
+
 // Peserta mencatat pilihan ikut/tidak ikut leaderboard (consent eksplisit, RPC security-definer).
 export async function setLeaderboardOptIn(optIn) {
   const { error } = await supabase.rpc('set_leaderboard_opt_in', { p_opt_in: !!optIn })

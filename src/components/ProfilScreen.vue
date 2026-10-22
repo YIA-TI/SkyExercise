@@ -74,10 +74,21 @@
             </div>
           </template>
           <template v-else>
-            <div v-for="info in infoDiri" :key="info.label" class="pf-linkrow">
-              <span class="pf-linkrow-label">{{ info.label }}</span>
-              <span class="pf-linkrow-value">{{ info.value }}</span>
-            </div>
+            <template v-for="info in infoDiri" :key="info.label">
+              <button
+                v-if="info.label === 'Certificate' && profile?.certificatePath"
+                class="pf-linkrow pf-linkrow--clickable" type="button"
+                @click="openCertificatePreview(profile.certificatePath)"
+              >
+                <span class="pf-linkrow-label">{{ info.label }}</span>
+                <span class="pf-linkrow-value">{{ info.value }}</span>
+                <svg class="pf-quick-row-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+              <div v-else class="pf-linkrow">
+                <span class="pf-linkrow-label">{{ info.label }}</span>
+                <span class="pf-linkrow-value">{{ info.value }}</span>
+              </div>
+            </template>
           </template>
         </template>
         <template v-else>
@@ -171,6 +182,7 @@ import { useProfile, useHomeStats, useMyStanding } from '../composables/useMembe
 import { calcBmi, bmiCategory } from '../lib/normalize.js'
 import { openBodyMetricsModal } from '../store/bodyMetricsModal.js'
 import { openEmployeeInfoModal } from '../store/employeeInfoModal.js'
+import { openCertificatePreview } from '../store/certificatePreviewModal.js'
 import { openLeaderboardConsent } from '../store/leaderboardConsent.js'
 import { setLeaderboardOptIn } from '../services/profile.js'
 import { showToast } from '../store/toast.js'
@@ -482,6 +494,16 @@ const icons = {
   background: rgba(37, 99, 235, 0.04);
   text-align: left;
 }
+/* Baris "Certificate" dibikin <button> kalau sudah ada file — supaya bisa
+   diklik untuk lihat pratinjau, sementara tampilannya tetap identik dgn
+   baris info lain yang tak bisa diklik. */
+.pf-linkrow--clickable {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease;
+}
+.pf-linkrow--clickable:hover { background: rgba(37, 99, 235, 0.09); }
 .pf-linkrow-ic {
   flex: 0 0 auto;
   width: 32px;

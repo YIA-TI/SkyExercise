@@ -5,6 +5,7 @@ import { authState } from './store/auth.js'
 import { bodyMetricsModalState } from './store/bodyMetricsModal.js'
 import { leaderboardConsentState } from './store/leaderboardConsent.js'
 import { employeeInfoModalState } from './store/employeeInfoModal.js'
+import { certificatePreviewModalState } from './store/certificatePreviewModal.js'
 import ToastHost from './components/ToastHost.vue'
 import MemberTabBar from './components/MemberTabBar.vue'
 import AdminTabBar from './components/AdminTabBar.vue'
@@ -13,6 +14,7 @@ import AdminTabBar from './components/AdminTabBar.vue'
 const BodyMetricsModal = defineAsyncComponent(() => import('./components/BodyMetricsModal.vue'))
 const LeaderboardConsentModal = defineAsyncComponent(() => import('./components/LeaderboardConsentModal.vue'))
 const EmployeeInfoModal = defineAsyncComponent(() => import('./components/EmployeeInfoModal.vue'))
+const CertificatePreviewModal = defineAsyncComponent(() => import('./components/CertificatePreviewModal.vue'))
 
 // Tab bar dirender di sini (bukan per-screen) supaya TIDAK ikut ter-animasi oleh
 // transisi pindah halaman di bawah — nav bar harus terasa statis/persisten.
@@ -47,6 +49,7 @@ const showLeaderboardConsent = computed(() =>
   <BodyMetricsModal v-if="showBodyMetricsModal" />
   <LeaderboardConsentModal v-if="showLeaderboardConsent" />
   <EmployeeInfoModal v-if="employeeInfoModalState.open" />
+  <CertificatePreviewModal v-if="certificatePreviewModalState.open" />
   <ToastHost />
 </template>
 
