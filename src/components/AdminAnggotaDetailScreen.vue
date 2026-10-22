@@ -64,9 +64,14 @@
 
         <div class="ins-card-tab-content">
           <template v-if="activeCardTab === 'info'">
-            <div v-for="info in infoDiri" :key="info.label" class="ins-card-linkrow">
+            <div
+              v-for="info in infoDiri" :key="info.label"
+              class="ins-card-linkrow"
+              :class="{ 'is-clickable': info.clickable }"
+              @click="info.clickable ? openCertificatePreview(member.certificatePath) : null"
+            >
               <span class="ins-card-linkrow-label">{{ info.label }}</span>
-              <span class="ins-card-linkrow-value">{{ info.value }}</span>
+              <span class="ins-card-linkrow-value" :class="{ 'ins-cert-link': info.clickable }">{{ info.value }}</span>
             </div>
           </template>
           <template v-else>
@@ -147,6 +152,7 @@ import { useAdminParticipantDetail } from '../composables/useAdminData.js'
 import { syncParticipantStrava, deleteParticipantData } from '../services/admin.js'
 import { showToast } from '../store/toast.js'
 import { calcBmi, bmiCategory, daysAgoDateStr, toDateStr } from '../lib/normalize.js'
+import { openCertificatePreview } from '../store/certificatePreviewModal.js'
 import DateRangeFilter from './DateRangeFilter.vue'
 
 const route = useRoute()
@@ -236,6 +242,8 @@ const member = computed(() => {
     aktif: true,
     memberId: `#${d.profile.athleteId}`,
     weight: d.profile.weight ? `${d.profile.weight} kg` : '—',
+    height: d.profile.height ? `${d.profile.height} cm` : '—',
+    sex: d.profile.sex,
     joined: '—',
     birthDate: d.profile.birthDate,
     employmentStatus: d.profile.employmentStatus,
@@ -318,19 +326,24 @@ function formatBirthDate(birthDateStr) {
   return age != null ? `${label} (${age} yrs)` : label
 }
 
+const SEX_LABEL = { M: 'Male', F: 'Female' }
+
 const infoDiri = computed(() => {
   if (!member.value) return []
   const m = member.value
+  const canPreviewCert = m.competency === 'senior' && !!m.certificatePath
   return [
     { label: 'Member ID', value: m.memberId },
     { label: 'Role', value: m.peran },
     { label: 'Specialization', value: m.spesialisasi },
     { label: 'Date of Birth', value: formatBirthDate(m.birthDate) },
+    { label: 'Gender', value: SEX_LABEL[m.sex] || '—' },
+    { label: 'City', value: m.city },
+    { label: 'Height', value: m.height },
+    { label: 'Weight', value: m.weight },
     { label: 'Employee Status', value: EMPLOYMENT_STATUS_LABEL[m.employmentStatus] || '—' },
     { label: 'Competency', value: COMPETENCY_LABEL[m.competency] || '—' },
-    { label: 'Certificate', value: m.certificatePath ? 'Uploaded' : 'Not uploaded' },
-    { label: 'City', value: m.city },
-    { label: 'Weight', value: m.weight },
+    { label: 'Certificate', value: canPreviewCert ? 'View Certificate' : m.certificatePath ? 'Uploaded' : 'Not uploaded', clickable: canPreviewCert },
     { label: 'Joined', value: m.joined },
     { label: 'Status', value: m.aktif ? 'On Duty' : 'Inactive' },
   ]
@@ -349,6 +362,10 @@ const filteredActivities = computed(() => {
 
 <style scoped>
 @import '../assets/mobile-ui.css';
+
+.ins-card-linkrow.is-clickable { cursor: pointer; }
+.ins-card-linkrow.is-clickable:hover { background: rgba(37, 99, 235, 0.04); }
+.ins-cert-link { color: #2563eb; font-weight: 600; }
 
 .ins-back {
   width: 40px;

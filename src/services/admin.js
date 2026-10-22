@@ -115,7 +115,7 @@ export async function fetchParticipantDetail(athleteId, range) {
     profile: prof
       ? {
           athleteId: prof.athlete_id, name: nameOf(prof), city: prof.city, avatar: prof.profile_photo,
-          weight: prof.weight, height: prof.height,
+          weight: prof.weight, height: prof.height, sex: prof.sex,
           birthDate: prof.birth_date, employmentStatus: prof.employment_status,
           competency: prof.competency, certificatePath: prof.certificate_path,
         }
