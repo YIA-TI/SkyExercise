@@ -103,6 +103,11 @@
             <span class="pf-quick-row-label">Edit Body Data</span>
             <svg class="pf-quick-row-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
+          <button class="pf-quick-row" type="button" @click="openEmployeeInfoModal">
+            <span class="pf-quick-row-ic" v-html="icons.badge"></span>
+            <span class="pf-quick-row-label">Edit Employee</span>
+            <svg class="pf-quick-row-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
           <button class="pf-quick-row" type="button" @click="toggleLeaderboard">
             <span class="pf-quick-row-ic" v-html="icons.shield"></span>
             <span class="pf-quick-row-label">Leaderboard: {{ authState.leaderboardOptIn ? 'Joined' : 'Not joined' }}</span>
@@ -165,6 +170,7 @@ import { stravaState, disconnectStrava } from '../store/strava.js'
 import { useProfile, useHomeStats, useMyStanding } from '../composables/useMemberData.js'
 import { calcBmi, bmiCategory } from '../lib/normalize.js'
 import { openBodyMetricsModal } from '../store/bodyMetricsModal.js'
+import { openEmployeeInfoModal } from '../store/employeeInfoModal.js'
 import { openLeaderboardConsent } from '../store/leaderboardConsent.js'
 import { setLeaderboardOptIn } from '../services/profile.js'
 import { showToast } from '../store/toast.js'
@@ -298,6 +304,7 @@ const quickStats = computed(() => [
 
 const icons = {
   scale: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/></svg>',
+  badge: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 6.6L21 9l-5 4.2L17.5 20 12 16.3 6.5 20 8 13.2 3 9l6.6-.4z"/></svg>',
   lock: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
   shield: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
   trash: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>',

@@ -55,3 +55,27 @@ export async function submitRegistration({ firstname, lastname, birthDate, emplo
   })
   if (error) throw error
 }
+
+// Edit status pegawai/kompetensi/sertifikat lewat tombol "Edit Employee" di Profil
+// (terpisah dari submitRegistration — tanpa nama/tgl lahir). Sertifikat opsional:
+// kalau tidak pilih file baru, path lama tetap dipakai (lihat RPC).
+export async function updateMyEmployeeInfo({ employmentStatus, competency, certificateFile }) {
+  const { data: { user }, error: userErr } = await supabase.auth.getUser()
+  if (userErr) throw userErr
+  if (!user) throw new Error('Sesi tidak ditemukan, silakan masuk ulang')
+
+  let path = null
+  if (certificateFile) {
+    const ext = certificateFile.name.split('.').pop()
+    path = `${user.id}/${Date.now()}.${ext}`
+    const { error: upErr } = await supabase.storage.from('sertifikat').upload(path, certificateFile, { upsert: true })
+    if (upErr) throw upErr
+  }
+
+  const { error } = await supabase.rpc('update_my_employee_info', {
+    p_employment_status: employmentStatus,
+    p_competency: competency,
+    p_certificate_path: path,
+  })
+  if (error) throw error
+}
