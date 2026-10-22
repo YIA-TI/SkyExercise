@@ -46,13 +46,16 @@
         <button type="button" :class="{ 'is-active': competency === 'junior' }" @click="competency = 'junior'">Junior</button>
         <button type="button" :class="{ 'is-active': competency === 'senior' }" @click="competency = 'senior'">Senior</button>
       </div>
+      <p v-if="competency === 'senior'" class="gp-hint">Senior level requires certificate proof.</p>
 
-      <label class="gp-label" for="rg-cert">Certificate Proof <span class="gp-optional">(optional)</span></label>
-      <label class="rg-upload" :class="{ 'has-file': certificateFile }" for="rg-cert">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <span>{{ certificateFile ? certificateFile.name : 'Choose file (PDF/JPG/PNG, max 10MB)' }}</span>
-      </label>
-      <input id="rg-cert" type="file" class="rg-file-input" accept=".pdf,image/*" @change="onFileChange" />
+      <template v-if="competency === 'senior'">
+        <label class="gp-label" for="rg-cert">Certificate Proof <span class="gp-required">*</span></label>
+        <label class="rg-upload" :class="{ 'has-file': certificateFile }" for="rg-cert">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>{{ certificateFile ? certificateFile.name : 'Choose file (PDF/JPG/PNG, max 10MB)' }}</span>
+        </label>
+        <input id="rg-cert" type="file" class="rg-file-input" accept=".pdf,image/*" @change="onFileChange" />
+      </template>
 
       <p v-if="errorMsg" class="gp-error">{{ errorMsg }}</p>
 
@@ -91,6 +94,10 @@ const stopPrefill = watch(profile, (p) => {
   stopPrefill()
 }, { immediate: true })
 
+watch(competency, (val) => {
+  if (val !== 'senior') certificateFile.value = null
+})
+
 function onFileChange(e) {
   certificateFile.value = e.target.files?.[0] ?? null
 }
@@ -103,6 +110,7 @@ const canSubmit = computed(() =>
   !!birthDate.value &&
   !!employmentStatus.value &&
   !!competency.value &&
+  (competency.value !== 'senior' || !!certificateFile.value) &&
   !saving.value,
 )
 
@@ -217,6 +225,14 @@ async function handleSubmit() {
   color: #0f172a;
   font-weight: 600;
 }
+
+.gp-hint {
+  margin: 6px 2px 0;
+  font-size: 12px;
+  color: #2563eb;
+}
+
+.gp-required { color: #dc2626; }
 
 .gp-error {
   margin: 8px 2px 0;
